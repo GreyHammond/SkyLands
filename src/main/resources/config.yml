@@ -53,6 +53,12 @@ prices:
     cherry_grove: 25000
     deep_ocean: 20000
     badlands: 20000
+    snowy: 15000
+    mushroom: 25000
+    lush_caverns: 25000
+    volcanic: 40000
+    crystal: 40000
+    ancient: 40000
 
 # Sphere sizes for /skylandadmin capture and preview (radius in blocks).
 # A Small island is 32 wide, so its first piece must be "medium" or smaller.

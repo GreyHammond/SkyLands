@@ -155,6 +155,7 @@ public final class IslandManager {
         i.xp = s.getLong("xp", 0);
         i.visitorsTotal = s.getLong("visitors", 0);
         i.xpBackfilled = s.getBoolean("xp-backfilled", false);
+        i.underside = s.getString("underside", "rock");
         return i;
     }
 
@@ -176,6 +177,7 @@ public final class IslandManager {
         s.set("xp", i.xp);
         s.set("visitors", i.visitorsTotal);
         s.set("xp-backfilled", i.xpBackfilled);
+        s.set("underside", i.underside);
     }
 
     private static void loadFlags(ConfigurationSection s, String path, Island i, Role role) {

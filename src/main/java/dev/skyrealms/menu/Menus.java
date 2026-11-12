@@ -95,6 +95,9 @@ public final class Menus {
         m.button(11, item(Material.CHERRY_SAPLING, "<light_purple>Unlock a Biome",
                 "<gray>Unlock a new biome so you", "<gray>can grow it with Grow Land."), pl -> biomes(pl, Mode.UNLOCK, null));
         m.button(12, upgradeIcon(i), this::upgrade);
+        var cur = dev.skyrealms.terrain.UndersideStyle.byId(i.underside);
+        m.button(13, item(cur.icon, "<aqua>Underside Style", "<gray>What hangs under new land.",
+                "<gray>Current: <white>" + cur.displayName, "<dark_gray>Existing land isn't changed."), this::undersides);
         m.button(14, item(Material.SHIELD, "<yellow>Protection",
                 "<gray>Choose what visitors and", "<gray>friends can do on your island."), this::protection);
         m.button(15, item(Material.PLAYER_HEAD, "<yellow>Friends", "<gray>Friends: <white>" + i.friends.size()), this::friends);
@@ -441,6 +444,33 @@ public final class Menus {
         m.fill().open(p);
     }
 
+    // ---- underside styles -------------------------------------------------------------------
+
+    public void undersides(Player p) {
+        Island i = svc.owned(p);
+        if (i == null) return;
+        int level = plugin.xp().level(i);
+        var lv = plugin.xp().levels();
+        Menu m = new Menu(3, "<dark_aqua>Underside Style");
+        int slot = 9;
+        for (var st : dev.skyrealms.terrain.UndersideStyle.values()) {
+            int need = lv.undersideLevel(st.id);
+            boolean current = st.id.equals(i.underside);
+            if (level < need) {
+                m.button(slot++, item(Material.GRAY_DYE, "<gray>" + st.displayName + " <dark_gray>(locked)", "<dark_gray>" + st.description,
+                        "<red>Unlocks at island level " + need), null);
+                continue;
+            }
+            var icon = item(st.icon, (current ? "<green>✔ " : "<aqua>") + st.displayName, "<gray>" + st.description,
+                    current ? "<green>In use for new land" : "<yellow>Tap to use for new land");
+            m.button(slot++, current ? glow(icon) : icon, pl -> { svc.setUnderside(pl, st); undersides(pl); });
+        }
+        m.button(4, item(Material.BOOK, "<white>How it works", "<gray>Land you grow from now on hangs",
+                "<gray>this style underneath. Land you", "<gray>already have is never changed."), null);
+        m.button(18, back(), this::manage);
+        m.fill().open(p);
+    }
+
     // ---- levels ----------------------------------------------------------------------------
 
     private org.bukkit.inventory.ItemStack levelCard(Island i) {
@@ -473,6 +503,8 @@ public final class Menus {
         var lv = plugin.xp().levels();
         List<String> out = new ArrayList<>();
         for (String b : plugin.biomes().all()) if (lv.biomeLevel(b) == l && l > 1) out.add(pretty(b));
+        for (var st : dev.skyrealms.terrain.UndersideStyle.values())
+            if (lv.undersideLevel(st.id) == l && l > 1) out.add(st.displayName + " underside");
         String t = lv.titles().get(l);
         if (t != null) out.add("title \"" + t + "\"");
         return out;
@@ -486,6 +518,7 @@ public final class Menus {
         int level = plugin.xp().level(i);
         TreeSet<Integer> milestones = new TreeSet<>(lv.titles().keySet());
         for (String b : plugin.biomes().all()) if (lv.biomeLevel(b) > 1) milestones.add(lv.biomeLevel(b));
+        for (var st : dev.skyrealms.terrain.UndersideStyle.values()) if (lv.undersideLevel(st.id) > 1) milestones.add(lv.undersideLevel(st.id));
         Menu m = new Menu(6, "<dark_aqua>Levels & Unlocks");
         m.button(4, levelCard(i), null);
         int slot = 9;
@@ -537,6 +570,12 @@ public final class Menus {
             case "beach" -> "Sandy shore at sea level";
             case "shallow_ocean" -> "Shallow water with seagrass";
             case "deep_ocean" -> "Deep water and kelp forests";
+            case "snowy" -> "Snowy spruce forest, frozen lakes";
+            case "mushroom" -> "Mycelium and giant mushrooms";
+            case "lush_caverns" -> "Moss, azaleas and glow berries";
+            case "volcanic" -> "Basalt, magma and lava lakes";
+            case "crystal" -> "Calcite, amethyst and crystal spires";
+            case "ancient" -> "Mossy ruins and broken pillars";
             default -> "Generated terrain";
         };
     }

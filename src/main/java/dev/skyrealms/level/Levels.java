@@ -13,7 +13,14 @@ public final class Levels {
     private final double a, b;
     public final int buyPerPiece, growPiece, unlockBiome, placeBlock, placeCap, harvestCrop, harvestCap, visitor, visitorCap;
     private final Map<Tier, Integer> upgradeXp = new EnumMap<>(Tier.class);
-    private final Map<String, Integer> biomeLevels = new HashMap<>();
+    private final Map<String, Integer> biomeLevels = new HashMap<>(Map.ofEntries(
+            Map.entry("plains", 1), Map.entry("oak_forest", 1), Map.entry("desert", 1), Map.entry("beach", 1),
+            Map.entry("meadow", 5), Map.entry("hilly_plains", 5), Map.entry("shallow_ocean", 5), Map.entry("cherry_grove", 5),
+            Map.entry("jungle", 15), Map.entry("badlands", 15), Map.entry("swamp", 15), Map.entry("snowy", 15),
+            Map.entry("dark_oak_forest", 30), Map.entry("deep_ocean", 30), Map.entry("mushroom", 30), Map.entry("lush_caverns", 30),
+            Map.entry("volcanic", 50), Map.entry("crystal", 50), Map.entry("ancient", 50)));
+    private final Map<String, Integer> undersideLevels = new HashMap<>(Map.of(
+            "rock", 1, "roots", 10, "ice", 20, "lush", 30, "dripstone", 40, "crystal", 55, "nether", 65, "ruins", 75));
     private final TreeMap<Integer, String> titles = new TreeMap<>();
     private final Map<Integer, List<String>> rewards = new HashMap<>();
     public final int announceEvery;
@@ -36,6 +43,8 @@ public final class Levels {
         for (Tier t : Tier.values()) upgradeXp.put(t, y.getInt("xp.upgrade." + t.name(), defUp[t.ordinal()]));
         ConfigurationSection bl = y.getConfigurationSection("biome-levels");
         if (bl != null) for (String k : bl.getKeys(false)) biomeLevels.put(k.toLowerCase(Locale.ROOT), Math.max(1, bl.getInt(k)));
+        ConfigurationSection ul = y.getConfigurationSection("underside-levels");
+        if (ul != null) for (String k : ul.getKeys(false)) undersideLevels.put(k.toLowerCase(Locale.ROOT), Math.max(1, ul.getInt(k)));
         ConfigurationSection ts = y.getConfigurationSection("titles");
         if (ts != null) for (String k : ts.getKeys(false)) {
             try { titles.put(Integer.parseInt(k), ts.getString(k)); } catch (NumberFormatException ignored) {}
@@ -71,6 +80,8 @@ public final class Levels {
     public int upgradeXp(Tier t) { return upgradeXp.getOrDefault(t, 0); }
 
     public int biomeLevel(String biome) { return biomeLevels.getOrDefault(biome.toLowerCase(Locale.ROOT), 1); }
+
+    public int undersideLevel(String style) { return undersideLevels.getOrDefault(style.toLowerCase(Locale.ROOT), 1); }
 
     public List<String> rewards(int level) { return rewards.getOrDefault(level, List.of()); }
 }

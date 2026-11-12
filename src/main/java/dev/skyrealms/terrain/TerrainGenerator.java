@@ -29,7 +29,9 @@ import java.util.logging.Logger;
 public final class TerrainGenerator extends BukkitRunnable {
 
     /** A blob in world coordinates. biome is null for a captured (custom) piece. */
-    public record Blob(TerrainBiome biome, double x, double z, double r) {}
+    public record Blob(TerrainBiome biome, double x, double z, double r, UndersideStyle style) {
+        public Blob(TerrainBiome biome, double x, double z, double r) { this(biome, x, z, r, UndersideStyle.ROCK); }
+    }
 
     private static final byte NONE = 0, LAND = 1, SEA = 2, LIP = 3, LAKE = 4;
     private static final int STITCH = 8;
@@ -83,6 +85,7 @@ public final class TerrainGenerator extends BukkitRunnable {
         byte[] kind;
         int[] top, bottom, water;
         TerrainBiome[] label;
+        UndersideStyle[] style;
         int[] order;                    // target column indices, chunk-sorted
         final List<Object[]> trees = new ArrayList<>();
 
@@ -143,6 +146,7 @@ public final class TerrainGenerator extends BukkitRunnable {
             bottom = new int[n];
             water = new int[n];
             label = new TerrainBiome[n];
+            style = new UndersideStyle[n];
             double[] edge = new double[n];
             int[] stitchDist = hasOld ? distanceToExisting() : null;
             int[] stitchTop = hasOld ? nearestExistingTop : null;
@@ -155,7 +159,11 @@ public final class TerrainGenerator extends BukkitRunnable {
                     double edgeNoise = noise.fbm(x * 0.05, z * 0.05, 3) * 0.22 + noise.fbm(x * 0.17 + 500, z * 0.17, 2) * 0.07;
 
                     double mTarget = Double.MAX_VALUE;
-                    for (Blob b : targets) mTarget = Math.min(mTarget, Math.hypot(x - b.x, z - b.z) / b.r);
+                    UndersideStyle colStyle = UndersideStyle.ROCK;
+                    for (Blob b : targets) {
+                        double d = Math.hypot(x - b.x, z - b.z) / b.r;
+                        if (d < mTarget) { mTarget = d; colStyle = b.style == null ? UndersideStyle.ROCK : b.style; }
+                    }
                     if (mTarget + edgeNoise >= 1) continue;
 
                     double m = Double.MAX_VALUE, wSum = 0, hSum = 0, bestW = -1, cone = 0;
@@ -209,6 +217,7 @@ public final class TerrainGenerator extends BukkitRunnable {
                     b = Math.max(b, world.getMinHeight() + 1);
 
                     label[i] = best;
+                    style[i] = colStyle;
                     top[i] = t;
                     bottom[i] = b;
                     edge[i] = e;
@@ -351,12 +360,17 @@ public final class TerrainGenerator extends BukkitRunnable {
             for (int y = b; y <= t; y++) {
                 int depth = t - y;
                 Material m;
-                if (depth == 0) {
+                if (depth == 0 && k == LAND && !beachy && !lb.isWater() && lb.surfaceData(noise.random(x, y, z, 1)) != null) {
+                    setData(x, y, z, lb.surfaceData(noise.random(x, y, z, 1)));
+                    placed++;
+                    continue;
+                } else if (depth == 0) {
                     m = switch (k) {
                         case LAND -> lb.isWater() || beachy ? Material.SAND : lb.surface(noise.random(x, y, z, 1));
                         case SEA -> lb.isWater() ? lb.surface(noise.random(x, y, z, 1)) : lb.wetFloor(noise.random(x, y, z, 1));
                         case LIP -> lb == TerrainBiome.BADLANDS ? Material.RED_SAND : Material.SAND;
-                        case LAKE -> noise.random(x, y, z, 1) < 0.35 ? Material.CLAY : Material.DIRT;
+                        case LAKE -> lb == TerrainBiome.VOLCANIC ? Material.BASALT
+                                : noise.random(x, y, z, 1) < 0.35 ? Material.CLAY : Material.DIRT;
                         default -> Material.STONE;
                     };
                 } else if (depth <= fillDepth && k != LIP) {
@@ -364,13 +378,15 @@ public final class TerrainGenerator extends BukkitRunnable {
                 } else if (k == LIP && depth <= 2) {
                     m = Material.SAND;
                 } else {
-                    m = stone(x, y, z, b);
+                    m = stone(x, y, z, b, style[i]);
                 }
                 set(x, y, z, m);
                 placed++;
             }
+            placed += hangings(x, z, b, i);
             if (k == SEA || k == LAKE) {
-                for (int y = t + 1; y <= water[i]; y++) { set(x, y, z, Material.WATER); placed++; }
+                Material liquid = k == LAKE ? lb.liquid() : Material.WATER;
+                for (int y = t + 1; y <= water[i]; y++) { set(x, y, z, liquid); placed++; }
                 waterPlants(x, z, i);
             } else if (k == LAND && !lb.isWater() && !beachy) {
                 groundPlant(x, z, i);
@@ -401,8 +417,30 @@ public final class TerrainGenerator extends BukkitRunnable {
             return false;
         }
 
-        Material stone(int x, int y, int z, int b) {
+        /** Things hanging below the island's bottom block (style decorations, lush vines). */
+        int hangings(int x, int z, int b, int i) {
+            double r = noise.random(x, b, z, 21);
+            int len = 1 + (int) (noise.random(x, b, z, 22) * 4);
+            String[] hang = style[i].hang(r, len);
+            if (hang == null && label[i] == TerrainBiome.LUSH_CAVERNS && r > 0.94) hang = UndersideStyle.vines(len);
+            if (hang == null) return 0;
+            int n = 0;
+            for (int k = 0; k < hang.length; k++) {
+                int y = b - 1 - k;
+                if (y <= world.getMinHeight() || !world.getBlockAt(x, y, z).getType().isAir()) break;
+                setData(x, y, z, hang[k]);
+                n++;
+            }
+            return n;
+        }
+
+        Material stone(int x, int y, int z, int b, UndersideStyle st) {
             double r = noise.random(x, y, z, 11);
+            if (st != null && st != UndersideStyle.ROCK) {
+                double pp = noise.value(x * 0.09 + y * 0.11, z * 0.09 - y * 0.07);
+                Material m = st.body(r, pp, y < b + 2);
+                if (m != null) return m;
+            }
             if (y < b + 2 && r < 0.35) return r < 0.15 ? Material.COBBLESTONE : Material.TUFF;
             if (r < 0.006) return Material.COAL_ORE;
             if (r < 0.010) return Material.IRON_ORE;
@@ -421,6 +459,28 @@ public final class TerrainGenerator extends BukkitRunnable {
             String plant = label[i].plant(noise.random(x, top[i], z, 4));
             if (plant == null) return;
             int y = top[i] + 1;
+            if (plant.equals("pillar")) {                 // broken ancient pillar
+                int hgt = 2 + (int) (noise.random(x, y, z, 5) * 4);
+                for (int k = 0; k < hgt; k++) {
+                    double rr = noise.random(x, y + k, z, 13);
+                    set(x, y + k, z, k == 0 && rr < 0.5 ? Material.CHISELED_STONE_BRICKS
+                            : rr < 0.35 ? Material.MOSSY_STONE_BRICKS : rr < 0.6 ? Material.CRACKED_STONE_BRICKS : Material.STONE_BRICKS);
+                }
+                if (noise.random(x, y, z, 14) < 0.5) setData(x, y + hgt, z, "minecraft:stone_brick_slab[type=bottom]");
+                return;
+            }
+            if (plant.equals("rubble")) {
+                double rr = noise.random(x, y, z, 15);
+                setData(x, y, z, rr < 0.4 ? "minecraft:mossy_stone_brick_slab[type=bottom]" : rr < 0.7 ? "minecraft:mossy_cobblestone"
+                        : "minecraft:stone_brick_stairs[facing=" + (rr < 0.85 ? "north" : "east") + "]");
+                return;
+            }
+            if (plant.equals("spire")) {                  // crystal spire
+                int hgt = 2 + (int) (noise.random(x, y, z, 5) * 4);
+                for (int k = 0; k < hgt; k++) set(x, y + k, z, noise.random(x, y + k, z, 16) < 0.25 ? Material.CALCITE : Material.AMETHYST_BLOCK);
+                setData(x, y + hgt, z, "minecraft:amethyst_cluster[facing=up]");
+                return;
+            }
             if (plant.equals("cactus")) {
                 int hgt = 1 + (int) (noise.random(x, y, z, 5) * 3);
                 for (int k = 0; k < hgt; k++) set(x, y + k, z, Material.CACTUS);

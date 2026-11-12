@@ -110,6 +110,8 @@ public final class XpService {
         boolean newTitle = levels.titles().containsKey(lv);
         List<String> unlocked = new ArrayList<>();
         for (String b : plugin.biomes().all()) if (levels.biomeLevel(b) == lv) unlocked.add(plugin.biomes().pretty(b));
+        List<String> styles = new ArrayList<>();
+        for (var st : dev.skyrealms.terrain.UndersideStyle.values()) if (levels.undersideLevel(st.id) == lv && lv > 1) styles.add(st.displayName);
 
         for (UUID id : i.managers()) {
             Player p = Bukkit.getPlayer(id);
@@ -121,6 +123,8 @@ public final class XpService {
             Msg.send(p, "Your island reached <gold>level " + lv + "</gold>"
                     + (newTitle ? " and earned the title <yellow>" + title + "</yellow>" : "") + "!");
             if (!unlocked.isEmpty()) p.sendMessage(Msg.c(" <gray>New biomes to unlock: <green>" + String.join(", ", unlocked)));
+            if (!styles.isEmpty()) p.sendMessage(Msg.c(" <gray>New underside style: <aqua>" + String.join(", ", styles)
+                    + " <dark_gray>(Manage Island → Underside Style)"));
             if (p.getWorld().equals(plugin.skyWorld()) && i.containsLand(p.getX(), p.getZ())) firework(p.getLocation());
         }
         if (levels.announceEvery > 0 && lv % levels.announceEvery == 0) {

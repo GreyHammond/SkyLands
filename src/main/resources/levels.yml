@@ -40,8 +40,25 @@ biome-levels:
   jungle: 15
   badlands: 15
   swamp: 15
+  snowy: 15
   dark_oak_forest: 30
   deep_ocean: 30
+  mushroom: 30
+  lush_caverns: 30
+  volcanic: 50
+  crystal: 50
+  ancient: 50
+
+# Level needed to pick an underside style (applies to land grown afterwards).
+underside-levels:
+  rock: 1
+  roots: 10
+  ice: 20
+  lush: 30
+  dripstone: 40
+  crystal: 55
+  nether: 65
+  ruins: 75
 
 # Titles: the highest one at or below the island's level is shown.
 titles:

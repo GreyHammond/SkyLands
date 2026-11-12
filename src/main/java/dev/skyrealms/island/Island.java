@@ -21,6 +21,8 @@ public final class Island {
     public long xp;
     public long visitorsTotal;
     public boolean xpBackfilled;
+    /** Underside style id used for land grown from now on. */
+    public String underside = "rock";
     public final LinkedHashSet<String> biomes = new LinkedHashSet<>();
     public final List<PiecePlacement> pieces = new ArrayList<>();
     /** Home offset from the centre; null means "top of the centre column". */

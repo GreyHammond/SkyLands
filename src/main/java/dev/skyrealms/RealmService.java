@@ -122,6 +122,18 @@ public final class RealmService {
         return true;
     }
 
+    /** Pick the underside style used for land grown from now on. */
+    public boolean setUnderside(Player p, dev.skyrealms.terrain.UndersideStyle style) {
+        Island i = owned(p);
+        if (i == null) return false;
+        int need = plugin.xp().levels().undersideLevel(style.id);
+        if (plugin.xp().level(i) < need) { Msg.error(p, style.displayName + " unlocks at island level " + need + "."); return false; }
+        i.underside = style.id;
+        plugin.islands().save();
+        Msg.send(p, "New land will now hang <aqua>" + style.displayName + "</aqua> underneath. Existing land stays as it is.");
+        return true;
+    }
+
     // ---- travel ----------------------------------------------------------------
 
     /** Seconds left on the return-home cooldown, or 0. */

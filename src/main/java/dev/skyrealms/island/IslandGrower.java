@@ -77,6 +77,7 @@ public final class IslandGrower {
                 if (p != null) pastes.add(piece);
             }
             if (p == null) break;
+            if (tb != null) p = p.withStyle(island.underside);   // new land hangs the island's current underside style
             island.pieces.add(p);
             island.biomes.add(biome);
             added.add(p);
@@ -112,7 +113,8 @@ public final class IslandGrower {
 
     private TerrainGenerator.Blob blob(Island island, PiecePlacement p) {
         TerrainBiome tb = GENERATED.equals(p.variant()) ? TerrainBiome.byId(p.biome()) : null;
-        return new TerrainGenerator.Blob(tb, island.centerX + p.dx(), island.centerZ + p.dz(), p.radius());
+        return new TerrainGenerator.Blob(tb, island.centerX + p.dx(), island.centerZ + p.dz(), p.radius(),
+                dev.skyrealms.terrain.UndersideStyle.byId(p.style()));
     }
 
     private List<TerrainGenerator.Blob> blobs(Island island) {
