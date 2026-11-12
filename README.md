@@ -104,7 +104,7 @@ tiers, biome names and player names.
 ├── Manage Island
 │   ├── Grow Land              add land of any biome you own
 │   ├── Unlock a Biome         makes a new biome available in Grow Land
-│   ├── Upgrade                move up to the next size
+│   ├── Upgrade                more room: bigger border and piece cap
 │   ├── Protection             Visitors · Friends · Island settings
 │   ├── Friends                add from online players, tap a head to remove
 │   ├── Set Home Here
