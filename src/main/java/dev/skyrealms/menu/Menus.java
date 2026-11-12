@@ -31,30 +31,85 @@ public final class Menus {
 
     // ---- main -----------------------------------------------------------------------
 
+    /** Top level: Return/Buy, Manage, Delete. */
     public void main(Player p) {
         Island i = plugin.islands().of(p.getUniqueId());
-        Menu m = new Menu(3, "<dark_aqua>Sky Realm");
+        Menu m = new Menu(3, "<dark_aqua>Skyland");
         if (i == null) {
-            m.button(11, glow(item(Material.GRASS_BLOCK, "<green>Buy an Island", "<gray>Pick a size and a biome.")), this::buyTier);
-            m.button(15, item(Material.COMPASS, "<aqua>Visit Islands", "<gray>Look around other players' islands."), pl -> visit(pl, 0));
+            m.button(11, glow(item(Material.GRASS_BLOCK, "<green>Buy an Island", "<gray>Pick a size and a biome,",
+                    "<gray>or visit other players' islands.")), this::buyTier);
+            m.button(13, item(Material.GRAY_DYE, "<gray>Manage Island", "<dark_gray>You don't have an island yet."), null);
+            m.button(15, item(Material.GRAY_DYE, "<gray>Delete Island", "<dark_gray>You don't have an island yet."), null);
         } else {
-            m.button(10, item(Material.RED_BED, "<green>Go Home", "<gray>Teleport to your island."), pl -> { pl.closeInventory(); svc.home(pl); });
-            m.button(11, item(Material.WHEAT_SEEDS, "<green>Grow Land",
-                    "<gray>Attach more of a biome you own.", "<gray>Cost: <gold>" + svc.money(svc.growPrice()) + " <gray>each",
-                    "<gray>Pieces: <white>" + i.pieces.size() + "/" + i.tier.maxPieces), pl -> biomes(pl, Mode.GROW, null));
-            m.button(12, item(Material.CHERRY_SAPLING, "<light_purple>Unlock a Biome",
-                    "<gray>Add a whole new biome region", "<gray>to the edge of your island."), pl -> biomes(pl, Mode.UNLOCK, null));
-            m.button(13, upgradeIcon(i), this::upgrade);
-            m.button(14, item(Material.SHIELD, "<yellow>Protection",
-                    "<gray>Choose what visitors and", "<gray>friends can do on your island."), this::protection);
-            m.button(15, item(Material.PLAYER_HEAD, "<yellow>Friends", "<gray>Friends: <white>" + i.friends.size()), this::friends);
-            m.button(16, item(Material.COMPASS, "<aqua>Visit Islands"), pl -> visit(pl, 0));
-            m.button(21, info(i), null);
-            m.button(22, glow(item(Material.FEATHER, "<aqua>Get a Sky Feather", "<gray>Use it anywhere to fly home.")),
-                    pl -> { pl.closeInventory(); svc.giveFeather(pl, true); });
-            m.button(23, item(Material.LIGHT_WEIGHTED_PRESSURE_PLATE, "<green>Set Home Here", "<gray>Stand on your island first."),
-                    pl -> { pl.closeInventory(); svc.setHome(pl); });
+            m.button(11, glow(item(Material.ELYTRA, "<green>Return to Island", "<gray>Ride the wind home,",
+                    "<gray>or visit other islands.")), this::travel);
+            m.button(13, item(Material.WRITABLE_BOOK, "<yellow>Manage Island", "<gray>Grow, upgrade, biomes,",
+                    "<gray>protection and friends."), this::manage);
+            m.button(15, item(Material.TNT, "<red>Delete Island", "<gray>Remove your island for good."), this::delete);
         }
+        m.fill().open(p);
+    }
+
+    /** Return / visit. */
+    public void travel(Player p) {
+        Island i = plugin.islands().of(p.getUniqueId());
+        Menu m = new Menu(3, "<dark_aqua>Return to Island");
+        if (i != null) {
+            long cd = svc.cooldownLeft(p);
+            m.button(11, glow(item(Material.ELYTRA, "<green>Return to My Island",
+                    "<gray>A gust of wind carries you home.", cd > 0 ? "<red>Ready in " + cd + "s" : "<yellow>Tap to fly")),
+                    pl -> { pl.closeInventory(); svc.launchHome(pl); });
+        }
+        List<Island> friendOf = plugin.islands().friendOf(p.getUniqueId());
+        m.button(13, item(Material.PLAYER_HEAD, "<aqua>Friends' Islands", "<gray>Islands where you're a friend: <white>" + friendOf.size()),
+                pl -> islandList(pl, friendOf, "<dark_aqua>Friends' islands", 0, this::travel));
+        m.button(15, item(Material.COMPASS, "<aqua>Visit Islands", "<gray>Every island open to visitors."), pl -> visit(pl, 0));
+        m.button(18, back(), this::main);
+        m.fill().open(p);
+    }
+
+    /** Everything an owner can change. */
+    public void manage(Player p) {
+        Island i = svc.owned(p);
+        if (i == null) { main(p); return; }
+        Menu m = new Menu(4, "<dark_aqua>Manage Island");
+        m.button(10, item(Material.WHEAT_SEEDS, "<green>Grow Land",
+                "<gray>Attach more of a biome you own.", "<gray>Cost: <gold>" + svc.money(svc.growPrice()) + " <gray>each",
+                "<gray>Pieces: <white>" + i.pieces.size() + "/" + i.tier.maxPieces), pl -> biomes(pl, Mode.GROW, null));
+        m.button(11, item(Material.CHERRY_SAPLING, "<light_purple>Unlock a Biome",
+                "<gray>Add a whole new biome region", "<gray>to the edge of your island."), pl -> biomes(pl, Mode.UNLOCK, null));
+        m.button(12, upgradeIcon(i), this::upgrade);
+        m.button(14, item(Material.SHIELD, "<yellow>Protection",
+                "<gray>Choose what visitors and", "<gray>friends can do on your island."), this::protection);
+        m.button(15, item(Material.PLAYER_HEAD, "<yellow>Friends", "<gray>Friends: <white>" + i.friends.size()), this::friends);
+        m.button(16, item(Material.LIGHT_WEIGHTED_PRESSURE_PLATE, "<green>Set Home Here",
+                "<gray>Where Return to Island drops you.", "<gray>Stand on your island first."),
+                pl -> { pl.closeInventory(); svc.setHome(pl); });
+        m.button(22, info(i), null);
+        m.button(27, back(), this::main);
+        m.fill().open(p);
+    }
+
+    /** Two confirmations before anything is destroyed. */
+    public void delete(Player p) {
+        Island i = svc.owned(p);
+        if (i == null) { main(p); return; }
+        double refund = svc.deleteRefund(i);
+        Menu m = new Menu(3, "<dark_red>Delete your island?");
+        m.button(11, item(Material.RED_CONCRETE, "<red>Yes, delete it",
+                "<gray>Every block, chest and animal on", "<gray>your island will be gone forever.",
+                refund > 0 ? "<gray>Refund: <gold>" + svc.money(refund) : "<gray>No refund."), this::deleteFinal);
+        m.button(13, info(i), null);
+        m.button(15, item(Material.LIME_CONCRETE, "<green>No, keep my island"), this::main);
+        m.fill().open(p);
+    }
+
+    private void deleteFinal(Player p) {
+        Menu m = new Menu(3, "<dark_red>This can't be undone!");
+        m.button(11, item(Material.LIME_CONCRETE, "<green>Cancel", "<gray>Keep my island."), this::main);
+        m.button(13, item(Material.BARRIER, "<red>Last chance", "<gray>Are you really sure?"), null);
+        m.button(15, glow(item(Material.TNT, "<dark_red>DELETE FOREVER", "<gray>Your island will crumble", "<gray>into the clouds.")),
+                pl -> { pl.closeInventory(); svc.deleteIsland(pl); });
         m.fill().open(p);
     }
 
@@ -91,6 +146,7 @@ public final class Menus {
                     "<gray>Price: <gold>" + svc.money(t.price)), pl -> biomes(pl, Mode.BUY, t));
         }
         m.button(18, back(), this::main);
+        m.button(26, item(Material.COMPASS, "<aqua>Visit Islands", "<gray>Look around before you buy."), pl -> visit(pl, 0));
         m.fill().open(p);
     }
 
@@ -131,14 +187,14 @@ public final class Menus {
             m.button(4, item(Material.BARRIER, "<red>Nothing here",
                     mode == Mode.UNLOCK ? "<gray>You own every biome!" : "<gray>No biomes are set up yet."), null);
         }
-        m.button((rows - 1) * 9, back(), mode == Mode.BUY ? this::buyTier : this::main);
+        m.button((rows - 1) * 9, back(), mode == Mode.BUY ? this::buyTier : this::manage);
         m.fill().open(p);
     }
 
     public void upgrade(Player p) {
         Island i = plugin.islands().of(p.getUniqueId());
         if (i == null || i.tier.next() == null) return;
-        confirm(p, "Upgrade to " + i.tier.next().pretty() + "?", svc.upgradeCost(i), yes -> { svc.upgrade(yes); main(yes); }, this::main);
+        confirm(p, "Upgrade to " + i.tier.next().pretty() + "?", svc.upgradeCost(i), yes -> { svc.upgrade(yes); manage(yes); }, this::manage);
     }
 
     /** A yes/no screen. Big targets so it's easy to tap on Bedrock. */
@@ -161,7 +217,7 @@ public final class Menus {
                 "<gray>By default they can do everything", "<gray>except trample farmland."), pl -> flags(pl, Role.FRIEND));
         m.button(15, item(Material.GRASS_BLOCK, "<aqua>Island settings", "<gray>Explosions, fire, mobs, PvP", "<gray>and whether visitors may come."),
                 pl -> flags(pl, null));
-        m.button(18, back(), this::main);
+        m.button(18, back(), this::manage);
         m.fill().open(p);
     }
 
@@ -210,7 +266,7 @@ public final class Menus {
                     pl -> confirm(pl, "Remove " + name + " as a friend?", 0,
                             yes -> { svc.removeFriend(yes, f); friends(yes); }, this::friends));
         }
-        m.button(45, back(), this::main);
+        m.button(45, back(), this::manage);
         m.button(49, glow(item(Material.EMERALD, "<green>Add a friend", "<gray>Pick from online players.")), pl -> pickPlayer(pl, 0));
         m.button(53, item(Material.SHIELD, "<yellow>What can friends do?"), pl -> flags(pl, Role.FRIEND));
         m.fill().open(p);
@@ -238,19 +294,26 @@ public final class Menus {
         List<Island> open = plugin.islands().all().stream()
                 .filter(i -> !i.owner.equals(p.getUniqueId()))
                 .filter(i -> i.setting(Flag.VISITS) || i.friends.contains(p.getUniqueId()))
-                .sorted(Comparator.comparing((Island i) -> Bukkit.getPlayer(i.owner) == null)
-                        .thenComparing(i -> -i.pieces.size()))
                 .toList();
-        Menu m = new Menu(6, "<dark_aqua>Visit an island");
-        paged(m, open, page, i -> {
+        islandList(p, open, "<dark_aqua>Visit an island", page,
+                plugin.islands().of(p.getUniqueId()) == null ? this::buyTier : this::travel);
+    }
+
+    private void islandList(Player p, List<Island> islands, String title, int page, Consumer<Player> back) {
+        List<Island> sorted = islands.stream()
+                .sorted(Comparator.comparing((Island i) -> Bukkit.getPlayer(i.owner) == null).thenComparing(i -> -i.pieces.size()))
+                .toList();
+        Menu m = new Menu(6, title);
+        paged(m, sorted, page, i -> {
             OfflinePlayer o = Bukkit.getOfflinePlayer(i.owner);
             return head(o, "<green>" + Objects.toString(o.getName(), "?") + "'s island",
                     "<gray>" + i.tier.pretty() + " · " + String.join(", ", i.biomes),
                     o.isOnline() ? "<green>Owner online" : "<gray>Owner offline",
                     i.friends.contains(p.getUniqueId()) ? "<aqua>You're a friend here" : "", "<yellow>Tap to visit");
-        }, (pl, i) -> { pl.closeInventory(); svc.visit(pl, Bukkit.getOfflinePlayer(i.owner)); }, pg -> visit(p, pg));
-        if (open.isEmpty()) m.button(22, item(Material.BARRIER, "<red>No islands open for visits yet"), null);
-        m.button(45, back(), this::main);
+        }, (pl, i) -> { pl.closeInventory(); svc.visit(pl, Bukkit.getOfflinePlayer(i.owner)); },
+                pg -> islandList(p, islands, title, pg, back));
+        if (sorted.isEmpty()) m.button(22, item(Material.BARRIER, "<red>No islands here yet"), null);
+        m.button(45, back(), back);
         m.fill().open(p);
     }
 

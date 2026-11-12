@@ -31,7 +31,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private int baseY;
     private RealmService service;
     private Menus menus;
-    private SkyFeather feather;
+    private dev.skyrealms.island.ClearQueue clearer;
 
     @Override
     public void onEnable() {
@@ -75,20 +75,19 @@ public final class SkyRealmsPlugin extends JavaPlugin {
 
         service = new RealmService(this);
         menus = new Menus(this, service);
-        feather = new SkyFeather(this);
+        clearer = new dev.skyrealms.island.ClearQueue(this, cfg.getInt("islands.blocks-per-tick", 20000));
 
         var pm = getServer().getPluginManager();
         pm.registerEvents(new MenuListener(), this);
-        pm.registerEvents(feather, this);
         pm.registerEvents(new FallTransit(this, skyName, overName, cfg.getConfigurationSection("transit")), this);
         pm.registerEvents(new ProtectionListener(islands, skyName), this);
 
         RealmCommand realm = new RealmCommand(this);
-        getCommand("realm").setExecutor(realm);
-        getCommand("realm").setTabCompleter(realm);
+        getCommand("skyland").setExecutor(realm);
+        getCommand("skyland").setTabCompleter(realm);
         AdminCommand admin = new AdminCommand(this);
-        getCommand("realmadmin").setExecutor(admin);
-        getCommand("realmadmin").setTabCompleter(admin);
+        getCommand("skylandadmin").setExecutor(admin);
+        getCommand("skylandadmin").setTabCompleter(admin);
 
         Bukkit.getScheduler().runTaskTimer(this, islands::save, 6000L, 6000L);
     }
@@ -112,5 +111,5 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public int baseY() { return baseY; }
     public RealmService service() { return service; }
     public Menus menus() { return menus; }
-    public SkyFeather feather() { return feather; }
+    public dev.skyrealms.island.ClearQueue clearer() { return clearer; }
 }

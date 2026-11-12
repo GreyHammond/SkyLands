@@ -14,7 +14,7 @@ Requires JDK 25.
 ./gradlew build
 ```
 
-The jar is `build/libs/SkyRealms-0.2.0.jar`. Drop it in `plugins/`.
+The jar is `build/libs/SkyRealms-0.3.0.jar`. Drop it in `plugins/`.
 
 Optional: **Vault** plus an economy plugin. Without one, everything is free, which is handy for testing.
 Set `economy.require-vault: true` to block purchases until an economy exists.
@@ -26,8 +26,8 @@ Set `economy.require-vault: true` to block purchases until an economy exists.
 Islands are built from **pieces**: spheres of real terrain you grab from your own worlds.
 
 1. Go to a nice spot in a biome (say a cherry grove) and stand in the middle.
-2. `/realmadmin preview 16` shows the sphere outline.
-3. `/realmadmin capture cherry_grove 16` saves it as `plugins/SkyRealms/pieces/cherry_grove/cherry_grove_1.skyp`.
+2. `/skylandadmin preview 16` shows the sphere outline.
+3. `/skylandadmin capture cherry_grove 16` saves it as `plugins/SkyRealms/pieces/cherry_grove/cherry_grove_1.skyp`.
 4. Do this 4–5 times per biome in different spots. Each one becomes a random variant.
 
 Every folder with at least one piece is a biome players can pick.
@@ -39,31 +39,31 @@ Tips:
 - Radius 12–20 works well. A Small island is 32 wide, so its first piece needs radius ≤ 16.
 - Pieces are pasted with a random rotation and a little height jitter so repeats don't look copied.
 
-### 2. Players buy and grow (chest menus, Bedrock-friendly)
+### 2. Players: everything is in `/skyland`
 
-Type **`/realm`** to open the menu. Everything is a single tap in a chest GUI, so it works
-the same for Bedrock players through Geyser/Floodgate. Nothing needs typing: friends are
-picked from a list of online players. Anything that costs money shows a **Yes/No confirm
-screen** first.
+`/skyland` (aliases `/sl`, `/realm`) opens a chest menu. There are no player subcommands and
+no items to lose. Every action is a single tap, so it works the same for Bedrock players
+through Geyser/Floodgate. Anything that costs money shows a **Yes/No confirm screen**.
 
-Menu: Buy an Island (size → biome → confirm) · Go Home · Grow Land · Unlock a Biome ·
-Upgrade · Protection · Friends · Visit Islands · Get a Sky Feather · Set Home Here
+```
+/skyland
+├── Return to Island            (shows "Buy an Island" if you don't have one)
+│   ├── Return to My Island     gust of wind → home (cooldown)
+│   ├── Friends' Islands        islands where you're a friend
+│   └── Visit Islands           every island open to visitors
+├── Manage Island
+│   ├── Grow Land               pick an owned biome → confirm
+│   ├── Unlock a Biome          pick a new biome → confirm (attaches at the edge)
+│   ├── Upgrade                 next size tier → confirm
+│   ├── Protection              Visitors / Friends / Island settings
+│   ├── Friends                 tap a head to remove; "Add a friend" picks from online players
+│   ├── Set Home Here
+│   └── (island info)
+└── Delete Island               two confirm screens, then the island is wiped
+```
 
-Text shortcuts still work too:
-
-| Command | What it does |
-|---|---|
-| `/realm` | Open the menu |
-| `/realm buy <size> <biome>` | Buy an island: small, medium, large, extra_large, continental |
-| `/realm home` | Teleport up to your island |
-| `/realm grow [biome]` | Attach one more piece of a biome you own |
-| `/realm biome buy <biome>` | Unlock a new biome; its region attaches to the **outer edge** |
-| `/realm upgrade` | Move up a tier: bigger border, room for more pieces, plus bonus land |
-| `/realm friend <player>` / `friend remove <player>` | Manage friends |
-| `/realm protection` | Open the protection menu |
-| `/realm visit [player]` | Visit an island (opens a list if no name) |
-| `/realm feather` | Get a Sky Feather |
-| `/realm info`, `/realm sethome` | Island details / set your home spot |
+Buying: Buy an Island → size → biome → confirm. The size screen also has a "Visit Islands"
+button so people can look around first.
 
 Growth rules: each new piece overlaps existing land so the island stays one continuous mass.
 Pieces of the same biome cluster together, new biome regions go on the rim, and nothing
@@ -72,7 +72,7 @@ grows past the tier's border. When an island is full, players must upgrade.
 ### 3. Island protection
 
 Owners choose what **Visitors** (everyone) and **Friends** can do, each toggled separately in
-the menu (Protection → Visitors / Friends). Owners can always do everything.
+the menu (Manage Island → Protection → Visitors / Friends). Owners can always do everything.
 
 | Option | Visitors default | Friends default |
 |---|---|---|
@@ -111,20 +111,25 @@ Monsters can always be fought. Ender chests are always usable, since they're per
 - Landing spots on lava, fire, cactus, magma and similar blocks are re-rolled.
 - **Elytra works naturally**: deploy it during the fall and glide wherever you like.
 
-### 5. Going back up: the Sky Feather
+### 5. Going back up
 
-Instead of a launch pad, players carry a **Sky Feather** (a glowing feather item). Using it
-(right-click on Java, tap/hold on Bedrock) throws you upward in a gust of wind, then carries
-you home a second later. It shares the cooldown with `/realm home`.
-New island owners get one automatically. Players can get a replacement from the menu or with `/realm feather`.
-The item type, launch strength and delay are set in `config.yml` (`sky-feather:`).
+`/skyland` → Return to Island → Return to My Island. A gust of wind throws you upward, then
+carries you home a second later. Launch strength, delay and cooldown are set in `config.yml`
+(`return:` and `transit.home-cooldown`).
+
+### 6. Deleting an island
+
+`/skyland` → Delete Island, then two confirmations. Anyone standing on the island is sent to
+overworld spawn. Every block and entity in the island's area is wiped in the background
+(chunk by chunk, no lag spike), and the player can buy a new island right away.
+`prices.delete-refund-percent` controls how much of the tier price comes back (default 0).
 
 Island centres sit `islands.spacing` (2048) blocks apart, so each player's landing zone on
 the ground is their own area too.
 
 ### Admin
 
-`/realmadmin capture | preview | pieces | give <player> <tier> <biome> | tp <player> | rebuild <player> | reload`
+`/skylandadmin capture | preview | pieces | give <player> <tier> <biome> | tp <player> | rebuild <player> | reload` (alias `/sla`)
 
 Permissions: `skyrealms.admin` (op), `skyrealms.admin.bypass` (build anywhere in the sky world).
 
