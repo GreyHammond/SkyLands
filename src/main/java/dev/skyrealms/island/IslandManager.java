@@ -15,7 +15,6 @@ public final class IslandManager {
     private final int spacing;
     private final Map<UUID, Island> byOwner = new HashMap<>();
     private final Map<Long, Island> byCell = new HashMap<>();
-    private final Map<UUID, Island> byMember = new HashMap<>();
     private int nextIndex = 1;
 
     public IslandManager(File file, int spacing, Logger log) {
@@ -26,10 +25,12 @@ public final class IslandManager {
 
     public Island ofOwner(UUID owner) { return byOwner.get(owner); }
 
-    /** The island a player owns, or failing that, one they're a member of. */
-    public Island of(UUID player) {
-        Island i = byOwner.get(player);
-        return i != null ? i : byMember.get(player);
+    /** The island a player owns (same as ofOwner; friends don't share ownership). */
+    public Island of(UUID player) { return byOwner.get(player); }
+
+    /** Islands where this player is a friend. */
+    public List<Island> friendOf(UUID player) {
+        return byOwner.values().stream().filter(i -> i.friends.contains(player)).toList();
     }
 
     public Collection<Island> all() { return byOwner.values(); }
@@ -50,21 +51,10 @@ public final class IslandManager {
         return island;
     }
 
-    public void addMember(Island island, UUID member) {
-        island.members.add(member);
-        byMember.put(member, island);
-    }
-
-    public void removeMember(Island island, UUID member) {
-        island.members.remove(member);
-        byMember.remove(member, island);
-    }
-
     private void register(Island island) {
         byOwner.put(island.owner, island);
         int[] cell = spiral(island.index);
         byCell.put(key(cell[0], cell[1]), island);
-        for (UUID m : island.members) byMember.put(m, island);
     }
 
     private static long key(int gx, int gz) { return ((long) gx << 32) | (gz & 0xffffffffL); }
@@ -99,7 +89,11 @@ public final class IslandManager {
                 Tier tier = Tier.parse(s.getString("tier", "SMALL"));
                 Island i = new Island(owner, s.getInt("index"), s.getInt("center-x"), s.getInt("center-z"),
                         tier == null ? Tier.SMALL : tier);
-                for (String m : s.getStringList("members")) i.members.add(UUID.fromString(m));
+                for (String m : s.getStringList("friends")) i.friends.add(UUID.fromString(m));
+                for (String m : s.getStringList("members")) i.friends.add(UUID.fromString(m)); // v0.1 name
+                loadFlags(s, "flags.visitors", i, Role.VISITOR);
+                loadFlags(s, "flags.friends", i, Role.FRIEND);
+                loadFlags(s, "flags.island", i, null);
                 i.biomes.addAll(s.getStringList("biomes"));
                 for (Map<?, ?> p : s.getMapList("pieces")) i.pieces.add(PiecePlacement.deserialize(p));
                 List<Double> home = s.getDoubleList("home");
@@ -113,6 +107,15 @@ public final class IslandManager {
         log.info("Loaded " + byOwner.size() + " islands.");
     }
 
+    private static void loadFlags(ConfigurationSection s, String path, Island i, Role role) {
+        if (!s.isList(path)) return; // keep defaults
+        i.flags(role).clear();
+        for (String f : s.getStringList(path)) {
+            Flag flag = Flag.parse(f);
+            if (flag != null) i.flags(role).add(flag);
+        }
+    }
+
     public void save() {
         YamlConfiguration yml = new YamlConfiguration();
         yml.set("next-index", nextIndex);
@@ -122,7 +125,10 @@ public final class IslandManager {
             yml.set(p + "center-x", i.centerX);
             yml.set(p + "center-z", i.centerZ);
             yml.set(p + "tier", i.tier.name());
-            yml.set(p + "members", i.members.stream().map(UUID::toString).toList());
+            yml.set(p + "friends", i.friends.stream().map(UUID::toString).toList());
+            yml.set(p + "flags.visitors", i.flags(Role.VISITOR).stream().map(Enum::name).toList());
+            yml.set(p + "flags.friends", i.flags(Role.FRIEND).stream().map(Enum::name).toList());
+            yml.set(p + "flags.island", i.flags(null).stream().map(Enum::name).toList());
             yml.set(p + "biomes", new ArrayList<>(i.biomes));
             yml.set(p + "pieces", i.pieces.stream().map(PiecePlacement::serialize).toList());
             if (i.home != null) yml.set(p + "home", Arrays.stream(i.home).boxed().toList());

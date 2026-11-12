@@ -6,6 +6,8 @@ import dev.skyrealms.island.IslandGrower;
 import dev.skyrealms.island.IslandManager;
 import dev.skyrealms.island.ProtectionListener;
 import dev.skyrealms.island.Tier;
+import dev.skyrealms.menu.MenuListener;
+import dev.skyrealms.menu.Menus;
 import dev.skyrealms.piece.PasteQueue;
 import dev.skyrealms.piece.PieceLibrary;
 import dev.skyrealms.transit.FallTransit;
@@ -27,6 +29,9 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private IslandGrower grower;
     private Money money;
     private int baseY;
+    private RealmService service;
+    private Menus menus;
+    private SkyFeather feather;
 
     @Override
     public void onEnable() {
@@ -68,7 +73,13 @@ public final class SkyRealmsPlugin extends JavaPlugin {
             getLogger().info(money.enabled() ? "Hooked into Vault economy." : "No Vault economy found - purchases are free.");
         });
 
+        service = new RealmService(this);
+        menus = new Menus(this, service);
+        feather = new SkyFeather(this);
+
         var pm = getServer().getPluginManager();
+        pm.registerEvents(new MenuListener(), this);
+        pm.registerEvents(feather, this);
         pm.registerEvents(new FallTransit(this, skyName, overName, cfg.getConfigurationSection("transit")), this);
         pm.registerEvents(new ProtectionListener(islands, skyName), this);
 
@@ -99,4 +110,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public IslandGrower grower() { return grower; }
     public Money money() { return money; }
     public int baseY() { return baseY; }
+    public RealmService service() { return service; }
+    public Menus menus() { return menus; }
+    public SkyFeather feather() { return feather; }
 }
