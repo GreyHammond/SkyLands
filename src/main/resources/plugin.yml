@@ -4,14 +4,6 @@ main: dev.skyrealms.SkyRealmsPlugin
 api-version: '26.3'
 description: Buyable floating islands that grow outward, with a fall-to-overworld transit.
 softdepend: [Vault, Multiverse-Core]
-commands:
-  skyland:
-    description: Open the Skyland menu.
-    aliases: [sl, realm]
-  skylandadmin:
-    description: Skyland admin tools.
-    aliases: [sla, realmadmin]
-    permission: skyrealms.admin
 permissions:
   skyrealms.use:
     default: true

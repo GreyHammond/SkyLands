@@ -1,7 +1,7 @@
 package dev.skyrealms;
 
-import dev.skyrealms.command.AdminCommand;
-import dev.skyrealms.command.RealmCommand;
+import dev.skyrealms.command.SkylandCommands;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import dev.skyrealms.island.IslandGrower;
 import dev.skyrealms.island.IslandManager;
 import dev.skyrealms.island.ProtectionListener;
@@ -82,12 +82,8 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         pm.registerEvents(new FallTransit(this, skyName, overName, cfg.getConfigurationSection("transit")), this);
         pm.registerEvents(new ProtectionListener(islands, skyName), this);
 
-        RealmCommand realm = new RealmCommand(this);
-        getCommand("skyland").setExecutor(realm);
-        getCommand("skyland").setTabCompleter(realm);
-        AdminCommand admin = new AdminCommand(this);
-        getCommand("skylandadmin").setExecutor(admin);
-        getCommand("skylandadmin").setTabCompleter(admin);
+        SkylandCommands commands = new SkylandCommands(this);
+        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> commands.register(event.registrar()));
 
         Bukkit.getScheduler().runTaskTimer(this, islands::save, 6000L, 6000L);
     }

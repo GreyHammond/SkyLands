@@ -244,7 +244,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 <header class="hero">
   <div class="wrap">
     <div>
-      <span class="tag pixel">v0.3.0 · Paper 26.3 · Java + Bedrock</span>
+      <span class="tag pixel">v0.3.1 · Paper 26.3 · Java + Bedrock</span>
       <h1>Your own island <em>in the sky.</em></h1>
       <p class="lede">Buy a floating island, grow it biome by biome, and jump off the edge to fall back to the world below.</p>
       <div class="ctas">
@@ -422,18 +422,21 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <div class="grid g2 steps">
       <div class="card step"><h3>Install</h3><p>Drop <code>skylands.jar</code> into <code>plugins/</code>. Optional: Vault plus an economy plugin. Without one, islands are free, which is handy for testing.</p></div>
       <div class="card step"><h3>Start the server</h3><p>An empty sky world, <code>skyrealms_sky</code>, is created automatically. Multiverse is optional.</p></div>
-      <div class="card step"><h3>Capture biomes</h3><p>Stand in a biome and run <code>/skylandadmin capture cherry_grove 16</code>. Grab 4–5 spots per biome for variety.</p></div>
+      <div class="card step"><h3>Capture biomes</h3><p>Stand in a biome and run <code>/skylandadmin capture cherry_grove medium</code>. Sizes are small, medium, large and huge. Grab 4–5 spots per biome for variety.</p></div>
       <div class="card step"><h3>Let players in</h3><p>Players type <code>/skyland</code> and buy their first island.</p></div>
     </div>
 
     <h3 style="margin-top:40px">Admin commands</h3>
-<pre><code>/skylandadmin preview &lt;radius&gt;                 show the capture sphere
-/skylandadmin capture &lt;biome&gt; &lt;radius&gt; [name]  save terrain as a piece
+<pre><code>/skylandadmin preview [size]                   show the capture sphere
+/skylandadmin capture &lt;biome&gt; [size] [name]    save terrain as a piece
+                  size = small | medium | large | huge
 /skylandadmin pieces                           list biomes and variants
 /skylandadmin give &lt;player&gt; &lt;size&gt; &lt;biome&gt;     free island
 /skylandadmin tp &lt;player&gt;                      go to an island
 /skylandadmin rebuild &lt;player&gt;                 re-paste an island
-/skylandadmin reload                           reload piece files</code></pre>
+/skylandadmin reload                           reload piece files
+
+Every argument has Tab completion: sizes, tiers, biomes and player names.</code></pre>
 
     <h3 style="margin-top:28px">Build from source</h3>
 <pre><code>./gradlew build      # requires JDK 25; jar lands in build/libs/skylands.jar</code></pre>

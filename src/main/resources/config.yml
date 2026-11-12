@@ -45,6 +45,14 @@ prices:
     cherry_grove: 25000
     mushroom_fields: 50000
 
+# Sphere sizes for /skylandadmin capture and preview (radius in blocks).
+# A Small island is 32 wide, so its first piece must be "medium" or smaller.
+capture-sizes:
+  small: 10     # 21 blocks wide
+  medium: 14    # 29 blocks wide
+  large: 20     # 41 blocks wide
+  huge: 28      # 57 blocks wide
+
 # Icons shown in the chest menus, per biome folder. Unlisted biomes get a sensible guess.
 biome-icons:
   cherry_grove: CHERRY_SAPLING

@@ -10,7 +10,7 @@ jump off the edge and you drop out of the sky, landing somewhere below your isla
 Everything a player does happens in one chest menu, `/skyland`, so it works the same for
 Java players and Bedrock players joining through **Geyser + Floodgate**.
 
-> **Download:** [`docs/skylands.jar`](docs/skylands.jar) (v0.3.0) · Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
+> **Download:** [`docs/skylands.jar`](docs/skylands.jar) (v0.3.1) · Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
 
 ---
 
@@ -50,16 +50,20 @@ Java players and Bedrock players joining through **Geyser + Floodgate**.
 Islands are built from *pieces*: spheres of real terrain.
 
 1. Stand in the middle of a nice spot in a biome, for example a cherry grove.
-2. `/skylandadmin preview 16` shows the sphere outline with particles.
-3. `/skylandadmin capture cherry_grove 16` saves it to
+2. `/skylandadmin preview medium` shows the sphere outline with particles.
+3. `/skylandadmin capture cherry_grove medium` saves it to
    `plugins/SkyRealms/pieces/cherry_grove/cherry_grove_1.skyp`.
 4. Capture 4–5 spots per biome. Each one becomes a variant, picked at random and rotated
    so repeats don't look copied.
 
 Every folder with at least one piece becomes a biome players can choose.
 
-Tips: radius 12–16 works well. A Small island is 32 wide, so its first piece needs
-radius ≤ 16. Air isn't saved, so pieces merge cleanly when they overlap. Water and lava on
+Sizes: `small` (21 blocks wide), `medium` (29, the default), `large` (41), `huge` (57).
+You can also type an exact radius from 4 to 48. A Small island is 32 wide, so its first
+piece needs to be `medium` or smaller. Sizes can be changed under `capture-sizes` in the config.
+
+Every command argument has **Tab completion**: press Tab to see and cycle through sizes,
+island tiers, biome names (including the one you're standing in) and player names. Air isn't saved, so pieces merge cleanly when they overlap. Water and lava on
 the outer edge of the sphere are skipped so they don't pour off the island forever.
 
 ---
@@ -151,8 +155,8 @@ their own neighbourhood too.
 
 | Command | What it does |
 |---|---|
-| `capture <biome> <radius> [name]` | Save the sphere of terrain around you as a piece |
-| `preview <radius>` | Show the capture sphere outline |
+| `capture <biome> [small\|medium\|large\|huge] [name]` | Save the sphere of terrain around you as a piece |
+| `preview [small\|medium\|large\|huge]` | Show the capture sphere outline |
 | `pieces` | List biomes and their variants |
 | `give <player> <size> <biome>` | Create an island for free |
 | `tp <player>` | Teleport to someone's island |
@@ -170,6 +174,7 @@ their own neighbourhood too.
 | Section | What it controls |
 |---|---|
 | `worlds` | Sky world name and the overworld players fall into |
+| `capture-sizes` | Radius of the small / medium / large / huge capture spheres |
 | `islands` | Island spacing, paste height, paste speed (blocks per tick) |
 | `tiers` | Footprint, price, starting and max pieces for each size |
 | `prices` | Grow price, biome unlock prices (per biome), refund on delete |
