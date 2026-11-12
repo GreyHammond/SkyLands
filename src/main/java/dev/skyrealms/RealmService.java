@@ -60,16 +60,11 @@ public final class RealmService {
         if (next == null) { Msg.error(p, "You're already Continental. There's nowhere bigger."); return false; }
         double cost = upgradeCost(i);
         if (!plugin.money().charge(p, cost)) { Msg.error(p, "Upgrading to " + next.pretty() + " costs <white>" + money(cost)); return false; }
-        int bonus = Math.max(0, next.startPieces - i.tier.startPieces);
+        // Room only: the border and piece cap grow, and players add land with Grow Land.
         i.tier = next;
-        List<String> owned = new ArrayList<>(i.biomes);
-        int grown = 0;
-        for (int n = 0; n < bonus; n++) {
-            if (plugin.grower().grow(plugin.skyWorld(), i, owned.get(rng.nextInt(owned.size())), null) != null) grown++;
-        }
         plugin.islands().save();
-        Msg.send(p, "Your island is now <white>" + next.pretty() + "</white> (" + next.footprint + "x" + next.footprint + ")."
-                + (grown > 0 ? " " + grown + " new pieces of land are rising." : ""));
+        Msg.send(p, "Your island is now <white>" + next.pretty() + "</white> (" + next.footprint + "x" + next.footprint
+                + "), with room for <white>" + next.maxPieces + "</white> pieces of land. Use <white>Grow Land</white> to fill it.");
         return true;
     }
 

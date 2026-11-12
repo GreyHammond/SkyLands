@@ -10,7 +10,7 @@ jump off the edge and you drop out of the sky, landing somewhere below your isla
 Everything a player does happens in one chest menu, `/skyland`, so it works the same for
 Java players and Bedrock players joining through **Geyser + Floodgate**.
 
-> **Download:** [`docs/skylands.jar`](docs/skylands.jar) (v0.4.2) · Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
+> **Download:** [`docs/skylands.jar`](docs/skylands.jar) (v0.4.3) · Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
 
 ---
 
@@ -124,7 +124,8 @@ Buying: **Buy an Island → size → biome → confirm**.
 | Extra Large | 256 × 256 | 250,000 | 20 | 90 |
 | Continental | 512 × 512 | 1,000,000 | 50 | 300 |
 
-Upgrading costs the difference between the two tier prices and adds bonus land. Growing
+Upgrading costs the difference between the two tier prices. It only adds room (a bigger
+border and a higher piece cap): players fill it themselves with Grow Land. Growing
 costs 1,000 per piece. Unlocking a new biome costs 10,000 by default; you can price each
 biome separately in the config.
 

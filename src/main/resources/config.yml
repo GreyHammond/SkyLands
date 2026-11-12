@@ -29,7 +29,8 @@ terrain:
 
 # footprint  = width/length of the buildable square, in blocks
 # price      = cost to buy at this tier (upgrades cost the difference)
-# start-pieces = how many biome pieces you get when buying outright
+# start-pieces = how many biome pieces you get when buying outright (upgrading adds none:
+#                upgrades only raise the border and max-pieces)
 # max-pieces = how far the island can grow at this tier
 tiers:
   SMALL:       { footprint: 32,  price: 5000,    start-pieces: 1,  max-pieces: 3 }
