@@ -10,7 +10,7 @@ jump off the edge and you drop out of the sky, landing somewhere below your isla
 Everything a player does happens in one chest menu, `/skyland`, so it works the same for
 Java players and Bedrock players joining through **Geyser + Floodgate**.
 
-> Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
+> **Download:** [`docs/skylands.jar`](docs/skylands.jar) (v0.3.0) · Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
 
 ---
 
@@ -39,7 +39,7 @@ Java players and Bedrock players joining through **Geyser + Floodgate**.
 ## Quick start
 
 1. Install **Paper 26.3** (Java 25).
-2. Put `skylands.jar` (from the [Releases](../../releases) page) in `plugins/`. Optional: **Vault** plus an economy plugin
+2. Download [`docs/skylands.jar`](docs/skylands.jar) (or grab it from the Releases page) and put it in `plugins/`. Optional: **Vault** plus an economy plugin
    (EssentialsX, etc.).
 3. Start the server. The plugin creates an empty void world called `skyrealms_sky`.
 4. Capture some biome pieces (next section).
