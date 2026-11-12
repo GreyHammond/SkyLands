@@ -10,7 +10,7 @@ jump off the edge and you drop out of the sky, landing somewhere below your isla
 Everything a player does happens in one chest menu, `/skyland`, so it works the same for
 Java players and Bedrock players joining through **Geyser + Floodgate**.
 
-> **Download:** [`docs/skylands.jar`](docs/skylands.jar) (v0.8.0) · Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
+> **Download:** [`docs/skylands.jar`](docs/skylands.jar) (v0.9.0) · Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
 
 ---
 
@@ -31,8 +31,8 @@ Java players and Bedrock players joining through **Geyser + Floodgate**.
   carries you home.
 - **Owner-controlled protection**: separate settings for Visitors and Friends: doors,
   buttons, chests, furnaces, workstations, harvesting, farmland trampling, animals and more.
-- **Bedrock-friendly GUI**: single-tap chest menus, no typing, and a confirm screen before
-  anything costs money.
+- **Native Bedrock forms**: with Floodgate installed, Bedrock players get Bedrock's own menus
+  (big buttons, toggles, text boxes) while Java players keep chest menus. Same features, same rules.
 - **Island levels 1–100**: islands earn XP for growing, building, farming and visitors.
   Levels unlock biomes and titles, and the best islands show up in **Top Islands**.
 - **Cosmetics and themes**: name your island, add ambient particles, light up your border,
@@ -343,6 +343,27 @@ can use parts you haven't unlocked on their own yet.
 
 All cosmetic unlock levels are in `levels.yml` (`island-name-level`, `cosmetic-levels`).
 
+## Bedrock players (Geyser + Floodgate)
+
+If **Floodgate** is installed, Bedrock players automatically get **native Bedrock forms** instead
+of chest menus. Java players keep the chest menus. Both run the same actions, so prices, levels,
+permissions and limits are identical.
+
+| Screen | Bedrock form |
+|---|---|
+| Menus and lists (main menu, Manage, biomes, islands, players) | Big full-width buttons; locked options listed underneath |
+| Anything that costs money, delete, transfer | A yes/no pop-up (two for delete and transfer) |
+| Protection for Visitors, Friends, Island settings | **One screen of on/off toggles**, plus a quick-set dropdown (Allow all / Block all / Defaults) |
+| Rename Island | **A real text box** (no typing in chat) |
+
+Without Floodgate, everyone gets chest menus as before. Settings (`config.yml`):
+
+```yaml
+bedrock:
+  forms: true          # turn native forms off to give Bedrock players chest menus
+  button-icons: true   # small vanilla icons on form buttons
+```
+
 ## Island levels
 
 Islands earn XP and level up from **1 to 100**. Owner and co-owner actions count.
@@ -417,6 +438,5 @@ Refunds give items back.
 
 ## Roadmap
 
-- Native Bedrock forms through the Floodgate API (chest menus already work)
 - More built-in biomes (snowy taiga, savanna, mushroom fields, ...)
 - Island leaderboards and island levels

@@ -3,15 +3,18 @@ plugins {
 }
 
 group = "dev.skyrealms"
-version = "0.8.0"
+version = "0.9.0"
 
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://repo.opencollab.dev/main/")
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:26.3.build.249-stable")
+    // Optional at runtime: only used when Floodgate is installed (native Bedrock forms).
+    compileOnly("org.geysermc.floodgate:api:2.2.5-SNAPSHOT")
 }
 
 java {

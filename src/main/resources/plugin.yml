@@ -3,7 +3,7 @@ version: '${version}'
 main: dev.skyrealms.SkyRealmsPlugin
 api-version: '26.3'
 description: Buyable floating islands that grow outward, with a fall-to-overworld transit.
-softdepend: [Vault, Multiverse-Core, LuckPerms]
+softdepend: [Vault, Multiverse-Core, LuckPerms, floodgate]
 permissions:
   skyrealms.use:
     description: Use /skyland (buy, manage, visit and return to islands).

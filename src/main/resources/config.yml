@@ -94,6 +94,13 @@ economy:
     singular: ""
     plural: ""
 
+# Bedrock players (via Geyser + Floodgate) get native Bedrock forms instead of chest menus.
+# Needs Floodgate installed; without it everyone uses chest menus.
+bedrock:
+  forms: true
+  # Show small vanilla icons on form buttons.
+  button-icons: true
+
 # Cosmetics (unlock levels are in levels.yml under cosmetic-levels).
 cosmetics:
   name-max-length: 24

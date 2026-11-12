@@ -38,6 +38,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private dev.skyrealms.level.XpService xp;
     private dev.skyrealms.cosmetic.CosmeticService cosmetics;
     private dev.skyrealms.cosmetic.NamePrompt namePrompt;
+    private dev.skyrealms.bedrock.BedrockUi bedrock;
 
     @Override
     public void onEnable() {
@@ -98,6 +99,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         namePrompt = new dev.skyrealms.cosmetic.NamePrompt(this);
         pm.registerEvents(namePrompt, this);
         Bukkit.getScheduler().runTaskTimer(this, new dev.skyrealms.cosmetic.CosmeticEffects(this), 40L, 10L);
+        bedrock = new dev.skyrealms.bedrock.BedrockUi(this);
         // Islands from before levels existed get XP for the land and biomes they already have.
         Bukkit.getScheduler().runTask(this, () -> {
             for (var i : islands.all()) xp.backfill(i);
@@ -138,4 +140,5 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public dev.skyrealms.level.XpService xp() { return xp; }
     public dev.skyrealms.cosmetic.CosmeticService cosmetics() { return cosmetics; }
     public dev.skyrealms.cosmetic.NamePrompt namePrompt() { return namePrompt; }
+    public dev.skyrealms.bedrock.BedrockUi bedrock() { return bedrock; }
 }

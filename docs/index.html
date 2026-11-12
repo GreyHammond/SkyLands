@@ -274,7 +274,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 <header class="hero">
   <div class="wrap">
     <div>
-      <span class="tag pixel">v0.8.0 · Paper 26.3 · Java + Bedrock</span>
+      <span class="tag pixel">v0.9.0 · Paper 26.3 · Java + Bedrock</span>
       <h1>Your own island <em>in the sky.</em></h1>
       <p class="lede">Buy a floating island, grow it biome by biome, and jump off the edge to fall back to the world below.</p>
       <div class="ctas">
@@ -322,7 +322,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
       <div class="card">
         <div class="icon" aria-hidden="true"><i style="background:#8a5a1f"></i><i style="background:#b7791f"></i><i style="background:#b7791f"></i><i style="background:#8a5a1f"></i><i style="background:#b7791f"></i><i style="background:#b7791f"></i><i style="background:#b7791f"></i><i style="background:#b7791f"></i><i style="background:#8a5a1f"></i><i style="background:var(--flower)"></i><i style="background:var(--flower)"></i><i style="background:#8a5a1f"></i><i style="background:#b7791f"></i><i style="background:#b7791f"></i><i style="background:#b7791f"></i><i style="background:#b7791f"></i></div>
         <h3>One menu for everything</h3>
-        <p>Type <code>/skyland</code>. Single-tap chest menus work the same on Java and on Bedrock through Geyser.</p>
+        <p>Type <code>/skyland</code>. Java players get chest menus; Bedrock players get native Bedrock forms through Floodgate.</p>
       </div>
       <div class="card">
         <div class="icon" aria-hidden="true"><i style="background:var(--leaf)"></i><i style="background:transparent"></i><i style="background:var(--leaf)"></i><i style="background:transparent"></i><i style="background:var(--grass)"></i><i style="background:var(--grass)"></i><i style="background:var(--grass)"></i><i style="background:var(--grass)"></i><i style="background:var(--dirt)"></i><i style="background:var(--dirt2)"></i><i style="background:var(--dirt)"></i><i style="background:var(--dirt)"></i><i style="background:var(--stone)"></i><i style="background:var(--stone2)"></i><i style="background:var(--stone)"></i><i style="background:var(--stone)"></i></div>
@@ -392,7 +392,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
   <div class="wrap">
     <div class="eyebrow pixel">The menu</div>
     <h2>Everything in <code>/skyland</code></h2>
-    <p class="sub">Three buttons at the top. Everything else lives one tap deeper. Anything that costs money asks you to confirm first.</p>
+    <p class="sub">Three buttons at the top. Everything else lives one tap deeper. Anything that costs money asks you to confirm first. Bedrock players see the same screens as native Bedrock forms.</p>
     <div class="grid g2" style="align-items:start">
       <div>
         <div class="chest" role="img" aria-label="Diagram of the top-level Skyland chest menu with three buttons">
@@ -637,8 +637,9 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 <pre><code>./gradlew build      # requires JDK 25; jar lands in build/libs/skylands.jar</code></pre>
 
     <div class="callout" style="margin-top:24px">
-      <strong>Geyser + Floodgate:</strong> every screen uses plain single-tap chest menus with no typing,
-      so Bedrock players get the same experience as Java players. Friends are picked from a list of online players.
+      <strong>Geyser + Floodgate:</strong> Bedrock players automatically get native Bedrock forms: big buttons,
+      yes/no pop-ups, a single screen of protection toggles, and a real text box for renaming. Java players keep chest menus.
+      Same features and rules for both. Without Floodgate, everyone gets chest menus.
     </div>
   </div>
 </section>

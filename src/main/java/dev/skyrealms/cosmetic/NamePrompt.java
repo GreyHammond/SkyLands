@@ -44,10 +44,11 @@ public final class NamePrompt implements Listener {
         if (System.currentTimeMillis() - since > TIMEOUT_MS) return; // too late: treat as normal chat
         e.setCancelled(true);
         String text = PlainTextComponentSerializer.plainText().serialize(e.message()).trim();
-        Bukkit.getScheduler().runTask(plugin, () -> apply(e.getPlayer(), text));
+        Bukkit.getScheduler().runTask(plugin, () -> rename(e.getPlayer(), text));
     }
 
-    private void apply(Player p, String text) {
+    /** Rename the player's island. "cancel" keeps it, "reset" restores the default. Used by chat and by the Bedrock text box. */
+    public void rename(Player p, String text) {
         Island i = plugin.service().owned(p);
         if (i == null) return;
         if (text.equalsIgnoreCase("cancel")) { Msg.send(p, "Name unchanged."); return; }

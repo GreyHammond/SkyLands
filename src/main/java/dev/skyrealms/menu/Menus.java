@@ -33,6 +33,7 @@ public final class Menus {
 
     /** Top level: Return/Buy, Manage, Delete. */
     public void main(Player p) {
+        if (plugin.bedrock().handles(p)) { plugin.bedrock().openMain(p); return; }   // native Bedrock forms
         Island i = plugin.islands().of(p.getUniqueId());
         Menu m = new Menu(3, "<dark_aqua>Skyland");
         if (i == null) {
