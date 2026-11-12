@@ -6,12 +6,17 @@ import org.bukkit.World;
 import java.util.*;
 
 public final class Island {
-    public final UUID owner;
+    /** Changes on transfer; always go through IslandManager.transfer so lookups stay in sync. */
+    public UUID owner;
     public final int index;        // position on the sky-world spiral grid
     public final int centerX, centerZ;
     public Tier tier;
+    /** Co-owners can manage the island (but not delete or transfer it). A player co-owns at most one island. */
+    public final Set<UUID> coOwners = new HashSet<>();
     /** Friends get the FRIEND permission set. A player can be a friend on many islands. */
     public final Set<UUID> friends = new HashSet<>();
+    /** Admin-set: never auto-pruned. */
+    public boolean pruneExempt;
     public final LinkedHashSet<String> biomes = new LinkedHashSet<>();
     public final List<PiecePlacement> pieces = new ArrayList<>();
     /** Home offset from the centre; null means "top of the centre column". */
@@ -38,13 +43,21 @@ public final class Island {
 
     public Role roleOf(UUID player) {
         if (owner.equals(player)) return Role.OWNER;
+        if (coOwners.contains(player)) return Role.COOWNER;
         return friends.contains(player) ? Role.FRIEND : Role.VISITOR;
+    }
+
+    /** Owner plus co-owners. */
+    public Set<UUID> managers() {
+        Set<UUID> out = new HashSet<>(coOwners);
+        out.add(owner);
+        return out;
     }
 
     /** Can this player do a ROLE-scoped action here? */
     public boolean allows(UUID player, Flag flag) {
         return switch (roleOf(player)) {
-            case OWNER -> true;
+            case OWNER, COOWNER -> true;
             case FRIEND -> friendFlags.contains(flag);
             case VISITOR -> visitorFlags.contains(flag);
         };

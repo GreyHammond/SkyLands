@@ -38,14 +38,28 @@ public final class Menus {
         if (i == null) {
             m.button(11, glow(item(Material.GRASS_BLOCK, "<green>Buy an Island", "<gray>Pick a size and a biome,",
                     "<gray>or visit other players' islands.")), this::buyTier);
-            m.button(13, item(Material.GRAY_DYE, "<gray>Manage Island", "<dark_gray>You don't have an island yet."), null);
+            var archived = plugin.archiver().info(p.getUniqueId());
+            if (archived != null) {
+                m.button(13, glow(item(Material.RECOVERY_COMPASS, "<aqua>Restore My Island",
+                        "<gray>Your island was archived while", "<gray>you were away. Bring it back",
+                        "<gray>exactly as you left it, for free.", "<yellow>" + archived.daysLeft() + " days left")),
+                        pl -> confirm(pl, "Restore your archived island?", 0,
+                                yes -> { yes.closeInventory(); svc.restoreOwn(yes); }, this::main));
+            } else {
+                m.button(13, item(Material.GRAY_DYE, "<gray>Manage Island", "<dark_gray>You don't have an island yet."), null);
+            }
             m.button(15, item(Material.GRAY_DYE, "<gray>Delete Island", "<dark_gray>You don't have an island yet."), null);
         } else {
+            boolean owner = i.owner.equals(p.getUniqueId());
             m.button(11, glow(item(Material.ELYTRA, "<green>Return to Island", "<gray>Ride the wind home,",
                     "<gray>or visit other islands.")), this::travel);
             m.button(13, item(Material.WRITABLE_BOOK, "<yellow>Manage Island", "<gray>Grow, upgrade, biomes,",
-                    "<gray>protection and friends."), this::manage);
-            m.button(15, item(Material.TNT, "<red>Delete Island", "<gray>Remove your island for good."), this::delete);
+                    "<gray>protection, friends" + (owner ? ", co-owners." : "."),
+                    owner ? "" : "<aqua>You co-own " + nameOf(i.owner) + "'s island"), this::manage);
+            if (owner) m.button(15, item(Material.TNT, "<red>Delete Island", "<gray>Remove your island for good."), this::delete);
+            else m.button(15, item(Material.OAK_DOOR, "<red>Leave Island", "<gray>Stop co-owning " + nameOf(i.owner) + "'s island."),
+                    pl -> confirm(pl, "Stop co-owning " + nameOf(i.owner) + "'s island?", 0,
+                            yes -> { yes.closeInventory(); svc.leaveIsland(yes); }, this::main));
         }
         m.fill().open(p);
     }
@@ -85,14 +99,21 @@ public final class Menus {
         m.button(16, item(Material.LIGHT_WEIGHTED_PRESSURE_PLATE, "<green>Set Home Here",
                 "<gray>Where Return to Island drops you.", "<gray>Stand on your island first."),
                 pl -> { pl.closeInventory(); svc.setHome(pl); });
+        boolean owner = i.owner.equals(p.getUniqueId());
+        m.button(20, owner ? item(Material.GOLDEN_HELMET, "<gold>Co-owners", "<gray>Players who can manage the",
+                        "<gray>island with you. Co-owners: <white>" + i.coOwners.size())
+                : item(Material.GRAY_DYE, "<gray>Co-owners", "<dark_gray>Only the owner can change this."), owner ? this::coOwners : null);
         m.button(22, info(i), null);
+        m.button(24, owner ? item(Material.NAME_TAG, "<gold>Transfer Island", "<gray>Give the island to someone else.",
+                        "<red>You lose all access to it.")
+                : item(Material.GRAY_DYE, "<gray>Transfer Island", "<dark_gray>Only the owner can do this."), owner ? this::transfer : null);
         m.button(27, back(), this::main);
         m.fill().open(p);
     }
 
     /** Two confirmations before anything is destroyed. */
     public void delete(Player p) {
-        Island i = svc.owned(p);
+        Island i = svc.ownerOnly(p);
         if (i == null) { main(p); return; }
         double refund = svc.deleteRefund(i);
         Menu m = new Menu(3, "<dark_red>Delete your island?");
@@ -105,6 +126,7 @@ public final class Menus {
     }
 
     private void deleteFinal(Player p) {
+        if (svc.ownerOnly(p) == null) return;
         Menu m = new Menu(3, "<dark_red>This can't be undone!");
         m.button(11, item(Material.LIME_CONCRETE, "<green>Cancel", "<gray>Keep my island."), this::main);
         m.button(13, item(Material.BARRIER, "<red>Last chance", "<gray>Are you really sure?"), null);
@@ -119,6 +141,7 @@ public final class Menus {
                 "<gray>Land pieces: <white>" + i.pieces.size() + "/" + i.tier.maxPieces,
                 "<gray>Biomes: <green>" + String.join(", ", i.biomes),
                 "<gray>Location: <white>" + i.centerX + ", " + i.centerZ,
+                "<gray>Owner: <white>" + nameOf(i.owner) + (i.coOwners.isEmpty() ? "" : " <gray>+ " + i.coOwners.size() + " co-owner(s)"),
                 "<dark_gray>Jump off the edge to fall to the overworld.");
     }
 
@@ -280,17 +303,85 @@ public final class Menus {
     public void pickPlayer(Player p, int page) {
         Island i = svc.owned(p);
         if (i == null) return;
+        pickOnline(p, page, "<dark_aqua>Add a friend", "<yellow>Tap to add as a friend",
+                o -> !i.roleOf(o.getUniqueId()).manages() && !i.friends.contains(o.getUniqueId()),
+                (pl, o) -> { svc.addFriend(pl, o); friends(pl); }, this::friends);
+    }
+
+    private void pickOnline(Player p, int page, String title, String hint, java.util.function.Predicate<Player> filter,
+                            java.util.function.BiConsumer<Player, Player> onPick, Consumer<Player> back) {
         List<Player> online = Bukkit.getOnlinePlayers().stream()
-                .filter(o -> !o.equals(p) && !i.friends.contains(o.getUniqueId()))
-                .sorted(Comparator.comparing(Player::getName, String.CASE_INSENSITIVE_ORDER))
-                .map(o -> (Player) o).toList();
-        Menu m = new Menu(6, "<dark_aqua>Add a friend");
-        paged(m, online, page, o -> head(o, "<green>" + o.getName(), "<yellow>Tap to add as a friend"),
-                (pl, o) -> { svc.addFriend(pl, o); friends(pl); }, pg -> pickPlayer(p, pg));
-        if (online.isEmpty()) m.button(22, item(Material.BARRIER, "<red>No one else is online"), null);
-        m.button(45, back(), this::friends);
+                .filter(o -> !o.equals(p)).map(o -> (Player) o).filter(filter)
+                .sorted(Comparator.comparing(Player::getName, String.CASE_INSENSITIVE_ORDER)).toList();
+        Menu m = new Menu(6, title);
+        paged(m, online, page, o -> head(o, "<green>" + o.getName(), hint), onPick,
+                pg -> pickOnline(p, pg, title, hint, filter, onPick, back));
+        if (online.isEmpty()) m.button(22, item(Material.BARRIER, "<red>No one else to pick", "<gray>They need to be online."), null);
+        m.button(45, back(), back);
         m.fill().open(p);
     }
+
+    // ---- co-owners & transfer --------------------------------------------------------------
+
+    public void coOwners(Player p) {
+        Island i = svc.ownerOnly(p);
+        if (i == null) return;
+        Menu m = new Menu(6, "<dark_aqua>Co-owners");
+        int slot = 0;
+        for (UUID id : i.coOwners) {
+            if (slot >= 45) break;
+            OfflinePlayer c = Bukkit.getOfflinePlayer(id);
+            String name = Objects.toString(c.getName(), "Unknown");
+            m.button(slot++, head(c, "<gold>" + name, c.isOnline() ? "<green>Online" : "<gray>Offline", "<yellow>Tap to remove"),
+                    pl -> confirm(pl, "Remove " + name + " as a co-owner?", 0,
+                            yes -> { svc.removeCoOwner(yes, c); coOwners(yes); }, this::coOwners));
+        }
+        if (i.coOwners.isEmpty()) m.button(22, item(Material.GOLDEN_HELMET, "<gray>No co-owners yet",
+                "<gray>Co-owners can grow, unlock, upgrade,", "<gray>and change protection and friends.",
+                "<gray>Only you can delete or transfer."), null);
+        m.button(45, back(), this::manage);
+        m.button(49, glow(item(Material.EMERALD, "<green>Add a co-owner", "<gray>Pick from online players.",
+                "<gray>They can't already own an island.")),
+                pl -> pickOnline(pl, 0, "<dark_aqua>Add a co-owner", "<yellow>Tap to make co-owner",
+                        o -> plugin.islands().of(o.getUniqueId()) == null,
+                        (who, o) -> confirm(who, "Make " + o.getName() + " a co-owner?", 0,
+                                yes -> { svc.addCoOwner(yes, o); coOwners(yes); }, this::coOwners),
+                        this::coOwners));
+        m.fill().open(p);
+    }
+
+    /** Pick who gets the island: co-owners first, then anyone online without an island. */
+    public void transfer(Player p) {
+        Island i = svc.ownerOnly(p);
+        if (i == null) return;
+        Menu m = new Menu(6, "<dark_aqua>Give your island to...");
+        List<OfflinePlayer> people = new ArrayList<>();
+        for (UUID c : i.coOwners) people.add(Bukkit.getOfflinePlayer(c));
+        for (Player o : Bukkit.getOnlinePlayers()) {
+            if (o.equals(p) || i.coOwners.contains(o.getUniqueId()) || plugin.islands().of(o.getUniqueId()) != null) continue;
+            people.add(o);
+        }
+        paged(m, people, 0, o -> head(o, "<gold>" + Objects.toString(o.getName(), "?"),
+                        i.coOwners.contains(o.getUniqueId()) ? "<aqua>Co-owner" : "<gray>Online player", "<yellow>Tap to choose"),
+                (pl, o) -> transferConfirm(pl, o), pg -> transfer(p));
+        if (people.isEmpty()) m.button(22, item(Material.BARRIER, "<red>No one to give it to",
+                "<gray>Add a co-owner, or ask the player", "<gray>to come online."), null);
+        m.button(45, back(), this::manage);
+        m.fill().open(p);
+    }
+
+    private void transferConfirm(Player p, OfflinePlayer target) {
+        String name = Objects.toString(target.getName(), "them");
+        Menu m = new Menu(3, "<dark_red>Give your island away?");
+        m.button(11, item(Material.LIME_CONCRETE, "<green>Cancel", "<gray>Keep my island."), this::manage);
+        m.button(13, head(target, "<gold>" + name, "<gray>will become the owner.", "<red>You become a visitor and",
+                "<red>lose all access immediately."), null);
+        m.button(15, glow(item(Material.NAME_TAG, "<dark_red>GIVE IT TO " + name.toUpperCase(),
+                "<gray>This can't be undone.")), pl -> { pl.closeInventory(); svc.transfer(pl, target); });
+        m.fill().open(p);
+    }
+
+    private static String nameOf(UUID id) { return Objects.toString(Bukkit.getOfflinePlayer(id).getName(), "someone"); }
 
     // ---- visiting -------------------------------------------------------------------------
 

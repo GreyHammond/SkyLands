@@ -15,6 +15,7 @@ public final class IslandManager {
     private final int spacing;
     private final Map<UUID, Island> byOwner = new HashMap<>();
     private final Map<Long, Island> byCell = new HashMap<>();
+    private final Map<UUID, Island> byCoOwner = new HashMap<>();
     private int nextIndex = 1;
 
     public IslandManager(File file, int spacing, Logger log) {
@@ -25,8 +26,34 @@ public final class IslandManager {
 
     public Island ofOwner(UUID owner) { return byOwner.get(owner); }
 
-    /** The island a player owns (same as ofOwner; friends don't share ownership). */
-    public Island of(UUID player) { return byOwner.get(player); }
+    /** The island a player owns or co-owns. */
+    public Island of(UUID player) {
+        Island i = byOwner.get(player);
+        return i != null ? i : byCoOwner.get(player);
+    }
+
+    public void addCoOwner(Island island, UUID player) {
+        island.coOwners.add(player);
+        island.friends.remove(player);
+        byCoOwner.put(player, island);
+    }
+
+    public void removeCoOwner(Island island, UUID player) {
+        island.coOwners.remove(player);
+        byCoOwner.remove(player, island);
+    }
+
+    /** Hand the island to a new owner. The old owner loses all access (becomes a visitor). */
+    public void transfer(Island island, UUID newOwner) {
+        UUID old = island.owner;
+        byOwner.remove(old);
+        island.coOwners.remove(newOwner);
+        byCoOwner.remove(newOwner, island);
+        island.friends.remove(newOwner);
+        island.friends.remove(old);
+        island.owner = newOwner;
+        byOwner.put(newOwner, island);
+    }
 
     /** Islands where this player is a friend. */
     public List<Island> friendOf(UUID player) {
@@ -51,8 +78,15 @@ public final class IslandManager {
         return island;
     }
 
+    /** Put an island (e.g. one restored from an archive) back on the grid. */
+    public void restore(Island island) {
+        register(island);
+        nextIndex = Math.max(nextIndex, island.index + 1);
+    }
+
     private void register(Island island) {
         byOwner.put(island.owner, island);
+        for (UUID c : island.coOwners) byCoOwner.put(c, island);
         int[] cell = spiral(island.index);
         byCell.put(key(cell[0], cell[1]), island);
     }
@@ -60,6 +94,7 @@ public final class IslandManager {
     /** Forget an island. Its grid cell isn't reused, so a half-cleared area never gets a new owner. */
     public void remove(Island island) {
         byOwner.remove(island.owner);
+        for (UUID c : island.coOwners) byCoOwner.remove(c, island);
         int[] cell = spiral(island.index);
         byCell.remove(key(cell[0], cell[1]), island);
     }
@@ -90,21 +125,8 @@ public final class IslandManager {
         ConfigurationSection sec = yml.getConfigurationSection("islands");
         if (sec == null) return;
         for (String key : sec.getKeys(false)) {
-            ConfigurationSection s = sec.getConfigurationSection(key);
             try {
-                UUID owner = UUID.fromString(key);
-                Tier tier = Tier.parse(s.getString("tier", "SMALL"));
-                Island i = new Island(owner, s.getInt("index"), s.getInt("center-x"), s.getInt("center-z"),
-                        tier == null ? Tier.SMALL : tier);
-                for (String m : s.getStringList("friends")) i.friends.add(UUID.fromString(m));
-                for (String m : s.getStringList("members")) i.friends.add(UUID.fromString(m)); // v0.1 name
-                loadFlags(s, "flags.visitors", i, Role.VISITOR);
-                loadFlags(s, "flags.friends", i, Role.FRIEND);
-                loadFlags(s, "flags.island", i, null);
-                i.biomes.addAll(s.getStringList("biomes"));
-                for (Map<?, ?> p : s.getMapList("pieces")) i.pieces.add(PiecePlacement.deserialize(p));
-                List<Double> home = s.getDoubleList("home");
-                if (home.size() == 5) i.home = home.stream().mapToDouble(Double::doubleValue).toArray();
+                Island i = read(UUID.fromString(key), sec.getConfigurationSection(key));
                 register(i);
                 nextIndex = Math.max(nextIndex, i.index + 1);
             } catch (Exception e) {
@@ -112,6 +134,42 @@ public final class IslandManager {
             }
         }
         log.info("Loaded " + byOwner.size() + " islands.");
+    }
+
+    /** Read one island from a config section (islands.yml entry or an archive's meta file). */
+    public static Island read(UUID owner, ConfigurationSection s) {
+        Tier tier = Tier.parse(s.getString("tier", "SMALL"));
+        Island i = new Island(owner, s.getInt("index"), s.getInt("center-x"), s.getInt("center-z"),
+                tier == null ? Tier.SMALL : tier);
+        for (String m : s.getStringList("co-owners")) i.coOwners.add(UUID.fromString(m));
+        for (String m : s.getStringList("friends")) i.friends.add(UUID.fromString(m));
+        for (String m : s.getStringList("members")) i.friends.add(UUID.fromString(m)); // v0.1 name
+        loadFlags(s, "flags.visitors", i, Role.VISITOR);
+        loadFlags(s, "flags.friends", i, Role.FRIEND);
+        loadFlags(s, "flags.island", i, null);
+        i.biomes.addAll(s.getStringList("biomes"));
+        for (Map<?, ?> p : s.getMapList("pieces")) i.pieces.add(PiecePlacement.deserialize(p));
+        List<Double> home = s.getDoubleList("home");
+        if (home.size() == 5) i.home = home.stream().mapToDouble(Double::doubleValue).toArray();
+        i.pruneExempt = s.getBoolean("prune-exempt", false);
+        return i;
+    }
+
+    /** Write one island into a config section. */
+    public static void write(ConfigurationSection s, Island i) {
+        s.set("index", i.index);
+        s.set("center-x", i.centerX);
+        s.set("center-z", i.centerZ);
+        s.set("tier", i.tier.name());
+        s.set("co-owners", i.coOwners.stream().map(UUID::toString).toList());
+        s.set("friends", i.friends.stream().map(UUID::toString).toList());
+        s.set("flags.visitors", i.flags(Role.VISITOR).stream().map(Enum::name).toList());
+        s.set("flags.friends", i.flags(Role.FRIEND).stream().map(Enum::name).toList());
+        s.set("flags.island", i.flags(null).stream().map(Enum::name).toList());
+        s.set("biomes", new ArrayList<>(i.biomes));
+        s.set("pieces", i.pieces.stream().map(PiecePlacement::serialize).toList());
+        if (i.home != null) s.set("home", Arrays.stream(i.home).boxed().toList());
+        if (i.pruneExempt) s.set("prune-exempt", true);
     }
 
     private static void loadFlags(ConfigurationSection s, String path, Island i, Role role) {
@@ -126,20 +184,7 @@ public final class IslandManager {
     public void save() {
         YamlConfiguration yml = new YamlConfiguration();
         yml.set("next-index", nextIndex);
-        for (Island i : byOwner.values()) {
-            String p = "islands." + i.owner + ".";
-            yml.set(p + "index", i.index);
-            yml.set(p + "center-x", i.centerX);
-            yml.set(p + "center-z", i.centerZ);
-            yml.set(p + "tier", i.tier.name());
-            yml.set(p + "friends", i.friends.stream().map(UUID::toString).toList());
-            yml.set(p + "flags.visitors", i.flags(Role.VISITOR).stream().map(Enum::name).toList());
-            yml.set(p + "flags.friends", i.flags(Role.FRIEND).stream().map(Enum::name).toList());
-            yml.set(p + "flags.island", i.flags(null).stream().map(Enum::name).toList());
-            yml.set(p + "biomes", new ArrayList<>(i.biomes));
-            yml.set(p + "pieces", i.pieces.stream().map(PiecePlacement::serialize).toList());
-            if (i.home != null) yml.set(p + "home", Arrays.stream(i.home).boxed().toList());
-        }
+        for (Island i : byOwner.values()) write(yml.createSection("islands." + i.owner), i);
         try {
             yml.save(file);
         } catch (IOException e) {

@@ -34,6 +34,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private RealmService service;
     private Menus menus;
     private dev.skyrealms.island.ClearQueue clearer;
+    private dev.skyrealms.island.IslandArchiver archiver;
 
     @Override
     public void onEnable() {
@@ -72,10 +73,10 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         islands.load();
 
         // Vault registers its economy late, so look it up once everything has enabled.
-        money = new Money(cfg.getBoolean("economy.require-vault", false));
+        money = new Money(cfg.getConfigurationSection("economy"));
         Bukkit.getScheduler().runTask(this, () -> {
-            money = new Money(cfg.getBoolean("economy.require-vault", false));
-            getLogger().info(money.enabled() ? "Hooked into Vault economy." : "No Vault economy found - purchases are free.");
+            money = new Money(cfg.getConfigurationSection("economy"));
+            getLogger().info(money.describe());
         });
 
         service = new RealmService(this);
@@ -83,6 +84,8 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         clearer = new dev.skyrealms.island.ClearQueue(this, cfg.getInt("islands.blocks-per-tick", 20000));
 
         var pm = getServer().getPluginManager();
+        archiver = new dev.skyrealms.island.IslandArchiver(this, cfg.getConfigurationSection("prune"));
+        pm.registerEvents(archiver, this);
         pm.registerEvents(new MenuListener(), this);
         pm.registerEvents(new FallTransit(this, skyName, overName, cfg.getConfigurationSection("transit")), this);
         pm.registerEvents(new ProtectionListener(islands, skyName), this);
@@ -115,4 +118,5 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public RealmService service() { return service; }
     public Menus menus() { return menus; }
     public dev.skyrealms.island.ClearQueue clearer() { return clearer; }
+    public dev.skyrealms.island.IslandArchiver archiver() { return archiver; }
 }

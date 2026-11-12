@@ -10,7 +10,7 @@ jump off the edge and you drop out of the sky, landing somewhere below your isla
 Everything a player does happens in one chest menu, `/skyland`, so it works the same for
 Java players and Bedrock players joining through **Geyser + Floodgate**.
 
-> **Download:** [`docs/skylands.jar`](docs/skylands.jar) (v0.4.3) · Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
+> **Download:** [`docs/skylands.jar`](docs/skylands.jar) (v0.5.0) · Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
 
 ---
 
@@ -33,6 +33,12 @@ Java players and Bedrock players joining through **Geyser + Floodgate**.
   buttons, chests, furnaces, workstations, harvesting, farmland trampling, animals and more.
 - **Bedrock-friendly GUI**: single-tap chest menus, no typing, and a confirm screen before
   anything costs money.
+- **Co-owners and transfers**: share an island with co-owners who can manage it with you,
+  or hand it to someone else entirely.
+- **Auto-prune with restore**: islands left alone for 30 days are archived (blocks, chests,
+  animals and all) and can be restored within 14 days.
+- **Money or items**: pay with any Vault economy plugin, or with a physical item such as
+  diamonds or a custom token.
 - **Vault economy**: works with any Vault economy plugin. Without one, everything is free,
   which is handy for testing.
 - **Safe deletion**: wipes an island chunk by chunk in the background, without a lag spike.
@@ -108,8 +114,13 @@ tiers, biome names and player names.
 │   ├── Protection             Visitors · Friends · Island settings
 │   ├── Friends                add from online players, tap a head to remove
 │   ├── Set Home Here
+│   ├── Co-owners              owner only: add or remove co-owners
+│   ├── Transfer Island        owner only: give the island away (you become a visitor)
 │   └── Island info
-└── Delete Island              two confirmations, then the island is wiped
+└── Delete Island              owner: two confirmations, then the island is wiped
+    (Leave Island)             co-owners see this instead
+
+If your island was archived, the middle button becomes **Restore My Island** (free).
 ```
 
 Buying: **Buy an Island → size → biome → confirm**.
@@ -133,7 +144,19 @@ biome separately in the config.
 
 ## Protection
 
-Owners can always do everything. For everyone else, the owner picks what **Visitors**
+### Roles
+
+| Role | Can |
+|---|---|
+| **Owner** | Everything, including delete, transfer, and adding or removing co-owners |
+| **Co-owner** | Grow, unlock, upgrade, change protection and friends, set home, build anywhere. Pays from their own balance. One co-owned island per player, and not while owning one. |
+| **Friend** | Whatever the Friends protection settings allow |
+| **Visitor** | Whatever the Visitors protection settings allow |
+
+**Transfer:** the owner picks a co-owner or an online player without an island. The new owner
+takes over and the old owner immediately becomes a visitor.
+
+Owners and co-owners can always do everything. For everyone else, the owner picks what **Visitors**
 (anyone) and **Friends** may do, in *Manage Island → Protection*.
 
 | Setting | Visitors | Friends |
@@ -187,6 +210,11 @@ their own neighbourhood too.
 | `give <player> <size> <biome>` | Create an island for free |
 | `tp <player>` | Teleport to someone's island |
 | `rebuild <player>` | Restore missing terrain on an island (never overwrites builds) |
+| `prune preview` | List islands that would be archived for inactivity |
+| `prune run` | Archive inactive islands now |
+| `prune exempt <owner>` | Toggle: never auto-prune this island |
+| `restore <owner>` | Restore an archived island |
+| `archives` | List archived islands and days left to restore |
 | `reload` | Reload piece files |
 
 ### Permissions
@@ -220,7 +248,10 @@ Example: `/lp group moderator permission set skyrealms.bypass.closed true`
 | `biome-icons` | Menu icon for each biome |
 | `transit` | Fall height, landing spread, landing protection, return cooldown |
 | `return` | Strength and duration of the Return to Island launch |
-| `economy.require-vault` | Block purchases until a Vault economy exists |
+| `economy.currency` | `vault` (money) or `item` (pay with a physical item) |
+| `economy.item` | Item mode: which item, its value (e.g. 1 diamond = 1,000), optional token name |
+| `economy.require-vault` | Vault mode: block purchases until a Vault economy exists |
+| `prune` | Auto-prune: on/off, inactive days (30), restore window (14), check interval |
 
 ### Multiverse
 
@@ -254,8 +285,37 @@ Enterprise). On a free plan, the repository has to be public for Pages to work.
 
 ---
 
+## Auto-prune
+
+An island is **inactive** when its owner and every co-owner have been offline for
+`prune.inactive-days` (default 30). Every few hours the plugin archives inactive islands:
+
+- **What's saved:** every block, chest and sign contents, and animals, plus all settings,
+  in `plugins/SkyRealms/archives/<owner-uuid>/`. Then the island is wiped from the world.
+- **Restoring:** within `prune.restore-days` (default 14), the owner sees **Restore My Island**
+  in `/skyland` (and a reminder when they join). Admins can use `/skylandadmin restore <owner>`.
+  The island returns to the exact same spot.
+- **After the window:** the archive is deleted.
+- **Exempt islands:** `/skylandadmin prune exempt <owner>` makes an island never prune.
+  Islands whose owner has never joined (e.g. created with `give`) are skipped.
+
+## Item currency
+
+```yaml
+economy:
+  currency: item
+  item:
+    material: DIAMOND   # any item
+    value: 1000         # 1 diamond per 1,000 of price: a 5,000 island costs 5 diamonds
+    name: ""            # optional: only accept items with this display name (custom tokens)
+```
+
+All prices in the config stay in the same units, and the menus show them as items ("5 Diamonds").
+Refunds give items back.
+
 ## Roadmap
 
+- Island levels and XP, unlocking biomes, underside themes and cosmetics
 - Native Bedrock forms through the Floodgate API (chest menus already work)
 - More built-in biomes (snowy taiga, savanna, mushroom fields, ...)
 - Island leaderboards and island levels

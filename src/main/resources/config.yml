@@ -73,9 +73,28 @@ return:
   # Ticks in the air before arriving home (20 ticks = 1 second).
   launch-ticks: 20
 
-# Without Vault + an economy plugin, everything is free (handy for testing).
+# How players pay: "vault" (money from any Vault economy plugin) or "item" (a physical item).
 economy:
+  currency: vault
+  # Vault mode: without an economy plugin everything is free, unless this is true.
   require-vault: false
+  # Item mode: prices above are converted to items. With value 1000, a 5,000 price costs 5 items.
+  item:
+    material: DIAMOND
+    value: 1000
+    # Optional: only accept items with this exact display name (for custom tokens).
+    name: ""
+    # Optional: how the currency is shown in menus. Defaults to the item's name.
+    singular: ""
+    plural: ""
+
+# Auto-prune: islands whose owner and co-owners have all been offline this long are archived
+# and removed from the world. The owner (or an admin) can restore them within restore-days.
+prune:
+  enabled: true
+  inactive-days: 30
+  restore-days: 14
+  check-every-hours: 6
 
 transit:
   # Falling below this Y in the sky world sends you down to the overworld.

@@ -36,7 +36,12 @@ public final class RealmService {
     // ---- buying & growing -------------------------------------------------------
 
     public boolean buy(Player p, Tier tier, String biome) {
-        if (plugin.islands().of(p.getUniqueId()) != null) { Msg.error(p, "You already have an island. Upgrade it instead."); return false; }
+        Island existing = plugin.islands().of(p.getUniqueId());
+        if (existing != null) {
+            Msg.error(p, existing.owner.equals(p.getUniqueId()) ? "You already have an island. Upgrade it instead."
+                    : "You're a co-owner of " + name(existing.owner) + "'s island. Leave it first to buy your own.");
+            return false;
+        }
         if (!plugin.biomes().startable(biome)) { Msg.error(p, "You can't start an island with that biome."); return false; }
         if (!plugin.money().usable()) { Msg.error(p, "The economy isn't set up yet."); return false; }
         if (!plugin.money().charge(p, tier.price)) { Msg.error(p, "You need <white>" + money(tier.price) + "</white> for a " + tier.pretty() + " island."); return false; }
@@ -184,6 +189,7 @@ public final class RealmService {
         Island i = owned(p);
         if (i == null) return false;
         if (target.getUniqueId().equals(p.getUniqueId())) { Msg.error(p, "That's you."); return false; }
+        if (i.roleOf(target.getUniqueId()).manages()) { Msg.error(p, target.getName() + " already manages this island."); return false; }
         if (!i.friends.add(target.getUniqueId())) { Msg.error(p, target.getName() + " is already a friend."); return false; }
         plugin.islands().save();
         Msg.send(p, "<white>" + target.getName() + "</white> is now a friend on your island.");
@@ -214,7 +220,7 @@ public final class RealmService {
 
     /** Removes the island, sends anyone standing on it to the overworld, and wipes its blocks in the background. */
     public boolean deleteIsland(Player p) {
-        Island i = owned(p);
+        Island i = ownerOnly(p);
         if (i == null) return false;
         World ground = Bukkit.getWorld(plugin.getConfig().getString("worlds.overworld", "world"));
         Location safe = ground != null ? ground.getSpawnLocation() : Bukkit.getWorlds().get(0).getSpawnLocation();
@@ -225,6 +231,10 @@ public final class RealmService {
             }
         }
         if (p.getWorld().equals(plugin.skyWorld()) && i.containsLand(p.getX(), p.getZ())) p.teleportAsync(safe);
+        for (UUID c : i.coOwners) {
+            Player cp = Bukkit.getPlayer(c);
+            if (cp != null && !cp.equals(p)) Msg.send(cp, name(i.owner) + " deleted the island you co-owned.");
+        }
         plugin.islands().remove(i);
         plugin.islands().save();
         plugin.clearer().clear(plugin.skyWorld(), i.centerX, i.centerZ, i.half() + 48);
@@ -235,9 +245,98 @@ public final class RealmService {
         return true;
     }
 
+    /** The island this player can manage (owner or co-owner), with an error message if none. */
     public Island owned(Player p) {
         Island i = plugin.islands().of(p.getUniqueId());
         if (i == null) Msg.error(p, "You don't have an island yet.");
         return i;
+    }
+
+    /** The island this player owns, for owner-only actions (delete, transfer, co-owners). */
+    public Island ownerOnly(Player p) {
+        Island i = plugin.islands().of(p.getUniqueId());
+        if (i == null) { Msg.error(p, "You don't have an island yet."); return null; }
+        if (!i.owner.equals(p.getUniqueId())) { Msg.error(p, "Only the island owner, " + name(i.owner) + ", can do that."); return null; }
+        return i;
+    }
+
+    // ---- co-owners & transfer ------------------------------------------------------------
+
+    public boolean addCoOwner(Player p, OfflinePlayer target) {
+        Island i = ownerOnly(p);
+        if (i == null) return false;
+        UUID t = target.getUniqueId();
+        if (t.equals(p.getUniqueId())) { Msg.error(p, "That's you."); return false; }
+        Island theirs = plugin.islands().of(t);
+        if (theirs == i) { Msg.error(p, target.getName() + " is already a co-owner."); return false; }
+        if (theirs != null) { Msg.error(p, target.getName() + " already owns or co-owns another island."); return false; }
+        plugin.islands().addCoOwner(i, t);
+        plugin.islands().save();
+        Msg.send(p, "<white>" + target.getName() + "</white> is now a co-owner of your island.");
+        if (target.getPlayer() != null) Msg.send(target.getPlayer(), "<white>" + p.getName()
+                + "</white> made you a co-owner of their island. Open /skyland to manage it.");
+        return true;
+    }
+
+    public boolean removeCoOwner(Player p, OfflinePlayer target) {
+        Island i = ownerOnly(p);
+        if (i == null) return false;
+        if (!i.coOwners.contains(target.getUniqueId())) { Msg.error(p, target.getName() + " isn't a co-owner."); return false; }
+        plugin.islands().removeCoOwner(i, target.getUniqueId());
+        plugin.islands().save();
+        Msg.send(p, "<white>" + target.getName() + "</white> is no longer a co-owner.");
+        if (target.getPlayer() != null) Msg.send(target.getPlayer(), "You're no longer a co-owner of " + p.getName() + "'s island.");
+        return true;
+    }
+
+    /** A co-owner walks away from the island they co-own. */
+    public boolean leaveIsland(Player p) {
+        Island i = plugin.islands().of(p.getUniqueId());
+        if (i == null || !i.coOwners.contains(p.getUniqueId())) { Msg.error(p, "You're not a co-owner of an island."); return false; }
+        plugin.islands().removeCoOwner(i, p.getUniqueId());
+        plugin.islands().save();
+        Msg.send(p, "You left " + name(i.owner) + "'s island.");
+        Player owner = Bukkit.getPlayer(i.owner);
+        if (owner != null) Msg.send(owner, p.getName() + " stopped co-owning your island.");
+        return true;
+    }
+
+    /** Give the island away. The old owner immediately becomes a visitor. */
+    public boolean transfer(Player p, OfflinePlayer target) {
+        Island i = ownerOnly(p);
+        if (i == null) return false;
+        UUID t = target.getUniqueId();
+        if (t.equals(p.getUniqueId())) { Msg.error(p, "You already own it."); return false; }
+        Island theirs = plugin.islands().of(t);
+        if (theirs != null && theirs != i) { Msg.error(p, target.getName() + " already owns or co-owns another island."); return false; }
+        plugin.islands().transfer(i, t);
+        plugin.islands().save();
+        Msg.send(p, "You gave your island to <white>" + target.getName() + "</white>. You're now a visitor there.");
+        if (target.getPlayer() != null) Msg.send(target.getPlayer(), "<white>" + p.getName()
+                + "</white> gave you their island! Open /skyland to manage it.");
+        return true;
+    }
+
+    // ---- archives ------------------------------------------------------------------------
+
+    public void restoreOwn(Player p) {
+        Msg.send(p, "Restoring your island...");
+        plugin.archiver().restore(p.getUniqueId(), result -> {
+            switch (result) {
+                case "ok" -> {
+                    Island i = plugin.islands().of(p.getUniqueId());
+                    if (i != null && p.isOnline()) p.teleportAsync(i.home(plugin.skyWorld(), plugin.baseY()));
+                    Msg.send(p, "Welcome back! Your island is exactly as you left it.");
+                }
+                case "has-island" -> Msg.error(p, "You already have an island, so the archived one can't be restored.");
+                case "none" -> Msg.error(p, "There's no archived island to restore (archives last "
+                        + plugin.archiver().restoreDays() + " days).");
+                default -> Msg.error(p, "Restoring failed. Please tell an admin.");
+            }
+        });
+    }
+
+    private static String name(UUID id) {
+        return Objects.toString(Bukkit.getOfflinePlayer(id).getName(), "someone");
     }
 }

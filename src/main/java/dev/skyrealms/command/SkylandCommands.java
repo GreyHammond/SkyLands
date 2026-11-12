@@ -102,6 +102,24 @@ public final class SkylandCommands {
                 .executes(ctx -> tp(ctx.getSource(), StringArgumentType.getString(ctx, "owner")))));
         root.then(Commands.literal("rebuild").then(Commands.argument("owner", StringArgumentType.word()).suggests(players(true))
                 .executes(ctx -> rebuild(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "owner")))));
+        // prune preview | run | exempt <owner>
+        root.then(Commands.literal("prune")
+                .then(Commands.literal("preview").executes(ctx -> prunePreview(ctx.getSource().getSender())))
+                .then(Commands.literal("run").executes(ctx -> {
+                    var list = plugin.archiver().candidates();
+                    Msg.send(ctx.getSource().getSender(), "Archiving " + list.size() + " inactive island(s)...");
+                    for (Island i : list) plugin.archiver().archive(i, ok -> Msg.send(ctx.getSource().getSender(),
+                            (ok ? "Archived " : "<red>Failed to archive ") + nameOf(i.owner) + "'s island."));
+                    return Command.SINGLE_SUCCESS;
+                }))
+                .then(Commands.literal("exempt").then(Commands.argument("owner", StringArgumentType.word()).suggests(players(true))
+                        .executes(ctx -> exempt(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "owner"))))));
+
+        // restore <owner> / archives
+        root.then(Commands.literal("restore").then(Commands.argument("owner", StringArgumentType.word()).suggests(archivedOwners())
+                .executes(ctx -> restore(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "owner")))));
+        root.then(Commands.literal("archives").executes(ctx -> archives(ctx.getSource().getSender())));
+
         root.then(Commands.literal("reload").executes(ctx -> {
             plugin.library().reload();
             Msg.send(ctx.getSource().getSender(), "Pieces reloaded. (Restart the server to apply config.yml changes.)");
@@ -151,6 +169,15 @@ public final class SkylandCommands {
         };
     }
 
+    private SuggestionProvider<CommandSourceStack> archivedOwners() {
+        return (ctx, builder) -> {
+            String typed = builder.getRemaining().toLowerCase(Locale.ROOT);
+            plugin.archiver().list().stream().map(a -> Bukkit.getOfflinePlayer(a.owner()).getName()).filter(Objects::nonNull)
+                    .filter(n -> n.toLowerCase(Locale.ROOT).startsWith(typed)).forEach(builder::suggest);
+            return builder.buildFuture();
+        };
+    }
+
     // ---- sizes -----------------------------------------------------------------------------
 
     private List<String> sizes() {
@@ -181,7 +208,10 @@ public final class SkylandCommands {
                 "pieces <dark_gray>- list biomes and their variants",
                 "give <player> <size> <biome> <dark_gray>- create an island for free",
                 "tp <owner> <dark_gray>- go to someone's island",
-                "rebuild <owner> <dark_gray>- re-paste every piece of an island",
+                "rebuild <owner> <dark_gray>- restore missing terrain on an island",
+                "prune preview|run|exempt <owner> <dark_gray>- inactive island archiving",
+                "restore <owner> <dark_gray>- bring back an archived island",
+                "archives <dark_gray>- list archived islands",
                 "reload <dark_gray>- reload piece files"))
             to.sendMessage(Msg.c(" <aqua>/skylandadmin <gray>" + l));
         to.sendMessage(Msg.c(" <dark_gray>Sizes can also be an exact radius from " + MIN_RADIUS + " to " + MAX_RADIUS + "."));
@@ -234,6 +264,51 @@ public final class SkylandCommands {
             to.sendMessage(Msg.c(" <green>" + b + "<gray>: " + String.join(", ",
                     plugin.library().variants(b).stream().map(v -> v.name + " <dark_gray>(" + sizeName(v.radius) + ")<gray>").toList())));
         }
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static String nameOf(UUID id) { return Objects.toString(Bukkit.getOfflinePlayer(id).getName(), id.toString()); }
+
+    private int prunePreview(CommandSender to) {
+        var list = plugin.archiver().candidates();
+        Msg.send(to, list.isEmpty() ? "No islands are inactive for " + plugin.archiver().inactiveDays() + "+ days."
+                : list.size() + " island(s) would be archived (inactive " + plugin.archiver().inactiveDays() + "+ days):");
+        long now = System.currentTimeMillis();
+        for (Island i : list) {
+            long days = (now - plugin.archiver().lastSeen(i)) / 86_400_000L;
+            to.sendMessage(Msg.c(" <white>" + nameOf(i.owner) + " <gray>- " + i.tier.pretty() + ", last seen " + days + " days ago"));
+        }
+        to.sendMessage(Msg.c(" <dark_gray>Run <white>/skylandadmin prune run</white> to archive now, or wait for the automatic check."));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int exempt(CommandSender to, String owner) {
+        Island i = plugin.islands().of(offline(owner).getUniqueId());
+        if (i == null) { Msg.error(to, owner + " doesn't have an island."); return 0; }
+        i.pruneExempt = !i.pruneExempt;
+        plugin.islands().save();
+        Msg.send(to, nameOf(i.owner) + "'s island " + (i.pruneExempt ? "will never be auto-pruned." : "can be auto-pruned again."));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int restore(CommandSender to, String owner) {
+        UUID id = offline(owner).getUniqueId();
+        Msg.send(to, "Restoring " + owner + "'s island...");
+        plugin.archiver().restore(id, result -> {
+            switch (result) {
+                case "ok" -> Msg.send(to, owner + "'s island is back.");
+                case "has-island" -> Msg.error(to, owner + " already has an island.");
+                case "none" -> Msg.error(to, "No archive for " + owner + " (or it expired).");
+                default -> Msg.error(to, "Restore failed. Check the console.");
+            }
+        });
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int archives(CommandSender to) {
+        var list = plugin.archiver().list();
+        Msg.send(to, list.isEmpty() ? "No archived islands." : list.size() + " archived island(s):");
+        for (var a : list) to.sendMessage(Msg.c(" <white>" + nameOf(a.owner()) + " <gray>- " + a.daysLeft() + " days left to restore"));
         return Command.SINGLE_SUCCESS;
     }
 
