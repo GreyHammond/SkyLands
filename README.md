@@ -10,7 +10,7 @@ jump off the edge and you drop out of the sky, landing somewhere below your isla
 Everything a player does happens in one chest menu, `/skyland`, so it works the same for
 Java players and Bedrock players joining through **Geyser + Floodgate**.
 
-> **Download:** [`docs/skylands.jar`](docs/skylands.jar) (v0.4.1) · Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
+> **Download:** [`docs/skylands.jar`](docs/skylands.jar) (v0.4.2) · Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
 
 ---
 
@@ -23,7 +23,7 @@ Java players and Bedrock players joining through **Geyser + Floodgate**.
 - **One sea level**: every ocean, shore and swamp sits at the same water height, so ocean
   expansions always line up. Only enclosed lakes sit higher.
 - **Grows outward**: new land attaches to the edge of the island so it stays one connected
-  landmass. New biomes form their own region on the rim.
+  landmass. Unlock a biome, then grow it: a new biome starts on the rim.
 - **Fall to the overworld**: drop off the edge and land up to 200 blocks from directly below
   your island, in a random direction. The landing that ends the fall does no damage, and
   you can open an elytra mid-fall.
@@ -102,8 +102,8 @@ tiers, biome names and player names.
 │   ├── Friends' Islands       islands where you're a friend
 │   └── Visit Islands          every island open to visitors
 ├── Manage Island
-│   ├── Grow Land              add more of a biome you own
-│   ├── Unlock a Biome         add a new biome region at the edge
+│   ├── Grow Land              add land of any biome you own
+│   ├── Unlock a Biome         makes a new biome available in Grow Land
 │   ├── Upgrade                move up to the next size
 │   ├── Protection             Visitors · Friends · Island settings
 │   ├── Friends                add from online players, tap a head to remove

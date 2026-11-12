@@ -91,24 +91,19 @@ public final class RealmService {
         return true;
     }
 
+    /** Unlocking only adds the biome to the island's list. Land is added with Grow Land. */
     public boolean unlockBiome(Player p, String biome) {
         Island i = owned(p);
         if (i == null) return false;
         if (!plugin.biomes().exists(biome)) { Msg.error(p, "That biome isn't available."); return false; }
-        if (i.biomes.contains(biome)) { Msg.error(p, "You already own that biome. Grow it instead."); return false; }
-        int slots = i.tier.maxPieces - i.pieces.size();
-        if (slots <= 0) { Msg.error(p, "Your island is full. Upgrade first."); return false; }
+        if (i.biomes.contains(biome)) { Msg.error(p, "You already have that biome. Use Grow Land to add more of it."); return false; }
         double cost = unlockPrice(biome);
-        if (!plugin.money().charge(p, cost)) { Msg.error(p, "Unlocking <white>" + biome + "</white> costs <white>" + money(cost)); return false; }
-        int want = Math.min(slots, Math.max(1, plugin.getConfig().getInt("prices.biome-region-pieces", 2)));
         String name = plugin.biomes().pretty(biome);
-        if (plugin.grower().growMany(plugin.skyWorld(), i, biome, want,
-                () -> Msg.send(p, "A <green>" + name + "</green> region has attached to the edge of your island!")).isEmpty()) {
-            plugin.money().refund(p, cost);
-            Msg.error(p, "There's no room on your island's edge. Upgrade first.");
-            return false;
-        }
+        if (!plugin.money().charge(p, cost)) { Msg.error(p, "Unlocking <white>" + name + "</white> costs <white>" + money(cost)); return false; }
+        i.biomes.add(biome);
         plugin.islands().save();
+        Msg.send(p, "<green>" + name + "</green> unlocked! Use <white>Grow Land</white> to add it to your island."
+                + (i.pieces.size() >= i.tier.maxPieces ? " <yellow>(Your island is full, so upgrade first.)" : ""));
         return true;
     }
 

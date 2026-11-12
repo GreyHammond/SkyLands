@@ -77,7 +77,7 @@ public final class Menus {
                 "<gray>Attach more of a biome you own.", "<gray>Cost: <gold>" + svc.money(svc.growPrice()) + " <gray>each",
                 "<gray>Pieces: <white>" + i.pieces.size() + "/" + i.tier.maxPieces), pl -> biomes(pl, Mode.GROW, null));
         m.button(11, item(Material.CHERRY_SAPLING, "<light_purple>Unlock a Biome",
-                "<gray>Add a whole new biome region", "<gray>to the edge of your island."), pl -> biomes(pl, Mode.UNLOCK, null));
+                "<gray>Unlock a new biome so you", "<gray>can grow it with Grow Land."), pl -> biomes(pl, Mode.UNLOCK, null));
         m.button(12, upgradeIcon(i), this::upgrade);
         m.button(14, item(Material.SHIELD, "<yellow>Protection",
                 "<gray>Choose what visitors and", "<gray>friends can do on your island."), this::protection);
@@ -174,14 +174,17 @@ public final class Menus {
                         "<gray>Island: <white>" + tier.pretty() + " for <gold>" + svc.money(tier.price)),
                         pl -> confirm(pl, "Buy a " + tier.pretty() + " " + pretty(b) + " island?", tier.price,
                                 yes -> { yes.closeInventory(); svc.buy(yes, tier, b); }, back -> biomes(back, Mode.BUY, tier)));
-                case GROW -> m.button(slot++, item(biomeIcon(b), "<green>" + pretty(b), "<gray>Attach one more piece",
+                case GROW -> m.button(slot++, item(biomeIcon(b), "<green>" + pretty(b),
+                        i != null && i.pieces.stream().noneMatch(pc -> pc.biome().equals(b))
+                                ? "<yellow>New! First piece attaches at your island's edge" : "<gray>Attach one more piece",
                         "<gray>Cost: <gold>" + svc.money(svc.growPrice())),
                         pl -> confirm(pl, "Grow more " + pretty(b) + "?", svc.growPrice(),
                                 yes -> { svc.grow(yes, b); biomes(yes, Mode.GROW, null); }, back -> biomes(back, Mode.GROW, null)));
                 case UNLOCK -> m.button(slot++, item(biomeIcon(b), "<light_purple>" + pretty(b), "<gray>" + style,
-                        "<gray>Attaches a new region to your edge", "<gray>Cost: <gold>" + svc.money(svc.unlockPrice(b))),
+                        "<gray>Unlocks it for Grow Land", "<gray>Cost: <gold>" + svc.money(svc.unlockPrice(b))),
                         pl -> confirm(pl, "Unlock " + pretty(b) + "?", svc.unlockPrice(b),
-                                yes -> { yes.closeInventory(); svc.unlockBiome(yes, b); }, back -> biomes(back, Mode.UNLOCK, null)));
+                                yes -> { if (svc.unlockBiome(yes, b)) biomes(yes, Mode.GROW, null); else yes.closeInventory(); },
+                                back -> biomes(back, Mode.UNLOCK, null)));
             }
         }
         if (list.isEmpty()) {

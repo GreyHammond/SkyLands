@@ -41,10 +41,8 @@ tiers:
 prices:
   # Cost of attaching one extra piece of a biome you already own.
   grow-piece: 1000
-  # Cost of unlocking a NEW biome region (this also attaches its first pieces).
+  # Cost of unlocking a new biome. Unlocking adds no land: players then use Grow Land.
   biome-unlock-default: 10000
-  # How many pieces a newly unlocked biome region starts with.
-  biome-region-pieces: 2
   # Percent of the island's tier price given back when it's deleted (0 = nothing).
   delete-refund-percent: 0
   # Per-biome unlock prices (built-in ids, or custom captured folder names).

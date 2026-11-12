@@ -63,9 +63,13 @@ public final class IslandGrower {
         for (int n = 0; n < count && island.pieces.size() < island.tier.maxPieces; n++) {
             PiecePlacement p;
             if (tb != null) {
-                int r = minRadius + rng.nextInt(maxRadius - minRadius + 1);
-                if (island.pieces.isEmpty()) r = Math.min(r, island.half() - 2);
+                // Piece size scales with the island, so a Small island still has room for all its pieces.
+                int hi = Math.max(6, Math.min(maxRadius, (int) Math.round(island.half() * 0.6)));
+                int lo = Math.max(5, Math.min(minRadius, hi - 3));
+                int r = lo + rng.nextInt(hi - lo + 1);
+                if (island.pieces.isEmpty()) r = Math.min(r, (int) Math.round(island.half() * 0.65));
                 p = findSpot(island, biome, GENERATED, r);
+                if (p == null && r > lo) p = findSpot(island, biome, GENERATED, lo); // squeeze a smaller piece in
             } else {
                 Piece piece = library.random(biome, rng);
                 if (piece == null) break;
