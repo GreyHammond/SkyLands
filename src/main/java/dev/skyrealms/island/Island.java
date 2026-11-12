@@ -10,11 +10,16 @@ public final class Island {
     public final int index;        // position on the sky-world spiral grid
     public final int centerX, centerZ;
     public Tier tier;
-    public final Set<UUID> members = new HashSet<>();
+    /** Friends get the FRIEND permission set. A player can be a friend on many islands. */
+    public final Set<UUID> friends = new HashSet<>();
     public final LinkedHashSet<String> biomes = new LinkedHashSet<>();
     public final List<PiecePlacement> pieces = new ArrayList<>();
     /** Home offset from the centre; null means "top of the centre column". */
     public double[] home;          // dx, y, dz, yaw, pitch
+
+    private final EnumSet<Flag> visitorFlags = EnumSet.noneOf(Flag.class);
+    private final EnumSet<Flag> friendFlags = EnumSet.noneOf(Flag.class);
+    private final EnumSet<Flag> islandFlags = EnumSet.noneOf(Flag.class);
 
     public Island(UUID owner, int index, int centerX, int centerZ, Tier tier) {
         this.owner = owner;
@@ -22,9 +27,43 @@ public final class Island {
         this.centerX = centerX;
         this.centerZ = centerZ;
         this.tier = tier;
+        for (Flag f : Flag.values()) {
+            if (f.scope == Flag.Scope.ISLAND) { if (f.defaultVisitor) islandFlags.add(f); }
+            else {
+                if (f.defaultVisitor) visitorFlags.add(f);
+                if (f.defaultFriend) friendFlags.add(f);
+            }
+        }
     }
 
-    public boolean canBuild(UUID player) { return owner.equals(player) || members.contains(player); }
+    public Role roleOf(UUID player) {
+        if (owner.equals(player)) return Role.OWNER;
+        return friends.contains(player) ? Role.FRIEND : Role.VISITOR;
+    }
+
+    /** Can this player do a ROLE-scoped action here? */
+    public boolean allows(UUID player, Flag flag) {
+        return switch (roleOf(player)) {
+            case OWNER -> true;
+            case FRIEND -> friendFlags.contains(flag);
+            case VISITOR -> visitorFlags.contains(flag);
+        };
+    }
+
+    /** Is an ISLAND-scoped setting on? */
+    public boolean setting(Flag flag) { return islandFlags.contains(flag); }
+
+    /** The flag set behind a role (or the island settings when role is null). */
+    public EnumSet<Flag> flags(Role role) {
+        if (role == null) return islandFlags;
+        return role == Role.FRIEND ? friendFlags : visitorFlags;
+    }
+
+    public boolean get(Role role, Flag flag) { return flags(role).contains(flag); }
+
+    public void set(Role role, Flag flag, boolean on) {
+        if (on) flags(role).add(flag); else flags(role).remove(flag);
+    }
 
     public int half() { return tier.footprint / 2; }
 

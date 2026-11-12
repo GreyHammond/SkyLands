@@ -43,6 +43,21 @@ prices:
     cherry_grove: 25000
     mushroom_fields: 50000
 
+# Icons shown in the chest menus, per biome folder. Unlisted biomes get a sensible guess.
+biome-icons:
+  cherry_grove: CHERRY_SAPLING
+  desert: SAND
+  mushroom_fields: RED_MUSHROOM
+
+# The item players use to fly back up to their island (works for Bedrock players too).
+sky-feather:
+  material: FEATHER
+  # Hand one out automatically when someone buys an island.
+  give-on-buy: true
+  # Upward push when used, and ticks before the wind carries you home (20 ticks = 1s).
+  launch-power: 1.8
+  launch-ticks: 20
+
 # Without Vault + an economy plugin, everything is free (handy for testing).
 economy:
   require-vault: false
@@ -62,5 +77,5 @@ transit:
   min-arrive-speed: 1.0
   # Seconds the one-time landing protection lasts before it expires.
   protection-seconds: 90
-  # Seconds between /realm home uses (0 = no cooldown).
+  # Seconds between /realm home or Sky Feather uses (0 = no cooldown).
   home-cooldown: 10
