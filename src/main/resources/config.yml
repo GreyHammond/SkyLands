@@ -13,12 +13,19 @@ islands:
   # largest footprint (continental = 512). Overworld landings sit "under" these
   # same X/Z coordinates, so this also spreads islands apart on the ground.
   spacing: 2048
-  # Y level island centres are pasted at.
+  # Sea level for every island: all ocean, shore and swamp water sits at exactly this Y.
+  # Land rises above it, ocean floors and the rocky undersides hang below it.
   base-y: 180
   # Random up/down jitter (blocks) for each attached piece, for a natural look.
   piece-y-jitter: 3
   # Blocks placed per server tick while pasting. Lower = less lag, slower paste.
   blocks-per-tick: 20000
+
+# Built-in generated terrain (works out of the box, no setup).
+terrain:
+  # Size range of each round chunk of land an island grows by (radius in blocks).
+  blob-radius-min: 11
+  blob-radius-max: 18
 
 # footprint  = width/length of the buildable square, in blocks
 # price      = cost to buy at this tier (upgrades cost the difference)
@@ -40,10 +47,13 @@ prices:
   biome-region-pieces: 2
   # Percent of the island's tier price given back when it's deleted (0 = nothing).
   delete-refund-percent: 0
-  # Per-biome overrides (folder name under plugins/SkyRealms/pieces/).
+  # Per-biome unlock prices (built-in ids, or custom captured folder names).
   biome-unlock:
+    beach: 5000
+    shallow_ocean: 8000
     cherry_grove: 25000
-    mushroom_fields: 50000
+    deep_ocean: 20000
+    badlands: 20000
 
 # Sphere sizes for /skylandadmin capture and preview (radius in blocks).
 # A Small island is 32 wide, so its first piece must be "medium" or smaller.
@@ -54,9 +64,8 @@ capture-sizes:
   huge: 28      # 57 blocks wide
 
 # Icons shown in the chest menus, per biome folder. Unlisted biomes get a sensible guess.
+# Built-in biomes already have icons; this is for custom captured biomes.
 biome-icons:
-  cherry_grove: CHERRY_SAPLING
-  desert: SAND
   mushroom_fields: RED_MUSHROOM
 
 # "Return to Island" effect: an upward gust, then the wind carries you home.

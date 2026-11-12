@@ -29,6 +29,8 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private IslandGrower grower;
     private Money money;
     private int baseY;
+    private dev.skyrealms.terrain.TerrainGenerator terrain;
+    private dev.skyrealms.terrain.BiomeCatalog biomes;
     private RealmService service;
     private Menus menus;
     private dev.skyrealms.island.ClearQueue clearer;
@@ -62,7 +64,10 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         library = new PieceLibrary(new File(getDataFolder(), "pieces"), getLogger());
         library.reload();
         PasteQueue paster = new PasteQueue(this, cfg.getInt("islands.blocks-per-tick", 20000));
-        grower = new IslandGrower(library, paster, baseY, cfg.getInt("islands.piece-y-jitter", 3));
+        terrain = new dev.skyrealms.terrain.TerrainGenerator(this, baseY, cfg.getInt("islands.blocks-per-tick", 20000));
+        biomes = new dev.skyrealms.terrain.BiomeCatalog(library);
+        grower = new IslandGrower(library, paster, terrain, baseY, cfg.getInt("islands.piece-y-jitter", 3),
+                cfg.getInt("terrain.blob-radius-min", 11), cfg.getInt("terrain.blob-radius-max", 18));
         islands = new IslandManager(new File(getDataFolder(), "islands.yml"), spacing, getLogger());
         islands.load();
 
@@ -105,6 +110,8 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public IslandGrower grower() { return grower; }
     public Money money() { return money; }
     public int baseY() { return baseY; }
+    public dev.skyrealms.terrain.BiomeCatalog biomes() { return biomes; }
+    public dev.skyrealms.terrain.TerrainGenerator terrain() { return terrain; }
     public RealmService service() { return service; }
     public Menus menus() { return menus; }
     public dev.skyrealms.island.ClearQueue clearer() { return clearer; }

@@ -3,6 +3,8 @@ package dev.skyrealms.island;
 import dev.skyrealms.piece.PasteQueue;
 import dev.skyrealms.piece.Piece;
 import dev.skyrealms.piece.PieceLibrary;
+import dev.skyrealms.terrain.TerrainBiome;
+import dev.skyrealms.terrain.TerrainGenerator;
 import org.bukkit.World;
 
 import java.util.ArrayList;
@@ -21,70 +23,123 @@ import java.util.Random;
  *  - Everything stays inside the tier's footprint.
  */
 public final class IslandGrower {
+    /** Variant name used for generated (built-in biome) land. */
+    public static final String GENERATED = "gen";
+
     private final PieceLibrary library;
     private final PasteQueue paster;
+    private final TerrainGenerator terrain;
     private final int baseY;
     private final int yJitter;
+    private final int minRadius, maxRadius;
     private final Random rng = new Random();
 
-    public IslandGrower(PieceLibrary library, PasteQueue paster, int baseY, int yJitter) {
+    public IslandGrower(PieceLibrary library, PasteQueue paster, TerrainGenerator terrain, int baseY, int yJitter,
+                        int minRadius, int maxRadius) {
         this.library = library;
         this.paster = paster;
+        this.terrain = terrain;
         this.baseY = baseY;
         this.yJitter = yJitter;
+        this.minRadius = Math.max(6, minRadius);
+        this.maxRadius = Math.max(this.minRadius, maxRadius);
     }
 
-    /** Find a spot, record it on the island, and queue the paste. Returns null if there's no room. */
+    /** Attach one piece of land. Returns null if there's no room. */
     public PiecePlacement grow(World world, Island island, String biome, Runnable done) {
-        if (island.pieces.size() >= island.tier.maxPieces) return null;
-        Piece piece = library.random(biome, rng);
-        if (piece == null) return null;
-        PiecePlacement placement = findSpot(island, biome, piece);
-        if (placement == null) return null;
-        island.pieces.add(placement);
-        island.biomes.add(biome);
-        paste(world, island, placement, piece, done);
-        return placement;
+        List<PiecePlacement> added = growMany(world, island, biome, 1, done);
+        return added.isEmpty() ? null : added.get(0);
     }
 
-    /** Re-paste every piece (admin repair command). */
+    /**
+     * Attach up to {@code count} pieces of a biome. Built-in biomes are generated together in one
+     * pass so they blend into a single landmass. {@code done} runs once, when all of it is built.
+     */
+    public List<PiecePlacement> growMany(World world, Island island, String biome, int count, Runnable done) {
+        List<PiecePlacement> added = new ArrayList<>();
+        List<Piece> pastes = new ArrayList<>();
+        TerrainBiome tb = TerrainBiome.byId(biome);
+        boolean hadLand = !island.pieces.isEmpty();
+        for (int n = 0; n < count && island.pieces.size() < island.tier.maxPieces; n++) {
+            PiecePlacement p;
+            if (tb != null) {
+                int r = minRadius + rng.nextInt(maxRadius - minRadius + 1);
+                if (island.pieces.isEmpty()) r = Math.min(r, island.half() - 2);
+                p = findSpot(island, biome, GENERATED, r);
+            } else {
+                Piece piece = library.random(biome, rng);
+                if (piece == null) break;
+                p = findSpot(island, biome, piece.name, piece.radius);
+                if (p != null) pastes.add(piece);
+            }
+            if (p == null) break;
+            island.pieces.add(p);
+            island.biomes.add(biome);
+            added.add(p);
+        }
+        if (added.isEmpty()) return added;
+        if (tb != null) {
+            List<TerrainGenerator.Blob> targets = added.stream().map(p -> blob(island, p)).toList();
+            terrain.generate(world, seed(island), blobs(island), targets, hadLand, done);
+        } else {
+            for (int n = 0; n < added.size(); n++) {
+                paste(world, island, added.get(n), pastes.get(n), n == added.size() - 1 ? done : null);
+            }
+        }
+        return added;
+    }
+
+    /** Re-paste captured pieces and regenerate any missing generated land (fills holes, never overwrites). */
     public int rebuild(World world, Island island) {
         int n = 0;
+        List<TerrainGenerator.Blob> gen = new ArrayList<>();
         for (PiecePlacement p : island.pieces) {
+            if (GENERATED.equals(p.variant())) { gen.add(blob(island, p)); n++; continue; }
             Piece piece = library.find(p.biome(), p.variant());
             if (piece == null) continue;
             paste(world, island, p, piece, null);
             n++;
         }
+        if (!gen.isEmpty()) terrain.generate(world, seed(island), blobs(island), gen, true, null);
         return n;
+    }
+
+    private static long seed(Island island) { return island.index * 1_000_003L + 0x51A9L; }
+
+    private TerrainGenerator.Blob blob(Island island, PiecePlacement p) {
+        TerrainBiome tb = GENERATED.equals(p.variant()) ? TerrainBiome.byId(p.biome()) : null;
+        return new TerrainGenerator.Blob(tb, island.centerX + p.dx(), island.centerZ + p.dz(), p.radius());
+    }
+
+    private List<TerrainGenerator.Blob> blobs(Island island) {
+        return island.pieces.stream().map(p -> blob(island, p)).toList();
     }
 
     private void paste(World world, Island island, PiecePlacement p, Piece piece, Runnable done) {
         paster.paste(world, piece, island.centerX + p.dx(), baseY + p.dy(), island.centerZ + p.dz(), p.rot(), done);
     }
 
-    private PiecePlacement findSpot(Island island, String biome, Piece piece) {
-        int rot = rng.nextInt(4);
-        int dy = yJitter > 0 ? rng.nextInt(yJitter * 2 + 1) - yJitter : 0;
-        int rn = piece.radius;
+    private PiecePlacement findSpot(Island island, String biome, String variant, int rn) {
+        boolean gen = GENERATED.equals(variant);
+        int rot = gen ? 0 : rng.nextInt(4);
+        int dy = gen || yJitter <= 0 ? 0 : rng.nextInt(yJitter * 2 + 1) - yJitter;
         if (island.pieces.isEmpty()) {
-            return new PiecePlacement(biome, piece.name, 0, 0, 0, rot, rn);
+            return new PiecePlacement(biome, variant, 0, 0, 0, rot, rn);
         }
 
         List<PiecePlacement> sameBiome = island.pieces.stream().filter(p -> p.biome().equals(biome)).toList();
         boolean newRegion = sameBiome.isEmpty();
 
-        PiecePlacement spot = bestCandidate(island, newRegion ? island.pieces : sameBiome, biome, piece, rot, dy, newRegion);
+        PiecePlacement spot = bestCandidate(island, newRegion ? island.pieces : sameBiome, biome, variant, rn, rot, dy, newRegion);
         if (spot == null && !newRegion) {
             // That biome's region is boxed in; let it spill out from any edge instead.
-            spot = bestCandidate(island, island.pieces, biome, piece, rot, dy, true);
+            spot = bestCandidate(island, island.pieces, biome, variant, rn, rot, dy, true);
         }
         return spot;
     }
 
     private PiecePlacement bestCandidate(Island island, List<PiecePlacement> anchors, String biome,
-                                         Piece piece, int rot, int dy, boolean preferOutward) {
-        int rn = piece.radius;
+                                         String variant, int rn, int rot, int dy, boolean preferOutward) {
         int half = island.half();
         // Allow a piece to poke slightly past the border: spheres are round, the border is square.
         double edgeAllowance = rn * 0.8;
@@ -114,6 +169,6 @@ public final class IslandGrower {
         }
         if (valid.isEmpty()) return null;
         double[] best = valid.stream().max((p, q) -> Double.compare(p[2], q[2])).get();
-        return new PiecePlacement(biome, piece.name, (int) Math.round(best[0]), dy, (int) Math.round(best[1]), rot, rn);
+        return new PiecePlacement(biome, variant, (int) Math.round(best[0]), dy, (int) Math.round(best[1]), rot, rn);
     }
 }

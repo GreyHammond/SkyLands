@@ -82,7 +82,7 @@ public final class Island {
         if (home != null) {
             return new Location(world, centerX + home[0], home[1], centerZ + home[2], (float) home[3], (float) home[4]);
         }
-        int y = world.getHighestBlockYAt(centerX, centerZ);
+        int y = world.getHighestBlockYAt(centerX, centerZ, org.bukkit.HeightMap.MOTION_BLOCKING_NO_LEAVES);
         if (y < baseY - 64) y = baseY; // nothing pasted yet
         return new Location(world, centerX + 0.5, y + 1, centerZ + 0.5);
     }

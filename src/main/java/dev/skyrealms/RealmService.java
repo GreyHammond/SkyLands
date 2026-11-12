@@ -37,18 +37,18 @@ public final class RealmService {
 
     public boolean buy(Player p, Tier tier, String biome) {
         if (plugin.islands().of(p.getUniqueId()) != null) { Msg.error(p, "You already have an island. Upgrade it instead."); return false; }
-        if (plugin.library().variants(biome).isEmpty()) { Msg.error(p, "That biome isn't available."); return false; }
+        if (!plugin.biomes().startable(biome)) { Msg.error(p, "You can't start an island with that biome."); return false; }
         if (!plugin.money().usable()) { Msg.error(p, "The economy isn't set up yet."); return false; }
         if (!plugin.money().charge(p, tier.price)) { Msg.error(p, "You need <white>" + money(tier.price) + "</white> for a " + tier.pretty() + " island."); return false; }
 
         Island island = plugin.islands().create(p.getUniqueId(), tier);
-        Msg.send(p, "Raising your <white>" + tier.pretty() + "</white> <green>" + biome + "</green> island from the clouds...");
-        plugin.grower().grow(plugin.skyWorld(), island, biome, () -> {
+        Msg.send(p, "Raising your <white>" + tier.pretty() + "</white> <green>" + plugin.biomes().pretty(biome)
+                + "</green> island from the clouds...");
+        plugin.grower().growMany(plugin.skyWorld(), island, biome, tier.startPieces, () -> {
             if (!p.isOnline()) return;
             p.teleportAsync(island.home(plugin.skyWorld(), plugin.baseY()));
             Msg.send(p, "Welcome home! Jump off the edge to drop into the overworld.");
         });
-        for (int n = 1; n < tier.startPieces; n++) plugin.grower().grow(plugin.skyWorld(), island, biome, null);
         plugin.islands().save();
         return true;
     }
@@ -94,19 +94,20 @@ public final class RealmService {
     public boolean unlockBiome(Player p, String biome) {
         Island i = owned(p);
         if (i == null) return false;
-        if (plugin.library().variants(biome).isEmpty()) { Msg.error(p, "That biome isn't available."); return false; }
+        if (!plugin.biomes().exists(biome)) { Msg.error(p, "That biome isn't available."); return false; }
         if (i.biomes.contains(biome)) { Msg.error(p, "You already own that biome. Grow it instead."); return false; }
         int slots = i.tier.maxPieces - i.pieces.size();
         if (slots <= 0) { Msg.error(p, "Your island is full. Upgrade first."); return false; }
         double cost = unlockPrice(biome);
         if (!plugin.money().charge(p, cost)) { Msg.error(p, "Unlocking <white>" + biome + "</white> costs <white>" + money(cost)); return false; }
         int want = Math.min(slots, Math.max(1, plugin.getConfig().getInt("prices.biome-region-pieces", 2)));
-        if (plugin.grower().grow(plugin.skyWorld(), i, biome, () -> Msg.send(p, "A <green>" + biome + "</green> region has attached to the edge of your island!")) == null) {
+        String name = plugin.biomes().pretty(biome);
+        if (plugin.grower().growMany(plugin.skyWorld(), i, biome, want,
+                () -> Msg.send(p, "A <green>" + name + "</green> region has attached to the edge of your island!")).isEmpty()) {
             plugin.money().refund(p, cost);
             Msg.error(p, "There's no room on your island's edge. Upgrade first.");
             return false;
         }
-        for (int n = 1; n < want; n++) plugin.grower().grow(plugin.skyWorld(), i, biome, null);
         plugin.islands().save();
         return true;
     }

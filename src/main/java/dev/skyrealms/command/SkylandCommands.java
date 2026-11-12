@@ -129,7 +129,7 @@ public final class SkylandCommands {
     private SuggestionProvider<CommandSourceStack> libraryBiomes() {
         return (ctx, builder) -> {
             String typed = builder.getRemaining().toLowerCase(Locale.ROOT);
-            plugin.library().biomes().stream().filter(s -> s.startsWith(typed)).forEach(builder::suggest);
+            plugin.biomes().all().stream().filter(s -> s.startsWith(typed)).forEach(builder::suggest);
             return builder.buildFuture();
         };
     }
@@ -223,10 +223,13 @@ public final class SkylandCommands {
     }
 
     private int pieces(CommandSender to) {
+        Msg.send(to, "Built-in biomes (generated, no setup needed): <green>" + String.join(", ",
+                java.util.Arrays.stream(dev.skyrealms.terrain.TerrainBiome.values()).map(b -> b.id).toList()));
         if (plugin.library().biomes().isEmpty()) {
-            Msg.send(to, "No pieces yet. Go to a biome and run <white>/skylandadmin capture <biome> medium");
+            to.sendMessage(Msg.c(" <gray>No custom captured biomes. (Optional: <white>/skylandadmin capture <biome> medium</white>)"));
             return Command.SINGLE_SUCCESS;
         }
+        to.sendMessage(Msg.c(" <gray>Custom captured biomes:"));
         for (String b : plugin.library().biomes()) {
             to.sendMessage(Msg.c(" <green>" + b + "<gray>: " + String.join(", ",
                     plugin.library().variants(b).stream().map(v -> v.name + " <dark_gray>(" + sizeName(v.radius) + ")<gray>").toList())));
@@ -244,9 +247,9 @@ public final class SkylandCommands {
         OfflinePlayer target = offline(playerName);
         biome = biome.toLowerCase(Locale.ROOT);
         if (plugin.islands().of(target.getUniqueId()) != null) { Msg.error(sender, playerName + " already has an island."); return 0; }
-        if (plugin.library().variants(biome).isEmpty()) { Msg.error(sender, "No pieces for biome <white>" + biome + "</white>."); return 0; }
+        if (!plugin.biomes().startable(biome)) { Msg.error(sender, "Can't start an island with biome <white>" + biome + "</white>."); return 0; }
         Island i = plugin.islands().create(target.getUniqueId(), tier);
-        for (int n = 0; n < tier.startPieces; n++) plugin.grower().grow(plugin.skyWorld(), i, biome, null);
+        plugin.grower().growMany(plugin.skyWorld(), i, biome, tier.startPieces, null);
         plugin.islands().save();
         Msg.send(sender, "Created a " + tier.pretty() + " " + biome + " island for " + playerName + " at " + i.centerX + ", " + i.centerZ + ".");
         return Command.SINGLE_SUCCESS;

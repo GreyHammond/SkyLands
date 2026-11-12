@@ -47,7 +47,8 @@ public final class ClearQueue extends BukkitRunnable {
             int min = w.world.getMinHeight();
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
-                    int top = snap.getHighestBlockYAt(x, z);
+                    // The height lookup skips plants (grass, flowers, sugar cane), so scan a little above it.
+                    int top = Math.min(w.world.getMaxHeight() - 1, snap.getHighestBlockYAt(x, z) + 8);
                     for (int y = top; y >= min; y--) {
                         if (snap.getBlockType(x, y, z).isAir()) continue;
                         chunk.getBlock(x, y, z).setType(Material.AIR, false);

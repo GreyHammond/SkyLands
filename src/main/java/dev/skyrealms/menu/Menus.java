@@ -154,7 +154,8 @@ public final class Menus {
 
     public void biomes(Player p, Mode mode, Tier tier) {
         Island i = plugin.islands().of(p.getUniqueId());
-        List<String> list = new ArrayList<>(plugin.library().biomes());
+        List<String> list = new ArrayList<>(plugin.biomes().all());
+        if (mode == Mode.BUY) list.removeIf(b -> !plugin.biomes().startable(b));
         if (mode == Mode.GROW && i != null) list.retainAll(i.biomes);
         if (mode == Mode.UNLOCK && i != null) list.removeAll(i.biomes);
         String title = switch (mode) {
@@ -167,9 +168,9 @@ public final class Menus {
         int slot = 0;
         for (String b : list) {
             if (slot >= (rows - 1) * 9) break;
-            int variants = plugin.library().variants(b).size();
+            String style = plugin.biomes().builtIn(b) ? describe(b) : plugin.library().variants(b).size() + " captured terrain styles";
             switch (mode) {
-                case BUY -> m.button(slot++, item(biomeIcon(b), "<green>" + pretty(b), "<gray>" + variants + " terrain styles",
+                case BUY -> m.button(slot++, item(biomeIcon(b), "<green>" + pretty(b), "<gray>" + style,
                         "<gray>Island: <white>" + tier.pretty() + " for <gold>" + svc.money(tier.price)),
                         pl -> confirm(pl, "Buy a " + tier.pretty() + " " + pretty(b) + " island?", tier.price,
                                 yes -> { yes.closeInventory(); svc.buy(yes, tier, b); }, back -> biomes(back, Mode.BUY, tier)));
@@ -177,7 +178,7 @@ public final class Menus {
                         "<gray>Cost: <gold>" + svc.money(svc.growPrice())),
                         pl -> confirm(pl, "Grow more " + pretty(b) + "?", svc.growPrice(),
                                 yes -> { svc.grow(yes, b); biomes(yes, Mode.GROW, null); }, back -> biomes(back, Mode.GROW, null)));
-                case UNLOCK -> m.button(slot++, item(biomeIcon(b), "<light_purple>" + pretty(b), "<gray>" + variants + " terrain styles",
+                case UNLOCK -> m.button(slot++, item(biomeIcon(b), "<light_purple>" + pretty(b), "<gray>" + style,
                         "<gray>Attaches a new region to your edge", "<gray>Cost: <gold>" + svc.money(svc.unlockPrice(b))),
                         pl -> confirm(pl, "Unlock " + pretty(b) + "?", svc.unlockPrice(b),
                                 yes -> { yes.closeInventory(); svc.unlockBiome(yes, b); }, back -> biomes(back, Mode.UNLOCK, null)));
@@ -335,7 +336,28 @@ public final class Menus {
 
     private static org.bukkit.inventory.ItemStack back() { return item(Material.ARROW, "<white>Back"); }
 
+    private String describe(String biome) {
+        return switch (biome) {
+            case "plains" -> "Gentle grassland with a few oaks";
+            case "hilly_plains" -> "Rolling grassy hills";
+            case "meadow" -> "Wildflowers everywhere";
+            case "oak_forest" -> "Dense oak and birch woods";
+            case "dark_oak_forest" -> "Dark canopy and giant mushrooms";
+            case "cherry_grove" -> "Pink blossoms and petals";
+            case "jungle" -> "Towering jungle trees and bushes";
+            case "swamp" -> "Murky shallows and lily pads";
+            case "desert" -> "Sand dunes and cacti";
+            case "badlands" -> "Striped terracotta mesas";
+            case "beach" -> "Sandy shore at sea level";
+            case "shallow_ocean" -> "Shallow water with seagrass";
+            case "deep_ocean" -> "Deep water and kelp forests";
+            default -> "Generated terrain";
+        };
+    }
+
     private Material biomeIcon(String biome) {
+        Material builtIn = plugin.biomes().icon(biome);
+        if (builtIn != null) return builtIn;
         String configured = plugin.getConfig().getString("biome-icons." + biome);
         Material m = configured == null ? null : Material.matchMaterial(configured);
         if (m != null && m.isItem()) return m;
@@ -361,7 +383,9 @@ public final class Menus {
         return Material.GRASS_BLOCK;
     }
 
-    static String pretty(String biome) {
+    private String pretty(String biome) { return plugin.biomes().pretty(biome); }
+
+    static String prettyId(String biome) {
         StringBuilder sb = new StringBuilder();
         for (String w : biome.split("_")) {
             if (w.isEmpty()) continue;
