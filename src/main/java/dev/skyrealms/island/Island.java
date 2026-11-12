@@ -23,6 +23,10 @@ public final class Island {
     public boolean xpBackfilled;
     /** Underside style id used for land grown from now on. */
     public String underside = "rock";
+    /** Cosmetics. name is null for the default "<owner>'s Island". islets: x, y, z, radius of placed decorations. */
+    public String name;
+    public String theme, particles = "none", border = "none", decorations = "none";
+    public final List<int[]> islets = new ArrayList<>();
     public final LinkedHashSet<String> biomes = new LinkedHashSet<>();
     public final List<PiecePlacement> pieces = new ArrayList<>();
     /** Home offset from the centre; null means "top of the centre column". */

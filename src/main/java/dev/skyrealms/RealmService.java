@@ -74,6 +74,9 @@ public final class RealmService {
         // Room only: the border and piece cap grow, and players add land with Grow Land.
         i.tier = next;
         plugin.xp().add(i, plugin.xp().levels().upgradeXp(next));
+        // Floating islets sat just outside the old border; move them out past the new one.
+        if (!i.islets.isEmpty()) dev.skyrealms.cosmetic.Islets.apply(plugin.skyWorld(), i,
+                dev.skyrealms.cosmetic.Cosmetics.DecorationSet.byId(i.decorations), plugin.baseY());
         plugin.islands().save();
         Msg.send(p, "Your island is now <white>" + next.pretty() + "</white> (" + next.footprint + "x" + next.footprint
                 + "), with room for <white>" + next.maxPieces + "</white> pieces of land. Use <white>Grow Land</white> to fill it.");

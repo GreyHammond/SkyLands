@@ -94,6 +94,12 @@ economy:
     singular: ""
     plural: ""
 
+# Cosmetics (unlock levels are in levels.yml under cosmetic-levels).
+cosmetics:
+  name-max-length: 24
+  # Island names containing any of these (case-insensitive) are refused.
+  banned-words: []
+
 # Auto-prune: islands whose owner and co-owners have all been offline this long are archived
 # and removed from the world. The owner (or an admin) can restore them within restore-days.
 prune:

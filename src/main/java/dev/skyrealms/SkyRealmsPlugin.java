@@ -36,6 +36,8 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private dev.skyrealms.island.ClearQueue clearer;
     private dev.skyrealms.island.IslandArchiver archiver;
     private dev.skyrealms.level.XpService xp;
+    private dev.skyrealms.cosmetic.CosmeticService cosmetics;
+    private dev.skyrealms.cosmetic.NamePrompt namePrompt;
 
     @Override
     public void onEnable() {
@@ -92,6 +94,10 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         pm.registerEvents(archiver, this);
         pm.registerEvents(new MenuListener(), this);
         pm.registerEvents(new dev.skyrealms.level.XpListener(this), this);
+        cosmetics = new dev.skyrealms.cosmetic.CosmeticService(this);
+        namePrompt = new dev.skyrealms.cosmetic.NamePrompt(this);
+        pm.registerEvents(namePrompt, this);
+        Bukkit.getScheduler().runTaskTimer(this, new dev.skyrealms.cosmetic.CosmeticEffects(this), 40L, 10L);
         // Islands from before levels existed get XP for the land and biomes they already have.
         Bukkit.getScheduler().runTask(this, () -> {
             for (var i : islands.all()) xp.backfill(i);
@@ -130,4 +136,6 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public dev.skyrealms.island.ClearQueue clearer() { return clearer; }
     public dev.skyrealms.island.IslandArchiver archiver() { return archiver; }
     public dev.skyrealms.level.XpService xp() { return xp; }
+    public dev.skyrealms.cosmetic.CosmeticService cosmetics() { return cosmetics; }
+    public dev.skyrealms.cosmetic.NamePrompt namePrompt() { return namePrompt; }
 }

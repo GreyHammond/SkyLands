@@ -21,6 +21,12 @@ public final class Levels {
             Map.entry("volcanic", 50), Map.entry("crystal", 50), Map.entry("ancient", 50)));
     private final Map<String, Integer> undersideLevels = new HashMap<>(Map.of(
             "rock", 1, "roots", 10, "ice", 20, "lush", 30, "dripstone", 40, "crystal", 55, "nether", 65, "ruins", 75));
+    private final Map<String, Map<String, Integer>> cosmeticLevels = new HashMap<>(Map.of(
+            "particles", new HashMap<>(Map.of("none", 1, "fireflies", 10, "petals", 25, "snowfall", 40, "embers", 60, "sparkles", 80, "aurora", 100)),
+            "border", new HashMap<>(Map.of("none", 1, "basic", 15, "leaves", 30, "glow", 45, "flame", 70)),
+            "decorations", new HashMap<>(Map.of("none", 1, "few", 20, "more", 50, "ring", 90)),
+            "themes", new HashMap<>(Map.of("frozen", 20, "medieval", 35, "fantasy", 45, "magical", 60, "volcanic", 70, "ancient", 80))));
+    public final int nameLevel;
     private final TreeMap<Integer, String> titles = new TreeMap<>();
     private final Map<Integer, List<String>> rewards = new HashMap<>();
     public final int announceEvery;
@@ -45,6 +51,14 @@ public final class Levels {
         if (bl != null) for (String k : bl.getKeys(false)) biomeLevels.put(k.toLowerCase(Locale.ROOT), Math.max(1, bl.getInt(k)));
         ConfigurationSection ul = y.getConfigurationSection("underside-levels");
         if (ul != null) for (String k : ul.getKeys(false)) undersideLevels.put(k.toLowerCase(Locale.ROOT), Math.max(1, ul.getInt(k)));
+        ConfigurationSection cl = y.getConfigurationSection("cosmetic-levels");
+        if (cl != null) for (String cat : cl.getKeys(false)) {
+            ConfigurationSection c = cl.getConfigurationSection(cat);
+            if (c == null) continue;
+            var map = cosmeticLevels.computeIfAbsent(cat.toLowerCase(Locale.ROOT), k -> new HashMap<>());
+            for (String k : c.getKeys(false)) map.put(k.toLowerCase(Locale.ROOT), Math.max(1, c.getInt(k)));
+        }
+        nameLevel = Math.max(1, y.getInt("island-name-level", 5));
         ConfigurationSection ts = y.getConfigurationSection("titles");
         if (ts != null) for (String k : ts.getKeys(false)) {
             try { titles.put(Integer.parseInt(k), ts.getString(k)); } catch (NumberFormatException ignored) {}
@@ -82,6 +96,11 @@ public final class Levels {
     public int biomeLevel(String biome) { return biomeLevels.getOrDefault(biome.toLowerCase(Locale.ROOT), 1); }
 
     public int undersideLevel(String style) { return undersideLevels.getOrDefault(style.toLowerCase(Locale.ROOT), 1); }
+
+    /** Level needed for a cosmetic: category is particles / border / decorations / themes. */
+    public int cosmeticLevel(String category, String id) {
+        return cosmeticLevels.getOrDefault(category, Map.of()).getOrDefault(id.toLowerCase(Locale.ROOT), 1);
+    }
 
     public List<String> rewards(int level) { return rewards.getOrDefault(level, List.of()); }
 }

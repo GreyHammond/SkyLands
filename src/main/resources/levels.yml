@@ -60,6 +60,33 @@ underside-levels:
   nether: 65
   ruins: 75
 
+# Level needed for each cosmetic and theme.
+island-name-level: 5
+cosmetic-levels:
+  particles:
+    fireflies: 10
+    petals: 25
+    snowfall: 40
+    embers: 60
+    sparkles: 80
+    aurora: 100
+  border:
+    basic: 15
+    leaves: 30
+    glow: 45
+    flame: 70
+  decorations:
+    few: 20
+    more: 50
+    ring: 90
+  themes:
+    frozen: 20
+    medieval: 35
+    fantasy: 45
+    magical: 60
+    volcanic: 70
+    ancient: 80
+
 # Titles: the highest one at or below the island's level is shown.
 titles:
   1: Castaway

@@ -112,6 +112,8 @@ public final class Menus {
         m.button(24, owner ? item(Material.NAME_TAG, "<gold>Transfer Island", "<gray>Give the island to someone else.",
                         "<red>You lose all access to it.")
                 : item(Material.GRAY_DYE, "<gray>Transfer Island", "<dark_gray>Only the owner can do this."), owner ? this::transfer : null);
+        m.button(31, glow(item(Material.ALLIUM, "<light_purple>Cosmetics & Themes", "<gray>Island name, particles, border,",
+                "<gray>floating islets and themes.", "<dark_gray>More unlock as your island levels up.")), this::cosmetics);
         m.button(27, back(), this::main);
         m.fill().open(p);
     }
@@ -141,7 +143,7 @@ public final class Menus {
     }
 
     private org.bukkit.inventory.ItemStack info(Island i) {
-        return item(Material.BOOK, "<white>Your Island", "<gold>" + plugin.xp().badge(i),
+        return item(Material.BOOK, "<white>" + plugin.cosmetics().displayName(i), "<gold>" + plugin.xp().badge(i),
                 "<gray>Size: <white>" + i.tier.pretty() + " (" + i.tier.footprint + "x" + i.tier.footprint + ")",
                 "<gray>Land pieces: <white>" + i.pieces.size() + "/" + i.tier.maxPieces,
                 "<gray>Biomes: <green>" + String.join(", ", i.biomes),
@@ -431,8 +433,8 @@ public final class Menus {
             OfflinePlayer o = Bukkit.getOfflinePlayer(i.owner);
             String rank = ranked ? "<gold>#" + (list.indexOf(i) + 1) + " " : "";
             Role r = i.roleOf(p.getUniqueId());
-            return head(o, rank + "<green>" + Objects.toString(o.getName(), "?") + "'s island",
-                    "<gold>" + plugin.xp().badge(i),
+            return head(o, rank + "<green>" + plugin.cosmetics().displayName(i),
+                    "<gold>" + plugin.xp().badge(i) + (i.name != null ? " <gray>· by " + Objects.toString(o.getName(), "?") : ""),
                     "<gray>" + i.tier.pretty() + " · " + i.biomes.size() + " biomes · " + String.format("%,d", i.visitorsTotal) + " visits",
                     o.isOnline() ? "<green>Owner online" : "<gray>Owner offline",
                     r == Role.OWNER ? "<aqua>Your island" : r == Role.COOWNER ? "<aqua>You co-own this" : r == Role.FRIEND ? "<aqua>You're a friend here" : "",
@@ -441,6 +443,115 @@ public final class Menus {
                 pg -> showIslands(p, list, title, pg, back, ranked));
         if (list.isEmpty()) m.button(22, item(Material.BARRIER, "<red>No islands here yet"), null);
         m.button(45, back(), back);
+        m.fill().open(p);
+    }
+
+    // ---- cosmetics & themes ----------------------------------------------------------------
+
+    public void cosmetics(Player p) {
+        Island i = svc.owned(p);
+        if (i == null) return;
+        var cs = plugin.cosmetics();
+        int level = plugin.xp().level(i);
+        var theme = dev.skyrealms.cosmetic.Cosmetics.Theme.byId(i.theme);
+        Menu m = new Menu(3, "<dark_aqua>Cosmetics & Themes");
+        m.button(10, item(theme != null ? theme.icon : Material.PAINTING, "<light_purple>Themes",
+                "<gray>One tap: underside + particles + border.", "<gray>Current: <white>" + (theme != null ? theme.displayName : "none")), this::themes);
+        var ps = dev.skyrealms.cosmetic.Cosmetics.ParticleSet.byId(i.particles);
+        m.button(11, item(ps.icon == Material.BARRIER ? Material.GLOWSTONE_DUST : ps.icon, "<aqua>Particles",
+                "<gray>Ambient effects on your island.", "<gray>Current: <white>" + ps.displayName), pl -> options(pl, "particles"));
+        var bs = dev.skyrealms.cosmetic.Cosmetics.BorderStyle.byId(i.border);
+        m.button(12, item(bs.icon == Material.BARRIER ? Material.WHITE_DYE : bs.icon, "<aqua>Border Style",
+                "<gray>Lights up when you're near the edge.", "<gray>Current: <white>" + bs.displayName), pl -> options(pl, "border"));
+        var ds = dev.skyrealms.cosmetic.Cosmetics.DecorationSet.byId(i.decorations);
+        m.button(13, item(ds.icon == Material.BARRIER ? Material.MOSS_BLOCK : ds.icon, "<aqua>Floating Decorations",
+                "<gray>Little islets floating around.", "<gray>Current: <white>" + ds.displayName), pl -> options(pl, "decorations"));
+        boolean canName = level >= plugin.xp().levels().nameLevel;
+        m.button(15, canName ? item(Material.NAME_TAG, "<gold>Rename Island", "<gray>Now: <white>" + cs.displayName(i),
+                        "<yellow>Tap, then type the name in chat")
+                : item(Material.GRAY_DYE, "<gray>Rename Island <dark_gray>(locked)", "<red>Unlocks at island level " + plugin.xp().levels().nameLevel),
+                canName ? pl -> plugin.namePrompt().ask(pl) : null);
+        var us = dev.skyrealms.terrain.UndersideStyle.byId(i.underside);
+        m.button(16, item(us.icon, "<aqua>Underside Style", "<gray>Current: <white>" + us.displayName), this::undersides);
+        m.button(18, back(), this::manage);
+        m.fill().open(p);
+    }
+
+    public void themes(Player p) {
+        Island i = svc.owned(p);
+        if (i == null) return;
+        int level = plugin.xp().level(i);
+        Menu m = new Menu(3, "<dark_aqua>Themes");
+        int slot = 10;
+        for (var t : dev.skyrealms.cosmetic.Cosmetics.Theme.values()) {
+            int need = plugin.cosmetics().need(t);
+            String parts = dev.skyrealms.terrain.UndersideStyle.byId(t.underside).displayName + " underside · "
+                    + t.particles.displayName + " particles · " + t.border.displayName + " border";
+            if (level < need) {
+                m.button(slot++, item(Material.GRAY_DYE, "<gray>" + t.displayName + " <dark_gray>(locked)", "<dark_gray>" + parts,
+                        "<red>Unlocks at island level " + need), null);
+                continue;
+            }
+            boolean current = t.id.equals(i.theme);
+            var icon = item(t.icon, (current ? "<green>✔ " : "<light_purple>") + t.displayName, "<gray>" + parts,
+                    "<dark_gray>Underside applies to new land only.", current ? "<green>In use" : "<yellow>Tap to apply");
+            m.button(slot++, current ? glow(icon) : icon, pl -> { plugin.cosmetics().applyTheme(pl, t); themes(pl); });
+        }
+        m.button(18, back(), this::cosmetics);
+        m.fill().open(p);
+    }
+
+    /** Pick particles, border style or decorations. */
+    public void options(Player p, String category) {
+        Island i = svc.owned(p);
+        if (i == null) return;
+        int level = plugin.xp().level(i);
+        Enum<?>[] values = switch (category) {
+            case "particles" -> dev.skyrealms.cosmetic.Cosmetics.ParticleSet.values();
+            case "border" -> dev.skyrealms.cosmetic.Cosmetics.BorderStyle.values();
+            default -> dev.skyrealms.cosmetic.Cosmetics.DecorationSet.values();
+        };
+        String title = switch (category) { case "particles" -> "Particles"; case "border" -> "Border Style"; default -> "Floating Decorations"; };
+        String currentId = switch (category) { case "particles" -> i.particles; case "border" -> i.border; default -> i.decorations; };
+        Menu m = new Menu(3, "<dark_aqua>" + title);
+        int slot = 10;
+        for (Enum<?> v : values) {
+            String id, name, desc; Material icon;
+            switch (v) {
+                case dev.skyrealms.cosmetic.Cosmetics.ParticleSet x -> { id = x.id; name = x.displayName; desc = x.description; icon = x.icon; }
+                case dev.skyrealms.cosmetic.Cosmetics.BorderStyle x -> { id = x.id; name = x.displayName; desc = x.description; icon = x.icon; }
+                case dev.skyrealms.cosmetic.Cosmetics.DecorationSet x -> { id = x.id; name = x.displayName; desc = x.description; icon = x.icon; }
+                default -> { continue; }
+            }
+            int need = plugin.cosmetics().need(v);
+            if (level < need) {
+                m.button(slot++, item(Material.GRAY_DYE, "<gray>" + name + " <dark_gray>(locked)", "<dark_gray>" + desc,
+                        "<red>Unlocks at island level " + need), null);
+                continue;
+            }
+            boolean current = id.equals(currentId);
+            List<String> lore = new ArrayList<>(List.of("<gray>" + desc));
+            if (category.equals("decorations") && !id.equals("none")) lore.add("<dark_gray>Changing this rebuilds the islets.");
+            lore.add(current ? "<green>In use" : "<yellow>Tap to use");
+            var it = item(icon, (current ? "<green>✔ " : "<aqua>") + name, lore.toArray(String[]::new));
+            m.button(slot++, current ? glow(it) : it, pl -> {
+                switch (v) {
+                    case dev.skyrealms.cosmetic.Cosmetics.ParticleSet x -> plugin.cosmetics().setParticles(pl, x);
+                    case dev.skyrealms.cosmetic.Cosmetics.BorderStyle x -> plugin.cosmetics().setBorder(pl, x);
+                    case dev.skyrealms.cosmetic.Cosmetics.DecorationSet x -> {
+                        if (!i.islets.isEmpty()) {
+                            confirm(pl, "Rebuild floating islets? Anything built on them is removed.", 0,
+                                    yes -> { plugin.cosmetics().setDecorations(yes, x); options(yes, category); }, back -> options(back, category));
+                            return;
+                        }
+                        plugin.cosmetics().setDecorations(pl, x);
+                    }
+                    default -> { }
+                }
+                options(pl, category);
+            });
+        }
+        m.button(18, back(), this::cosmetics);
         m.fill().open(p);
     }
 
@@ -505,6 +616,7 @@ public final class Menus {
         for (String b : plugin.biomes().all()) if (lv.biomeLevel(b) == l && l > 1) out.add(pretty(b));
         for (var st : dev.skyrealms.terrain.UndersideStyle.values())
             if (lv.undersideLevel(st.id) == l && l > 1) out.add(st.displayName + " underside");
+        out.addAll(plugin.cosmetics().unlocksAt(l));
         String t = lv.titles().get(l);
         if (t != null) out.add("title \"" + t + "\"");
         return out;
@@ -519,6 +631,7 @@ public final class Menus {
         TreeSet<Integer> milestones = new TreeSet<>(lv.titles().keySet());
         for (String b : plugin.biomes().all()) if (lv.biomeLevel(b) > 1) milestones.add(lv.biomeLevel(b));
         for (var st : dev.skyrealms.terrain.UndersideStyle.values()) if (lv.undersideLevel(st.id) > 1) milestones.add(lv.undersideLevel(st.id));
+        for (int l = 2; l <= lv.maxLevel; l++) if (!plugin.cosmetics().unlocksAt(l).isEmpty()) milestones.add(l);
         Menu m = new Menu(6, "<dark_aqua>Levels & Unlocks");
         m.button(4, levelCard(i), null);
         int slot = 9;

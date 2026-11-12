@@ -72,7 +72,8 @@ public final class XpListener implements Listener {
 
         Role role = i.roleOf(p.getUniqueId());
         String owner = Objects.toString(Bukkit.getOfflinePlayer(i.owner).getName(), "Someone");
-        p.showTitle(Title.title(Msg.c("<white>" + (role == Role.OWNER ? "Your Island" : owner + "'s Island")),
+        String shown = i.name != null ? plugin.cosmetics().displayName(i) : role == Role.OWNER ? "Your Island" : owner + "'s Island";
+        p.showTitle(Title.title(Msg.c("<white>" + shown),
                 Msg.c("<gold>" + plugin.xp().badge(i)),
                 Title.Times.times(Duration.ofMillis(250), Duration.ofMillis(1800), Duration.ofMillis(600))));
         if (role == Role.VISITOR) plugin.xp().visited(i, p.getUniqueId());

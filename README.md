@@ -10,7 +10,7 @@ jump off the edge and you drop out of the sky, landing somewhere below your isla
 Everything a player does happens in one chest menu, `/skyland`, so it works the same for
 Java players and Bedrock players joining through **Geyser + Floodgate**.
 
-> **Download:** [`docs/skylands.jar`](docs/skylands.jar) (v0.7.0) · Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
+> **Download:** [`docs/skylands.jar`](docs/skylands.jar) (v0.8.0) · Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
 
 ---
 
@@ -35,6 +35,8 @@ Java players and Bedrock players joining through **Geyser + Floodgate**.
   anything costs money.
 - **Island levels 1–100**: islands earn XP for growing, building, farming and visitors.
   Levels unlock biomes and titles, and the best islands show up in **Top Islands**.
+- **Cosmetics and themes**: name your island, add ambient particles, light up your border,
+  float islets around it, or apply a one-tap theme. All unlocked by level.
 - **Co-owners and transfers**: share an island with co-owners who can manage it with you,
   or hand it to someone else entirely.
 - **Auto-prune with restore**: islands left alone for 30 days are archived (blocks, chests,
@@ -143,6 +145,7 @@ tiers, biome names and player names.
 │   ├── Protection             Visitors · Friends · Island settings
 │   ├── Friends                add from online players, tap a head to remove
 │   ├── Set Home Here
+│   ├── Cosmetics & Themes     name, particles, border, floating islets, themes
 │   ├── Co-owners              owner only: add or remove co-owners
 │   ├── Transfer Island        owner only: give the island away (you become a visitor)
 │   └── Island info
@@ -315,6 +318,31 @@ Enterprise). On a free plan, the repository has to be public for Pages to work.
 
 ---
 
+## Cosmetics & themes
+
+**Manage Island → Cosmetics & Themes.** Owners and co-owners can change them.
+
+| Cosmetic | What it does | Unlocks at level |
+|---|---|---|
+| Island name | Tap **Rename**, then type the name in chat (works on Bedrock). Shown in the arrival banner, visits and Top Islands. `cosmetics.banned-words` filters names | 5 |
+| Particles | Fireflies · Petals · Snowfall · Embers · Sparkles · Aurora, shown around players on your island | 10 · 25 · 40 · 60 · 80 · 100 |
+| Border style | Basic · Leaves · Glow · Flame. Your border lights up when you're within 10 blocks of it | 15 · 30 · 45 · 70 |
+| Floating decorations | A Few Islets · Many Islets · Rock Ring, floating just outside your border (they move out when you upgrade) | 20 · 50 · 90 |
+
+**Themes** set the underside style (for new land), particles and border in one tap. A theme
+can use parts you haven't unlocked on their own yet.
+
+| Theme | Level | Underside | Particles | Border |
+|---|---|---|---|---|
+| Frozen | 20 | Ice | Snowfall | Basic |
+| Medieval | 35 | Ruins | none | Basic |
+| Fantasy | 45 | Lush | Fireflies | Glow |
+| Magical | 60 | Crystal | Sparkles | Glow |
+| Volcanic | 70 | Nether | Embers | Flame |
+| Ancient | 80 | Ruins | Petals | Leaves |
+
+All cosmetic unlock levels are in `levels.yml` (`island-name-level`, `cosmetic-levels`).
+
 ## Island levels
 
 Islands earn XP and level up from **1 to 100**. Owner and co-owner actions count.
@@ -389,8 +417,6 @@ Refunds give items back.
 
 ## Roadmap
 
-- Themes (one-click bundles) and cosmetics: particles, custom island names, border styles,
-  floating decorations, all unlocked by island level
 - Native Bedrock forms through the Floodgate API (chest menus already work)
 - More built-in biomes (snowy taiga, savanna, mushroom fields, ...)
 - Island leaderboards and island levels

@@ -156,6 +156,14 @@ public final class IslandManager {
         i.visitorsTotal = s.getLong("visitors", 0);
         i.xpBackfilled = s.getBoolean("xp-backfilled", false);
         i.underside = s.getString("underside", "rock");
+        i.name = s.getString("name");
+        i.theme = s.getString("theme");
+        i.particles = s.getString("particles", "none");
+        i.border = s.getString("border", "none");
+        i.decorations = s.getString("decorations", "none");
+        for (List<?> l : s.getList("islets", List.of()).stream().filter(o -> o instanceof List<?>).map(o -> (List<?>) o).toList()) {
+            if (l.size() == 4) i.islets.add(new int[]{num(l.get(0)), num(l.get(1)), num(l.get(2)), num(l.get(3))});
+        }
         return i;
     }
 
@@ -178,7 +186,15 @@ public final class IslandManager {
         s.set("visitors", i.visitorsTotal);
         s.set("xp-backfilled", i.xpBackfilled);
         s.set("underside", i.underside);
+        s.set("name", i.name);
+        s.set("theme", i.theme);
+        s.set("particles", i.particles);
+        s.set("border", i.border);
+        s.set("decorations", i.decorations);
+        s.set("islets", i.islets.stream().map(a -> List.of(a[0], a[1], a[2], a[3])).toList());
     }
+
+    private static int num(Object o) { return o instanceof Number n ? n.intValue() : 0; }
 
     private static void loadFlags(ConfigurationSection s, String path, Island i, Role role) {
         if (!s.isList(path)) return; // keep defaults

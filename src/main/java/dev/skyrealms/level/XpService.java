@@ -123,13 +123,16 @@ public final class XpService {
             Msg.send(p, "Your island reached <gold>level " + lv + "</gold>"
                     + (newTitle ? " and earned the title <yellow>" + title + "</yellow>" : "") + "!");
             if (!unlocked.isEmpty()) p.sendMessage(Msg.c(" <gray>New biomes to unlock: <green>" + String.join(", ", unlocked)));
+            List<String> cos = plugin.cosmetics().unlocksAt(lv);
+            if (!cos.isEmpty()) p.sendMessage(Msg.c(" <gray>New cosmetics: <light_purple>" + String.join(", ", cos)
+                    + " <dark_gray>(Manage Island → Cosmetics)"));
             if (!styles.isEmpty()) p.sendMessage(Msg.c(" <gray>New underside style: <aqua>" + String.join(", ", styles)
                     + " <dark_gray>(Manage Island → Underside Style)"));
             if (p.getWorld().equals(plugin.skyWorld()) && i.containsLand(p.getX(), p.getZ())) firework(p.getLocation());
         }
         if (levels.announceEvery > 0 && lv % levels.announceEvery == 0) {
             Bukkit.broadcast(Msg.c("<dark_aqua>[<aqua>SkyLands</aqua>]</dark_aqua> <white>"
-                    + name(i.owner) + "'s</white> <gray>island reached <gold>level " + lv + "</gold>: <yellow>" + title + "</yellow>!"));
+                    + plugin.cosmetics().displayName(i) + "</white> <gray>reached <gold>level " + lv + "</gold>: <yellow>" + title + "</yellow>!"));
         }
         for (String cmd : levels.rewards(lv)) {
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("{owner}", name(i.owner))
