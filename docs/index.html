@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkyLands</title>
+<meta name="description" content="SkyLands: a Paper plugin where players buy floating islands, grow them biome by biome, and jump off the edge to fall back to the overworld. Java and Bedrock friendly.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Silkscreen&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sky-top: #7cc4f5;
+  --sky-bottom: #d9f0ff;
+  --bg: #f6fbff;
+  --surface: #ffffff;
+  --surface-2: #eef6fd;
+  --text: #13253a;
+  --muted: #4d6276;
+  --line: #d6e5f2;
+  --accent: #2f9e5a;
+  --accent-ink: #ffffff;
+  --accent-2: #e2679a;
+  --gold: #b7791f;
+  --shadow: 0 10px 30px rgba(19, 37, 58, .10);
+  --grass: #5fb84a; --grass2: #4da23b;
+  --dirt: #8a5a35; --dirt2: #74492a;
+  --stone: #8f969c; --stone2: #767d84;
+  --log: #6b4a2b;
+  --leaf: #3f8f37; --leaf2: #357a2e;
+  --cherry: #f3a6c8; --cherry2: #e888b3;
+  --flower: #f5d547;
+  --radius: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sky-top: #0d1b33;
+    --sky-bottom: #1d3557;
+    --bg: #0b1424;
+    --surface: #12203a;
+    --surface-2: #172a4a;
+    --text: #e6eef8;
+    --muted: #9fb2c8;
+    --line: #23395c;
+    --accent: #4cc27a;
+    --accent-ink: #062012;
+    --accent-2: #f08cb8;
+    --gold: #e5b04f;
+    --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+  }
+}
+:root[data-theme="dark"] {
+  --sky-top: #0d1b33;
+  --sky-bottom: #1d3557;
+  --bg: #0b1424;
+  --surface: #12203a;
+  --surface-2: #172a4a;
+  --text: #e6eef8;
+  --muted: #9fb2c8;
+  --line: #23395c;
+  --accent: #4cc27a;
+  --accent-ink: #062012;
+  --accent-2: #f08cb8;
+  --gold: #e5b04f;
+  --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 17px/1.6 "Outfit", system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); }
+code, pre { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: .9em; }
+code { background: var(--surface-2); padding: .1em .4em; border-radius: 6px; }
+pre { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; overflow-x: auto; line-height: 1.5; }
+pre code { background: none; padding: 0; }
+
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+.pixel { font-family: "Silkscreen", "Outfit", monospace; letter-spacing: .02em; }
+
+/* nav */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  border-bottom: 1px solid var(--line);
+}
+nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 58px; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; color: var(--text); text-decoration: none; }
+.brand-mark { width: 22px; height: 22px; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); }
+.brand-mark i { display: block; }
+.navlinks { display: flex; gap: 22px; align-items: center; }
+.navlinks a { color: var(--muted); text-decoration: none; font-weight: 500; font-size: 15px; }
+.navlinks a:hover { color: var(--text); }
+.theme-btn {
+  border: 1px solid var(--line); background: var(--surface); color: var(--text);
+  border-radius: 999px; width: 36px; height: 36px; cursor: pointer; font-size: 16px;
+}
+@media (max-width: 720px) { .navlinks a:not(.keep) { display: none; } }
+
+/* hero */
+.hero {
+  position: relative; overflow: hidden;
+  background: linear-gradient(180deg, var(--sky-top), var(--sky-bottom) 85%, var(--bg));
+  padding: 64px 0 40px;
+}
+.hero .wrap { display: grid; grid-template-columns: 1.05fr 1fr; gap: 32px; align-items: center; }
+@media (max-width: 860px) { .hero .wrap { grid-template-columns: 1fr; text-align: center; } }
+.tag {
+  display: inline-block; font-size: 12px; padding: 6px 12px; border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 70%, transparent); color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+}
+h1 { font-size: clamp(38px, 6vw, 64px); line-height: 1.04; margin: 16px 0 14px; letter-spacing: -.02em; font-weight: 800; }
+h1 em { font-style: normal; color: var(--accent); }
+.lede { font-size: clamp(17px, 2.2vw, 20px); color: var(--muted); max-width: 34ch; margin: 0 0 26px; }
+@media (max-width: 860px) { .lede { margin-left: auto; margin-right: auto; } }
+.ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+@media (max-width: 860px) { .ctas { justify-content: center; } }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 12px;
+  font-weight: 700; text-decoration: none; border: 2px solid transparent;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn-primary { background: var(--accent); color: var(--accent-ink); box-shadow: 0 4px 0 color-mix(in srgb, var(--accent) 60%, black); }
+.btn-ghost { background: var(--surface); color: var(--text); border-color: var(--line); }
+
+.scene { position: relative; height: 380px; }
+.island { position: absolute; left: 50%; top: 40px; width: min(440px, 92%); transform: translateX(-50%); animation: bob 6s ease-in-out infinite; filter: drop-shadow(0 24px 24px rgba(19,37,58,.18)); }
+@keyframes bob { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -12px); } }
+.cloud { position: absolute; background: #fff; opacity: .85; border-radius: 4px; box-shadow: 16px 0 0 #fff, 32px 0 0 #fff, 8px -12px 0 #fff, 24px -12px 0 #fff; width: 16px; height: 12px; animation: drift linear infinite; }
+:root[data-theme="dark"] .cloud { opacity: .12; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .cloud { opacity: .12; } }
+@keyframes drift { from { transform: translateX(-80px); } to { transform: translateX(620px); } }
+.faller { position: absolute; left: 70%; top: 250px; width: 8px; height: 16px; background: var(--accent-2); border-radius: 2px; animation: fall 3.6s ease-in infinite; }
+.faller::before { content: ""; position: absolute; left: 0; top: -8px; width: 8px; height: 8px; background: #f2c9a0; border-radius: 2px; }
+@keyframes fall { 0% { transform: translateY(-30px); opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { transform: translateY(140px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .island, .cloud, .faller { animation: none; } }
+
+/* sections */
+section { padding: 72px 0; }
+section.alt { background: var(--surface-2); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.eyebrow { color: var(--accent); font-size: 13px; margin-bottom: 8px; }
+h2 { font-size: clamp(28px, 4vw, 40px); margin: 0 0 12px; letter-spacing: -.01em; line-height: 1.15; }
+.sub { color: var(--muted); max-width: 60ch; margin: 0 0 36px; }
+
+.grid { display: grid; gap: 18px; }
+.g3 { grid-template-columns: repeat(3, 1fr); }
+.g2 { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 860px) { .g3, .g2 { grid-template-columns: 1fr; } }
+
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 22px; box-shadow: var(--shadow);
+}
+.card h3 { margin: 12px 0 6px; font-size: 19px; }
+.card p { margin: 0; color: var(--muted); font-size: 16px; }
+.icon { width: 40px; height: 40px; display: grid; grid-template: repeat(4, 1fr) / repeat(4, 1fr); border-radius: 6px; overflow: hidden; }
+.icon i { display: block; }
+
+/* steps */
+.steps { counter-reset: step; }
+.step { position: relative; padding-left: 64px; }
+.step::before {
+  counter-increment: step; content: counter(step);
+  position: absolute; left: 22px; top: 22px; width: 30px; height: 30px; border-radius: 8px;
+  display: grid; place-items: center; font-family: "Silkscreen", monospace; font-size: 14px;
+  background: var(--accent); color: var(--accent-ink);
+}
+
+/* menu mock */
+.chest {
+  background: #c6c6c6; border-radius: 6px; padding: 14px; color: #3f3f3f;
+  box-shadow: inset -4px -4px 0 #555, inset 4px 4px 0 #fff, var(--shadow);
+  font-family: "Silkscreen", monospace;
+}
+.chest-title { font-size: 13px; margin: 0 0 10px 2px; }
+.slots { display: grid; grid-template-columns: repeat(9, 1fr); gap: 3px; }
+.slot { aspect-ratio: 1; background: #8b8b8b; box-shadow: inset 2px 2px 0 #373737, inset -2px -2px 0 #fff; display: grid; place-items: center; }
+.slot b { width: 62%; height: 62%; border-radius: 3px; display: block; }
+.slot.pane { background: #9a9a9a; }
+.legend { display: grid; gap: 10px; margin-top: 18px; }
+.legend div { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; color: var(--muted); }
+.legend span.sw { flex: none; width: 16px; height: 16px; border-radius: 3px; margin-top: 4px; }
+.legend strong { color: var(--text); }
+.tree { font-size: 15px; }
+.tree ul { list-style: none; margin: 0; padding-left: 18px; border-left: 2px dashed var(--line); }
+.tree > ul { padding-left: 0; border: 0; }
+.tree li { margin: 6px 0; }
+.tree li > span.t { font-weight: 700; }
+.tree small { color: var(--muted); }
+
+/* tables */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); }
+table { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 520px; }
+th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+th { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--surface-2); }
+tr:last-child td { border-bottom: 0; }
+td.num { font-variant-numeric: tabular-nums; }
+.yes, .no { display: inline-block; width: 22px; height: 22px; border-radius: 6px; text-align: center; line-height: 22px; font-weight: 800; font-size: 13px; }
+.yes { background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent); }
+.no { background: color-mix(in srgb, #d9534f 18%, transparent); color: #d9534f; }
+.center { text-align: center; }
+
+.tierbar { height: 8px; border-radius: 4px; background: var(--accent); }
+
+.callout {
+  border-left: 4px solid var(--gold); background: color-mix(in srgb, var(--gold) 10%, var(--surface));
+  padding: 14px 18px; border-radius: 0 var(--radius) var(--radius) 0; color: var(--text); font-size: 15px;
+}
+
+footer { padding: 40px 0 56px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); }
+footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#">
+      <span class="brand-mark" aria-hidden="true">
+        <i style="background:var(--grass)"></i><i style="background:var(--grass2)"></i><i style="background:var(--grass)"></i>
+        <i style="background:var(--dirt)"></i><i style="background:var(--dirt2)"></i><i style="background:var(--dirt)"></i>
+        <i></i><i style="background:var(--stone)"></i><i></i>
+      </span>
+      SkyLands
+    </a>
+    <div class="navlinks">
+      <a href="#features">Features</a>
+      <a href="#menu">Menu</a>
+      <a href="#protection">Protection</a>
+      <a href="#setup">Setup</a>
+      <button class="theme-btn" id="theme" type="button" aria-label="Toggle dark mode">◐</button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <span class="tag pixel">Paper 26.3 · Java + Bedrock</span>
+      <h1>Your own island <em>in the sky.</em></h1>
+      <p class="lede">Buy a floating island, grow it biome by biome, and jump off the edge to fall back to the world below.</p>
+      <div class="ctas">
+        <a class="btn btn-primary" href="#setup">Get started</a>
+        <a class="btn btn-ghost" href="#features">See how it works</a>
+      </div>
+    </div>
+    <div class="scene" aria-hidden="false">
+      <div class="cloud" style="top:40px; animation-duration:38s; animation-delay:-6s"></div>
+      <div class="cloud" style="top:120px; animation-duration:52s; animation-delay:-30s; transform:scale(.8)"></div>
+      <div class="cloud" style="top:300px; animation-duration:44s; animation-delay:-18s"></div>
+      <svg class="island" viewBox="0 64 448 320" role="img" aria-label="Pixel-art floating island with oak and cherry trees" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg"><rect x="32" y="144" width="8" height="8" fill="var(--grass)"/><rect x="32" y="152" width="8" height="8" fill="var(--dirt)"/><rect x="40" y="136" width="8" height="8" fill="var(--grass)"/><rect x="40" y="144" width="8" height="8" fill="var(--dirt)"/><rect x="48" y="136" width="8" height="8" fill="var(--grass)"/><rect x="48" y="144" width="8" height="8" fill="var(--dirt)"/><rect x="48" y="152" width="8" height="8" fill="var(--dirt2)"/><rect x="56" y="136" width="8" height="8" fill="var(--grass2)"/><rect x="56" y="144" width="8" height="8" fill="var(--dirt)"/><rect x="56" y="152" width="8" height="8" fill="var(--dirt)"/><rect x="64" y="128" width="8" height="8" fill="var(--grass)"/><rect x="64" y="136" width="8" height="8" fill="var(--dirt)"/><rect x="64" y="144" width="8" height="8" fill="var(--dirt)"/><rect x="64" y="152" width="8" height="8" fill="var(--stone)"/><rect x="72" y="120" width="8" height="8" fill="var(--grass2)"/><rect x="72" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="72" y="136" width="8" height="8" fill="var(--dirt)"/><rect x="72" y="144" width="8" height="8" fill="var(--stone)"/><rect x="72" y="152" width="8" height="8" fill="var(--stone)"/><rect x="80" y="120" width="8" height="8" fill="var(--grass2)"/><rect x="80" y="128" width="8" height="8" fill="var(--dirt2)"/><rect x="80" y="136" width="8" height="8" fill="var(--dirt)"/><rect x="80" y="144" width="8" height="8" fill="var(--dirt2)"/><rect x="80" y="152" width="8" height="8" fill="var(--stone)"/><rect x="80" y="160" width="8" height="8" fill="var(--stone)"/><rect x="80" y="168" width="8" height="8" fill="var(--stone)"/><rect x="80" y="176" width="8" height="8" fill="var(--stone)"/><rect x="80" y="184" width="8" height="8" fill="var(--stone2)"/><rect x="88" y="120" width="8" height="8" fill="var(--grass)"/><rect x="88" y="128" width="8" height="8" fill="var(--dirt2)"/><rect x="88" y="136" width="8" height="8" fill="var(--dirt)"/><rect x="88" y="144" width="8" height="8" fill="var(--stone2)"/><rect x="88" y="152" width="8" height="8" fill="var(--stone)"/><rect x="88" y="160" width="8" height="8" fill="var(--stone)"/><rect x="88" y="168" width="8" height="8" fill="var(--stone)"/><rect x="88" y="176" width="8" height="8" fill="var(--stone2)"/><rect x="88" y="184" width="8" height="8" fill="var(--stone)"/><rect x="96" y="112" width="8" height="8" fill="var(--grass2)"/><rect x="96" y="120" width="8" height="8" fill="var(--dirt)"/><rect x="96" y="128" width="8" height="8" fill="var(--dirt2)"/><rect x="96" y="136" width="8" height="8" fill="var(--stone)"/><rect x="96" y="144" width="8" height="8" fill="var(--stone)"/><rect x="96" y="152" width="8" height="8" fill="var(--stone2)"/><rect x="96" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="96" y="168" width="8" height="8" fill="var(--stone2)"/><rect x="96" y="176" width="8" height="8" fill="var(--stone2)"/><rect x="96" y="184" width="8" height="8" fill="var(--stone2)"/><rect x="96" y="192" width="8" height="8" fill="var(--stone2)"/><rect x="104" y="112" width="8" height="8" fill="var(--grass)"/><rect x="104" y="120" width="8" height="8" fill="var(--dirt)"/><rect x="104" y="128" width="8" height="8" fill="var(--dirt2)"/><rect x="104" y="136" width="8" height="8" fill="var(--stone)"/><rect x="104" y="144" width="8" height="8" fill="var(--stone)"/><rect x="104" y="152" width="8" height="8" fill="var(--stone2)"/><rect x="104" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="104" y="168" width="8" height="8" fill="var(--stone2)"/><rect x="104" y="176" width="8" height="8" fill="var(--stone2)"/><rect x="104" y="184" width="8" height="8" fill="var(--stone2)"/><rect x="104" y="192" width="8" height="8" fill="var(--stone)"/><rect x="112" y="112" width="8" height="8" fill="var(--grass2)"/><rect x="112" y="120" width="8" height="8" fill="var(--dirt)"/><rect x="112" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="112" y="136" width="8" height="8" fill="var(--stone2)"/><rect x="112" y="144" width="8" height="8" fill="var(--stone)"/><rect x="112" y="152" width="8" height="8" fill="var(--stone2)"/><rect x="112" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="112" y="168" width="8" height="8" fill="var(--stone)"/><rect x="112" y="176" width="8" height="8" fill="var(--stone)"/><rect x="112" y="184" width="8" height="8" fill="var(--stone2)"/><rect x="112" y="192" width="8" height="8" fill="var(--stone2)"/><rect x="120" y="112" width="8" height="8" fill="var(--grass)"/><rect x="120" y="120" width="8" height="8" fill="var(--dirt2)"/><rect x="120" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="120" y="136" width="8" height="8" fill="var(--dirt2)"/><rect x="120" y="144" width="8" height="8" fill="var(--stone)"/><rect x="120" y="152" width="8" height="8" fill="var(--stone)"/><rect x="120" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="120" y="168" width="8" height="8" fill="var(--stone2)"/><rect x="120" y="176" width="8" height="8" fill="var(--stone)"/><rect x="120" y="184" width="8" height="8" fill="var(--stone)"/><rect x="120" y="192" width="8" height="8" fill="var(--stone2)"/><rect x="120" y="200" width="8" height="8" fill="var(--stone2)"/><rect x="120" y="208" width="8" height="8" fill="var(--stone2)"/><rect x="120" y="216" width="8" height="8" fill="var(--stone2)"/><rect x="128" y="112" width="8" height="8" fill="var(--grass)"/><rect x="128" y="120" width="8" height="8" fill="var(--dirt)"/><rect x="128" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="128" y="136" width="8" height="8" fill="var(--stone2)"/><rect x="128" y="144" width="8" height="8" fill="var(--stone)"/><rect x="128" y="152" width="8" height="8" fill="var(--stone)"/><rect x="128" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="128" y="168" width="8" height="8" fill="var(--stone)"/><rect x="128" y="176" width="8" height="8" fill="var(--stone)"/><rect x="128" y="184" width="8" height="8" fill="var(--stone2)"/><rect x="128" y="192" width="8" height="8" fill="var(--stone)"/><rect x="128" y="200" width="8" height="8" fill="var(--stone)"/><rect x="128" y="208" width="8" height="8" fill="var(--stone2)"/><rect x="128" y="216" width="8" height="8" fill="var(--stone2)"/><rect x="128" y="224" width="8" height="8" fill="var(--stone2)"/><rect x="136" y="112" width="8" height="8" fill="var(--grass)"/><rect x="136" y="120" width="8" height="8" fill="var(--dirt)"/><rect x="136" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="136" y="136" width="8" height="8" fill="var(--stone2)"/><rect x="136" y="144" width="8" height="8" fill="var(--stone)"/><rect x="136" y="152" width="8" height="8" fill="var(--stone2)"/><rect x="136" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="136" y="168" width="8" height="8" fill="var(--stone2)"/><rect x="136" y="176" width="8" height="8" fill="var(--stone2)"/><rect x="136" y="184" width="8" height="8" fill="var(--stone2)"/><rect x="136" y="192" width="8" height="8" fill="var(--stone)"/><rect x="136" y="200" width="8" height="8" fill="var(--stone)"/><rect x="136" y="208" width="8" height="8" fill="var(--stone)"/><rect x="136" y="216" width="8" height="8" fill="var(--stone)"/><rect x="144" y="112" width="8" height="8" fill="var(--grass)"/><rect x="144" y="120" width="8" height="8" fill="var(--dirt2)"/><rect x="144" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="144" y="136" width="8" height="8" fill="var(--stone)"/><rect x="144" y="144" width="8" height="8" fill="var(--dirt2)"/><rect x="144" y="152" width="8" height="8" fill="var(--stone)"/><rect x="144" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="144" y="168" width="8" height="8" fill="var(--stone2)"/><rect x="144" y="176" width="8" height="8" fill="var(--stone)"/><rect x="144" y="184" width="8" height="8" fill="var(--stone)"/><rect x="144" y="192" width="8" height="8" fill="var(--stone2)"/><rect x="144" y="200" width="8" height="8" fill="var(--stone2)"/><rect x="144" y="208" width="8" height="8" fill="var(--stone2)"/><rect x="144" y="216" width="8" height="8" fill="var(--stone)"/><rect x="144" y="224" width="8" height="8" fill="var(--stone)"/><rect x="152" y="112" width="8" height="8" fill="var(--grass2)"/><rect x="152" y="120" width="8" height="8" fill="var(--dirt2)"/><rect x="152" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="152" y="136" width="8" height="8" fill="var(--dirt2)"/><rect x="152" y="144" width="8" height="8" fill="var(--dirt2)"/><rect x="152" y="152" width="8" height="8" fill="var(--stone2)"/><rect x="152" y="160" width="8" height="8" fill="var(--stone)"/><rect x="152" y="168" width="8" height="8" fill="var(--stone2)"/><rect x="152" y="176" width="8" height="8" fill="var(--stone2)"/><rect x="152" y="184" width="8" height="8" fill="var(--stone)"/><rect x="152" y="192" width="8" height="8" fill="var(--stone)"/><rect x="152" y="200" width="8" height="8" fill="var(--stone)"/><rect x="152" y="208" width="8" height="8" fill="var(--stone)"/><rect x="152" y="216" width="8" height="8" fill="var(--stone2)"/><rect x="152" y="224" width="8" height="8" fill="var(--stone)"/><rect x="152" y="232" width="8" height="8" fill="var(--stone)"/><rect x="152" y="240" width="8" height="8" fill="var(--stone2)"/><rect x="160" y="120" width="8" height="8" fill="var(--grass)"/><rect x="160" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="160" y="136" width="8" height="8" fill="var(--dirt)"/><rect x="160" y="144" width="8" height="8" fill="var(--stone)"/><rect x="160" y="152" width="8" height="8" fill="var(--stone)"/><rect x="160" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="160" y="168" width="8" height="8" fill="var(--stone)"/><rect x="160" y="176" width="8" height="8" fill="var(--stone)"/><rect x="160" y="184" width="8" height="8" fill="var(--stone)"/><rect x="160" y="192" width="8" height="8" fill="var(--stone2)"/><rect x="160" y="200" width="8" height="8" fill="var(--stone)"/><rect x="160" y="208" width="8" height="8" fill="var(--stone2)"/><rect x="160" y="216" width="8" height="8" fill="var(--stone2)"/><rect x="160" y="224" width="8" height="8" fill="var(--stone2)"/><rect x="160" y="232" width="8" height="8" fill="var(--stone2)"/><rect x="160" y="240" width="8" height="8" fill="var(--stone)"/><rect x="160" y="248" width="8" height="8" fill="var(--stone)"/><rect x="160" y="256" width="8" height="8" fill="var(--stone2)"/><rect x="160" y="264" width="8" height="8" fill="var(--stone2)"/><rect x="168" y="120" width="8" height="8" fill="var(--grass)"/><rect x="168" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="168" y="136" width="8" height="8" fill="var(--dirt)"/><rect x="168" y="144" width="8" height="8" fill="var(--stone)"/><rect x="168" y="152" width="8" height="8" fill="var(--stone)"/><rect x="168" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="168" y="168" width="8" height="8" fill="var(--stone2)"/><rect x="168" y="176" width="8" height="8" fill="var(--stone2)"/><rect x="168" y="184" width="8" height="8" fill="var(--stone)"/><rect x="168" y="192" width="8" height="8" fill="var(--stone)"/><rect x="168" y="200" width="8" height="8" fill="var(--stone)"/><rect x="168" y="208" width="8" height="8" fill="var(--stone2)"/><rect x="168" y="216" width="8" height="8" fill="var(--stone)"/><rect x="168" y="224" width="8" height="8" fill="var(--stone)"/><rect x="168" y="232" width="8" height="8" fill="var(--stone2)"/><rect x="168" y="240" width="8" height="8" fill="var(--stone)"/><rect x="168" y="248" width="8" height="8" fill="var(--stone2)"/><rect x="168" y="256" width="8" height="8" fill="var(--stone2)"/><rect x="176" y="120" width="8" height="8" fill="var(--grass)"/><rect x="176" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="176" y="136" width="8" height="8" fill="var(--dirt2)"/><rect x="176" y="144" width="8" height="8" fill="var(--stone2)"/><rect x="176" y="152" width="8" height="8" fill="var(--stone)"/><rect x="176" y="160" width="8" height="8" fill="var(--stone)"/><rect x="176" y="168" width="8" height="8" fill="var(--stone)"/><rect x="176" y="176" width="8" height="8" fill="var(--stone2)"/><rect x="176" y="184" width="8" height="8" fill="var(--stone)"/><rect x="176" y="192" width="8" height="8" fill="var(--stone)"/><rect x="176" y="200" width="8" height="8" fill="var(--stone2)"/><rect x="176" y="208" width="8" height="8" fill="var(--stone2)"/><rect x="176" y="216" width="8" height="8" fill="var(--stone)"/><rect x="176" y="224" width="8" height="8" fill="var(--stone)"/><rect x="176" y="232" width="8" height="8" fill="var(--stone2)"/><rect x="176" y="240" width="8" height="8" fill="var(--stone2)"/><rect x="176" y="248" width="8" height="8" fill="var(--stone2)"/><rect x="176" y="256" width="8" height="8" fill="var(--stone)"/><rect x="184" y="120" width="8" height="8" fill="var(--grass2)"/><rect x="184" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="184" y="136" width="8" height="8" fill="var(--dirt)"/><rect x="184" y="144" width="8" height="8" fill="var(--stone2)"/><rect x="184" y="152" width="8" height="8" fill="var(--stone2)"/><rect x="184" y="160" width="8" height="8" fill="var(--stone)"/><rect x="184" y="168" width="8" height="8" fill="var(--stone)"/><rect x="184" y="176" width="8" height="8" fill="var(--stone)"/><rect x="184" y="184" width="8" height="8" fill="var(--stone)"/><rect x="184" y="192" width="8" height="8" fill="var(--stone2)"/><rect x="184" y="200" width="8" height="8" fill="var(--stone)"/><rect x="184" y="208" width="8" height="8" fill="var(--stone2)"/><rect x="184" y="216" width="8" height="8" fill="var(--stone)"/><rect x="184" y="224" width="8" height="8" fill="var(--stone2)"/><rect x="184" y="232" width="8" height="8" fill="var(--stone)"/><rect x="184" y="240" width="8" height="8" fill="var(--stone2)"/><rect x="184" y="248" width="8" height="8" fill="var(--stone2)"/><rect x="184" y="256" width="8" height="8" fill="var(--stone)"/><rect x="184" y="264" width="8" height="8" fill="var(--stone)"/><rect x="184" y="272" width="8" height="8" fill="var(--stone2)"/><rect x="184" y="280" width="8" height="8" fill="var(--stone)"/><rect x="192" y="120" width="8" height="8" fill="var(--grass)"/><rect x="192" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="192" y="136" width="8" height="8" fill="var(--dirt2)"/><rect x="192" y="144" width="8" height="8" fill="var(--stone2)"/><rect x="192" y="152" width="8" height="8" fill="var(--stone)"/><rect x="192" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="192" y="168" width="8" height="8" fill="var(--stone2)"/><rect x="192" y="176" width="8" height="8" fill="var(--stone2)"/><rect x="192" y="184" width="8" height="8" fill="var(--stone)"/><rect x="192" y="192" width="8" height="8" fill="var(--stone)"/><rect x="192" y="200" width="8" height="8" fill="var(--stone)"/><rect x="192" y="208" width="8" height="8" fill="var(--stone)"/><rect x="192" y="216" width="8" height="8" fill="var(--stone)"/><rect x="192" y="224" width="8" height="8" fill="var(--stone)"/><rect x="192" y="232" width="8" height="8" fill="var(--stone2)"/><rect x="192" y="240" width="8" height="8" fill="var(--stone)"/><rect x="192" y="248" width="8" height="8" fill="var(--stone2)"/><rect x="192" y="256" width="8" height="8" fill="var(--stone2)"/><rect x="192" y="264" width="8" height="8" fill="var(--stone)"/><rect x="192" y="272" width="8" height="8" fill="var(--stone)"/><rect x="200" y="120" width="8" height="8" fill="var(--grass)"/><rect x="200" y="128" width="8" height="8" fill="var(--dirt2)"/><rect x="200" y="136" width="8" height="8" fill="var(--dirt2)"/><rect x="200" y="144" width="8" height="8" fill="var(--stone)"/><rect x="200" y="152" width="8" height="8" fill="var(--stone)"/><rect x="200" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="200" y="168" width="8" height="8" fill="var(--stone)"/><rect x="200" y="176" width="8" height="8" fill="var(--stone)"/><rect x="200" y="184" width="8" height="8" fill="var(--stone)"/><rect x="200" y="192" width="8" height="8" fill="var(--stone2)"/><rect x="200" y="200" width="8" height="8" fill="var(--stone)"/><rect x="200" y="208" width="8" height="8" fill="var(--stone2)"/><rect x="200" y="216" width="8" height="8" fill="var(--stone)"/><rect x="200" y="224" width="8" height="8" fill="var(--stone2)"/><rect x="200" y="232" width="8" height="8" fill="var(--stone2)"/><rect x="200" y="240" width="8" height="8" fill="var(--stone2)"/><rect x="200" y="248" width="8" height="8" fill="var(--stone)"/><rect x="200" y="256" width="8" height="8" fill="var(--stone)"/><rect x="200" y="264" width="8" height="8" fill="var(--stone2)"/><rect x="200" y="272" width="8" height="8" fill="var(--stone2)"/><rect x="208" y="112" width="8" height="8" fill="var(--grass2)"/><rect x="208" y="120" width="8" height="8" fill="var(--dirt2)"/><rect x="208" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="208" y="136" width="8" height="8" fill="var(--stone)"/><rect x="208" y="144" width="8" height="8" fill="var(--stone)"/><rect x="208" y="152" width="8" height="8" fill="var(--stone)"/><rect x="208" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="208" y="168" width="8" height="8" fill="var(--stone)"/><rect x="208" y="176" width="8" height="8" fill="var(--stone)"/><rect x="208" y="184" width="8" height="8" fill="var(--stone)"/><rect x="208" y="192" width="8" height="8" fill="var(--stone)"/><rect x="208" y="200" width="8" height="8" fill="var(--stone)"/><rect x="208" y="208" width="8" height="8" fill="var(--stone2)"/><rect x="208" y="216" width="8" height="8" fill="var(--stone)"/><rect x="208" y="224" width="8" height="8" fill="var(--stone)"/><rect x="208" y="232" width="8" height="8" fill="var(--stone2)"/><rect x="208" y="240" width="8" height="8" fill="var(--stone2)"/><rect x="208" y="248" width="8" height="8" fill="var(--stone)"/><rect x="208" y="256" width="8" height="8" fill="var(--stone)"/><rect x="208" y="264" width="8" height="8" fill="var(--stone)"/><rect x="208" y="272" width="8" height="8" fill="var(--stone)"/><rect x="208" y="280" width="8" height="8" fill="var(--stone2)"/><rect x="216" y="112" width="8" height="8" fill="var(--grass)"/><rect x="216" y="120" width="8" height="8" fill="var(--dirt2)"/><rect x="216" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="216" y="136" width="8" height="8" fill="var(--stone)"/><rect x="216" y="144" width="8" height="8" fill="var(--stone)"/><rect x="216" y="152" width="8" height="8" fill="var(--stone2)"/><rect x="216" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="216" y="168" width="8" height="8" fill="var(--stone)"/><rect x="216" y="176" width="8" height="8" fill="var(--stone2)"/><rect x="216" y="184" width="8" height="8" fill="var(--stone2)"/><rect x="216" y="192" width="8" height="8" fill="var(--stone2)"/><rect x="216" y="200" width="8" height="8" fill="var(--stone)"/><rect x="216" y="208" width="8" height="8" fill="var(--stone2)"/><rect x="216" y="216" width="8" height="8" fill="var(--stone)"/><rect x="216" y="224" width="8" height="8" fill="var(--stone2)"/><rect x="216" y="232" width="8" height="8" fill="var(--stone)"/><rect x="216" y="240" width="8" height="8" fill="var(--stone2)"/><rect x="216" y="248" width="8" height="8" fill="var(--stone)"/><rect x="216" y="256" width="8" height="8" fill="var(--stone2)"/><rect x="216" y="264" width="8" height="8" fill="var(--stone2)"/><rect x="224" y="112" width="8" height="8" fill="var(--grass)"/><rect x="224" y="120" width="8" height="8" fill="var(--dirt2)"/><rect x="224" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="224" y="136" width="8" height="8" fill="var(--dirt2)"/><rect x="224" y="144" width="8" height="8" fill="var(--stone)"/><rect x="224" y="152" width="8" height="8" fill="var(--stone)"/><rect x="224" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="224" y="168" width="8" height="8" fill="var(--stone)"/><rect x="224" y="176" width="8" height="8" fill="var(--stone)"/><rect x="224" y="184" width="8" height="8" fill="var(--stone2)"/><rect x="224" y="192" width="8" height="8" fill="var(--stone)"/><rect x="224" y="200" width="8" height="8" fill="var(--stone2)"/><rect x="224" y="208" width="8" height="8" fill="var(--stone)"/><rect x="224" y="216" width="8" height="8" fill="var(--stone2)"/><rect x="224" y="224" width="8" height="8" fill="var(--stone)"/><rect x="224" y="232" width="8" height="8" fill="var(--stone)"/><rect x="224" y="240" width="8" height="8" fill="var(--stone2)"/><rect x="224" y="248" width="8" height="8" fill="var(--stone2)"/><rect x="224" y="256" width="8" height="8" fill="var(--stone)"/><rect x="224" y="264" width="8" height="8" fill="var(--stone)"/><rect x="224" y="272" width="8" height="8" fill="var(--stone)"/><rect x="224" y="280" width="8" height="8" fill="var(--stone2)"/><rect x="232" y="104" width="8" height="8" fill="var(--grass)"/><rect x="232" y="112" width="8" height="8" fill="var(--dirt)"/><rect x="232" y="120" width="8" height="8" fill="var(--dirt)"/><rect x="232" y="128" width="8" height="8" fill="var(--stone)"/><rect x="232" y="136" width="8" height="8" fill="var(--stone2)"/><rect x="232" y="144" width="8" height="8" fill="var(--stone2)"/><rect x="232" y="152" width="8" height="8" fill="var(--stone)"/><rect x="232" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="232" y="168" width="8" height="8" fill="var(--stone)"/><rect x="232" y="176" width="8" height="8" fill="var(--stone2)"/><rect x="232" y="184" width="8" height="8" fill="var(--stone2)"/><rect x="232" y="192" width="8" height="8" fill="var(--stone2)"/><rect x="232" y="200" width="8" height="8" fill="var(--stone)"/><rect x="232" y="208" width="8" height="8" fill="var(--stone2)"/><rect x="232" y="216" width="8" height="8" fill="var(--stone2)"/><rect x="232" y="224" width="8" height="8" fill="var(--stone2)"/><rect x="232" y="232" width="8" height="8" fill="var(--stone)"/><rect x="232" y="240" width="8" height="8" fill="var(--stone)"/><rect x="232" y="248" width="8" height="8" fill="var(--stone)"/><rect x="232" y="256" width="8" height="8" fill="var(--stone)"/><rect x="232" y="264" width="8" height="8" fill="var(--stone)"/><rect x="232" y="272" width="8" height="8" fill="var(--stone2)"/><rect x="240" y="104" width="8" height="8" fill="var(--grass)"/><rect x="240" y="112" width="8" height="8" fill="var(--dirt)"/><rect x="240" y="120" width="8" height="8" fill="var(--dirt)"/><rect x="240" y="128" width="8" height="8" fill="var(--stone)"/><rect x="240" y="136" width="8" height="8" fill="var(--dirt2)"/><rect x="240" y="144" width="8" height="8" fill="var(--stone2)"/><rect x="240" y="152" width="8" height="8" fill="var(--stone2)"/><rect x="240" y="160" width="8" height="8" fill="var(--stone)"/><rect x="240" y="168" width="8" height="8" fill="var(--stone2)"/><rect x="240" y="176" width="8" height="8" fill="var(--stone2)"/><rect x="240" y="184" width="8" height="8" fill="var(--stone)"/><rect x="240" y="192" width="8" height="8" fill="var(--stone2)"/><rect x="240" y="200" width="8" height="8" fill="var(--stone)"/><rect x="240" y="208" width="8" height="8" fill="var(--stone)"/><rect x="240" y="216" width="8" height="8" fill="var(--stone2)"/><rect x="240" y="224" width="8" height="8" fill="var(--stone)"/><rect x="240" y="232" width="8" height="8" fill="var(--stone2)"/><rect x="240" y="240" width="8" height="8" fill="var(--stone)"/><rect x="240" y="248" width="8" height="8" fill="var(--stone)"/><rect x="240" y="256" width="8" height="8" fill="var(--stone2)"/><rect x="240" y="264" width="8" height="8" fill="var(--stone)"/><rect x="248" y="104" width="8" height="8" fill="var(--grass)"/><rect x="248" y="112" width="8" height="8" fill="var(--dirt)"/><rect x="248" y="120" width="8" height="8" fill="var(--dirt)"/><rect x="248" y="128" width="8" height="8" fill="var(--stone)"/><rect x="248" y="136" width="8" height="8" fill="var(--dirt2)"/><rect x="248" y="144" width="8" height="8" fill="var(--stone)"/><rect x="248" y="152" width="8" height="8" fill="var(--stone2)"/><rect x="248" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="248" y="168" width="8" height="8" fill="var(--stone2)"/><rect x="248" y="176" width="8" height="8" fill="var(--stone)"/><rect x="248" y="184" width="8" height="8" fill="var(--stone)"/><rect x="248" y="192" width="8" height="8" fill="var(--stone)"/><rect x="248" y="200" width="8" height="8" fill="var(--stone)"/><rect x="248" y="208" width="8" height="8" fill="var(--stone)"/><rect x="248" y="216" width="8" height="8" fill="var(--stone2)"/><rect x="248" y="224" width="8" height="8" fill="var(--stone)"/><rect x="248" y="232" width="8" height="8" fill="var(--stone)"/><rect x="248" y="240" width="8" height="8" fill="var(--stone)"/><rect x="248" y="248" width="8" height="8" fill="var(--stone2)"/><rect x="248" y="256" width="8" height="8" fill="var(--stone2)"/><rect x="248" y="264" width="8" height="8" fill="var(--stone)"/><rect x="248" y="272" width="8" height="8" fill="var(--stone2)"/><rect x="256" y="104" width="8" height="8" fill="var(--grass2)"/><rect x="256" y="112" width="8" height="8" fill="var(--dirt2)"/><rect x="256" y="120" width="8" height="8" fill="var(--dirt)"/><rect x="256" y="128" width="8" height="8" fill="var(--stone2)"/><rect x="256" y="136" width="8" height="8" fill="var(--stone2)"/><rect x="256" y="144" width="8" height="8" fill="var(--stone)"/><rect x="256" y="152" width="8" height="8" fill="var(--stone2)"/><rect x="256" y="160" width="8" height="8" fill="var(--stone)"/><rect x="256" y="168" width="8" height="8" fill="var(--stone)"/><rect x="256" y="176" width="8" height="8" fill="var(--stone)"/><rect x="256" y="184" width="8" height="8" fill="var(--stone)"/><rect x="256" y="192" width="8" height="8" fill="var(--stone2)"/><rect x="256" y="200" width="8" height="8" fill="var(--stone)"/><rect x="256" y="208" width="8" height="8" fill="var(--stone2)"/><rect x="256" y="216" width="8" height="8" fill="var(--stone)"/><rect x="256" y="224" width="8" height="8" fill="var(--stone2)"/><rect x="256" y="232" width="8" height="8" fill="var(--stone2)"/><rect x="256" y="240" width="8" height="8" fill="var(--stone2)"/><rect x="256" y="248" width="8" height="8" fill="var(--stone2)"/><rect x="256" y="256" width="8" height="8" fill="var(--stone)"/><rect x="264" y="104" width="8" height="8" fill="var(--grass)"/><rect x="264" y="112" width="8" height="8" fill="var(--dirt)"/><rect x="264" y="120" width="8" height="8" fill="var(--dirt2)"/><rect x="264" y="128" width="8" height="8" fill="var(--stone)"/><rect x="264" y="136" width="8" height="8" fill="var(--dirt2)"/><rect x="264" y="144" width="8" height="8" fill="var(--stone2)"/><rect x="264" y="152" width="8" height="8" fill="var(--stone)"/><rect x="264" y="160" width="8" height="8" fill="var(--stone)"/><rect x="264" y="168" width="8" height="8" fill="var(--stone)"/><rect x="264" y="176" width="8" height="8" fill="var(--stone)"/><rect x="264" y="184" width="8" height="8" fill="var(--stone2)"/><rect x="264" y="192" width="8" height="8" fill="var(--stone2)"/><rect x="264" y="200" width="8" height="8" fill="var(--stone)"/><rect x="264" y="208" width="8" height="8" fill="var(--stone)"/><rect x="264" y="216" width="8" height="8" fill="var(--stone)"/><rect x="264" y="224" width="8" height="8" fill="var(--stone2)"/><rect x="264" y="232" width="8" height="8" fill="var(--stone2)"/><rect x="264" y="240" width="8" height="8" fill="var(--stone)"/><rect x="264" y="248" width="8" height="8" fill="var(--stone2)"/><rect x="272" y="112" width="8" height="8" fill="var(--grass)"/><rect x="272" y="120" width="8" height="8" fill="var(--dirt)"/><rect x="272" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="272" y="136" width="8" height="8" fill="var(--stone2)"/><rect x="272" y="144" width="8" height="8" fill="var(--dirt2)"/><rect x="272" y="152" width="8" height="8" fill="var(--stone)"/><rect x="272" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="272" y="168" width="8" height="8" fill="var(--stone2)"/><rect x="272" y="176" width="8" height="8" fill="var(--stone2)"/><rect x="272" y="184" width="8" height="8" fill="var(--stone2)"/><rect x="272" y="192" width="8" height="8" fill="var(--stone)"/><rect x="272" y="200" width="8" height="8" fill="var(--stone)"/><rect x="272" y="208" width="8" height="8" fill="var(--stone2)"/><rect x="272" y="216" width="8" height="8" fill="var(--stone)"/><rect x="272" y="224" width="8" height="8" fill="var(--stone2)"/><rect x="272" y="232" width="8" height="8" fill="var(--stone)"/><rect x="272" y="240" width="8" height="8" fill="var(--stone)"/><rect x="272" y="248" width="8" height="8" fill="var(--stone2)"/><rect x="280" y="112" width="8" height="8" fill="var(--grass)"/><rect x="280" y="120" width="8" height="8" fill="var(--dirt)"/><rect x="280" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="280" y="136" width="8" height="8" fill="var(--stone)"/><rect x="280" y="144" width="8" height="8" fill="var(--stone)"/><rect x="280" y="152" width="8" height="8" fill="var(--stone)"/><rect x="280" y="160" width="8" height="8" fill="var(--stone)"/><rect x="280" y="168" width="8" height="8" fill="var(--stone2)"/><rect x="280" y="176" width="8" height="8" fill="var(--stone)"/><rect x="280" y="184" width="8" height="8" fill="var(--stone)"/><rect x="280" y="192" width="8" height="8" fill="var(--stone2)"/><rect x="280" y="200" width="8" height="8" fill="var(--stone)"/><rect x="280" y="208" width="8" height="8" fill="var(--stone2)"/><rect x="280" y="216" width="8" height="8" fill="var(--stone)"/><rect x="280" y="224" width="8" height="8" fill="var(--stone2)"/><rect x="280" y="232" width="8" height="8" fill="var(--stone2)"/><rect x="280" y="240" width="8" height="8" fill="var(--stone)"/><rect x="280" y="248" width="8" height="8" fill="var(--stone)"/><rect x="288" y="112" width="8" height="8" fill="var(--grass2)"/><rect x="288" y="120" width="8" height="8" fill="var(--dirt)"/><rect x="288" y="128" width="8" height="8" fill="var(--dirt2)"/><rect x="288" y="136" width="8" height="8" fill="var(--dirt2)"/><rect x="288" y="144" width="8" height="8" fill="var(--stone2)"/><rect x="288" y="152" width="8" height="8" fill="var(--stone2)"/><rect x="288" y="160" width="8" height="8" fill="var(--stone)"/><rect x="288" y="168" width="8" height="8" fill="var(--stone2)"/><rect x="288" y="176" width="8" height="8" fill="var(--stone)"/><rect x="288" y="184" width="8" height="8" fill="var(--stone)"/><rect x="288" y="192" width="8" height="8" fill="var(--stone2)"/><rect x="288" y="200" width="8" height="8" fill="var(--stone)"/><rect x="288" y="208" width="8" height="8" fill="var(--stone)"/><rect x="288" y="216" width="8" height="8" fill="var(--stone)"/><rect x="288" y="224" width="8" height="8" fill="var(--stone)"/><rect x="288" y="232" width="8" height="8" fill="var(--stone)"/><rect x="288" y="240" width="8" height="8" fill="var(--stone)"/><rect x="288" y="248" width="8" height="8" fill="var(--stone)"/><rect x="288" y="256" width="8" height="8" fill="var(--stone2)"/><rect x="296" y="112" width="8" height="8" fill="var(--grass)"/><rect x="296" y="120" width="8" height="8" fill="var(--dirt)"/><rect x="296" y="128" width="8" height="8" fill="var(--dirt2)"/><rect x="296" y="136" width="8" height="8" fill="var(--stone)"/><rect x="296" y="144" width="8" height="8" fill="var(--stone)"/><rect x="296" y="152" width="8" height="8" fill="var(--stone)"/><rect x="296" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="296" y="168" width="8" height="8" fill="var(--stone2)"/><rect x="296" y="176" width="8" height="8" fill="var(--stone)"/><rect x="296" y="184" width="8" height="8" fill="var(--stone2)"/><rect x="296" y="192" width="8" height="8" fill="var(--stone)"/><rect x="296" y="200" width="8" height="8" fill="var(--stone)"/><rect x="296" y="208" width="8" height="8" fill="var(--stone)"/><rect x="296" y="216" width="8" height="8" fill="var(--stone2)"/><rect x="296" y="224" width="8" height="8" fill="var(--stone2)"/><rect x="296" y="232" width="8" height="8" fill="var(--stone)"/><rect x="304" y="120" width="8" height="8" fill="var(--grass)"/><rect x="304" y="128" width="8" height="8" fill="var(--dirt2)"/><rect x="304" y="136" width="8" height="8" fill="var(--dirt)"/><rect x="304" y="144" width="8" height="8" fill="var(--stone)"/><rect x="304" y="152" width="8" height="8" fill="var(--dirt2)"/><rect x="304" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="304" y="168" width="8" height="8" fill="var(--stone2)"/><rect x="304" y="176" width="8" height="8" fill="var(--stone)"/><rect x="304" y="184" width="8" height="8" fill="var(--stone2)"/><rect x="304" y="192" width="8" height="8" fill="var(--stone2)"/><rect x="304" y="200" width="8" height="8" fill="var(--stone)"/><rect x="304" y="208" width="8" height="8" fill="var(--stone)"/><rect x="304" y="216" width="8" height="8" fill="var(--stone)"/><rect x="304" y="224" width="8" height="8" fill="var(--stone)"/><rect x="304" y="232" width="8" height="8" fill="var(--stone2)"/><rect x="304" y="240" width="8" height="8" fill="var(--stone2)"/><rect x="312" y="120" width="8" height="8" fill="var(--grass2)"/><rect x="312" y="128" width="8" height="8" fill="var(--dirt2)"/><rect x="312" y="136" width="8" height="8" fill="var(--dirt)"/><rect x="312" y="144" width="8" height="8" fill="var(--stone)"/><rect x="312" y="152" width="8" height="8" fill="var(--stone)"/><rect x="312" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="312" y="168" width="8" height="8" fill="var(--stone)"/><rect x="312" y="176" width="8" height="8" fill="var(--stone2)"/><rect x="312" y="184" width="8" height="8" fill="var(--stone2)"/><rect x="312" y="192" width="8" height="8" fill="var(--stone)"/><rect x="312" y="200" width="8" height="8" fill="var(--stone)"/><rect x="312" y="208" width="8" height="8" fill="var(--stone2)"/><rect x="312" y="216" width="8" height="8" fill="var(--stone2)"/><rect x="312" y="224" width="8" height="8" fill="var(--stone2)"/><rect x="312" y="232" width="8" height="8" fill="var(--stone2)"/><rect x="312" y="240" width="8" height="8" fill="var(--stone2)"/><rect x="320" y="120" width="8" height="8" fill="var(--grass)"/><rect x="320" y="128" width="8" height="8" fill="var(--dirt2)"/><rect x="320" y="136" width="8" height="8" fill="var(--dirt)"/><rect x="320" y="144" width="8" height="8" fill="var(--stone2)"/><rect x="320" y="152" width="8" height="8" fill="var(--stone)"/><rect x="320" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="320" y="168" width="8" height="8" fill="var(--stone)"/><rect x="320" y="176" width="8" height="8" fill="var(--stone2)"/><rect x="320" y="184" width="8" height="8" fill="var(--stone2)"/><rect x="320" y="192" width="8" height="8" fill="var(--stone)"/><rect x="320" y="200" width="8" height="8" fill="var(--stone2)"/><rect x="320" y="208" width="8" height="8" fill="var(--stone2)"/><rect x="320" y="216" width="8" height="8" fill="var(--stone2)"/><rect x="320" y="224" width="8" height="8" fill="var(--stone)"/><rect x="328" y="120" width="8" height="8" fill="var(--grass)"/><rect x="328" y="128" width="8" height="8" fill="var(--dirt2)"/><rect x="328" y="136" width="8" height="8" fill="var(--dirt)"/><rect x="328" y="144" width="8" height="8" fill="var(--stone)"/><rect x="328" y="152" width="8" height="8" fill="var(--stone2)"/><rect x="328" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="328" y="168" width="8" height="8" fill="var(--stone)"/><rect x="328" y="176" width="8" height="8" fill="var(--stone2)"/><rect x="328" y="184" width="8" height="8" fill="var(--stone)"/><rect x="328" y="192" width="8" height="8" fill="var(--stone2)"/><rect x="328" y="200" width="8" height="8" fill="var(--stone)"/><rect x="328" y="208" width="8" height="8" fill="var(--stone2)"/><rect x="336" y="120" width="8" height="8" fill="var(--grass)"/><rect x="336" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="336" y="136" width="8" height="8" fill="var(--dirt)"/><rect x="336" y="144" width="8" height="8" fill="var(--stone)"/><rect x="336" y="152" width="8" height="8" fill="var(--dirt2)"/><rect x="336" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="336" y="168" width="8" height="8" fill="var(--stone2)"/><rect x="336" y="176" width="8" height="8" fill="var(--stone2)"/><rect x="336" y="184" width="8" height="8" fill="var(--stone)"/><rect x="336" y="192" width="8" height="8" fill="var(--stone2)"/><rect x="336" y="200" width="8" height="8" fill="var(--stone2)"/><rect x="336" y="208" width="8" height="8" fill="var(--stone2)"/><rect x="344" y="120" width="8" height="8" fill="var(--grass)"/><rect x="344" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="344" y="136" width="8" height="8" fill="var(--dirt)"/><rect x="344" y="144" width="8" height="8" fill="var(--stone2)"/><rect x="344" y="152" width="8" height="8" fill="var(--stone2)"/><rect x="344" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="344" y="168" width="8" height="8" fill="var(--stone)"/><rect x="344" y="176" width="8" height="8" fill="var(--stone)"/><rect x="344" y="184" width="8" height="8" fill="var(--stone)"/><rect x="344" y="192" width="8" height="8" fill="var(--stone2)"/><rect x="344" y="200" width="8" height="8" fill="var(--stone2)"/><rect x="352" y="120" width="8" height="8" fill="var(--grass)"/><rect x="352" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="352" y="136" width="8" height="8" fill="var(--dirt)"/><rect x="352" y="144" width="8" height="8" fill="var(--stone)"/><rect x="352" y="152" width="8" height="8" fill="var(--stone2)"/><rect x="352" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="352" y="168" width="8" height="8" fill="var(--stone2)"/><rect x="352" y="176" width="8" height="8" fill="var(--stone)"/><rect x="352" y="184" width="8" height="8" fill="var(--stone2)"/><rect x="352" y="192" width="8" height="8" fill="var(--stone)"/><rect x="360" y="120" width="8" height="8" fill="var(--grass2)"/><rect x="360" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="360" y="136" width="8" height="8" fill="var(--dirt2)"/><rect x="360" y="144" width="8" height="8" fill="var(--stone)"/><rect x="360" y="152" width="8" height="8" fill="var(--stone)"/><rect x="360" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="360" y="168" width="8" height="8" fill="var(--stone2)"/><rect x="360" y="176" width="8" height="8" fill="var(--stone2)"/><rect x="368" y="120" width="8" height="8" fill="var(--grass)"/><rect x="368" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="368" y="136" width="8" height="8" fill="var(--dirt)"/><rect x="368" y="144" width="8" height="8" fill="var(--dirt2)"/><rect x="368" y="152" width="8" height="8" fill="var(--stone)"/><rect x="368" y="160" width="8" height="8" fill="var(--stone)"/><rect x="368" y="168" width="8" height="8" fill="var(--stone)"/><rect x="376" y="120" width="8" height="8" fill="var(--grass)"/><rect x="376" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="376" y="136" width="8" height="8" fill="var(--dirt2)"/><rect x="376" y="144" width="8" height="8" fill="var(--stone)"/><rect x="376" y="152" width="8" height="8" fill="var(--stone2)"/><rect x="376" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="376" y="168" width="8" height="8" fill="var(--stone)"/><rect x="384" y="120" width="8" height="8" fill="var(--grass)"/><rect x="384" y="128" width="8" height="8" fill="var(--dirt)"/><rect x="384" y="136" width="8" height="8" fill="var(--dirt)"/><rect x="384" y="144" width="8" height="8" fill="var(--dirt2)"/><rect x="384" y="152" width="8" height="8" fill="var(--stone2)"/><rect x="384" y="160" width="8" height="8" fill="var(--stone2)"/><rect x="392" y="120" width="8" height="8" fill="var(--grass)"/><rect x="392" y="128" width="8" height="8" fill="var(--dirt2)"/><rect x="392" y="136" width="8" height="8" fill="var(--dirt2)"/><rect x="392" y="144" width="8" height="8" fill="var(--stone2)"/><rect x="400" y="128" width="8" height="8" fill="var(--grass2)"/><rect x="400" y="136" width="8" height="8" fill="var(--dirt)"/><rect x="408" y="128" width="8" height="8" fill="var(--grass)"/><rect x="408" y="136" width="8" height="8" fill="var(--dirt2)"/><rect x="80" y="88" width="8" height="8" fill="var(--log)"/><rect x="80" y="96" width="8" height="8" fill="var(--log)"/><rect x="80" y="104" width="8" height="8" fill="var(--log)"/><rect x="80" y="112" width="8" height="8" fill="var(--log)"/><rect x="72" y="72" width="8" height="8" fill="var(--leaf2)"/><rect x="80" y="72" width="8" height="8" fill="var(--leaf)"/><rect x="88" y="72" width="8" height="8" fill="var(--leaf)"/><rect x="64" y="80" width="8" height="8" fill="var(--leaf)"/><rect x="72" y="80" width="8" height="8" fill="var(--leaf2)"/><rect x="80" y="80" width="8" height="8" fill="var(--leaf)"/><rect x="88" y="80" width="8" height="8" fill="var(--leaf)"/><rect x="96" y="80" width="8" height="8" fill="var(--leaf)"/><rect x="64" y="88" width="8" height="8" fill="var(--leaf2)"/><rect x="72" y="88" width="8" height="8" fill="var(--leaf)"/><rect x="80" y="88" width="8" height="8" fill="var(--leaf2)"/><rect x="88" y="88" width="8" height="8" fill="var(--leaf)"/><rect x="96" y="88" width="8" height="8" fill="var(--leaf)"/><rect x="72" y="96" width="8" height="8" fill="var(--leaf)"/><rect x="80" y="96" width="8" height="8" fill="var(--leaf)"/><rect x="88" y="96" width="8" height="8" fill="var(--leaf)"/><rect x="136" y="72" width="8" height="8" fill="var(--log)"/><rect x="136" y="80" width="8" height="8" fill="var(--log)"/><rect x="136" y="88" width="8" height="8" fill="var(--log)"/><rect x="136" y="96" width="8" height="8" fill="var(--log)"/><rect x="136" y="104" width="8" height="8" fill="var(--log)"/><rect x="128" y="56" width="8" height="8" fill="var(--leaf)"/><rect x="136" y="56" width="8" height="8" fill="var(--leaf2)"/><rect x="144" y="56" width="8" height="8" fill="var(--leaf)"/><rect x="120" y="64" width="8" height="8" fill="var(--leaf)"/><rect x="128" y="64" width="8" height="8" fill="var(--leaf)"/><rect x="136" y="64" width="8" height="8" fill="var(--leaf)"/><rect x="144" y="64" width="8" height="8" fill="var(--leaf)"/><rect x="152" y="64" width="8" height="8" fill="var(--leaf2)"/><rect x="120" y="72" width="8" height="8" fill="var(--leaf)"/><rect x="128" y="72" width="8" height="8" fill="var(--leaf)"/><rect x="136" y="72" width="8" height="8" fill="var(--leaf)"/><rect x="144" y="72" width="8" height="8" fill="var(--leaf)"/><rect x="152" y="72" width="8" height="8" fill="var(--leaf)"/><rect x="128" y="80" width="8" height="8" fill="var(--leaf2)"/><rect x="136" y="80" width="8" height="8" fill="var(--leaf)"/><rect x="144" y="80" width="8" height="8" fill="var(--leaf)"/><rect x="192" y="88" width="8" height="8" fill="var(--log)"/><rect x="192" y="96" width="8" height="8" fill="var(--log)"/><rect x="192" y="104" width="8" height="8" fill="var(--log)"/><rect x="192" y="112" width="8" height="8" fill="var(--log)"/><rect x="184" y="72" width="8" height="8" fill="var(--leaf2)"/><rect x="192" y="72" width="8" height="8" fill="var(--leaf)"/><rect x="200" y="72" width="8" height="8" fill="var(--leaf)"/><rect x="176" y="80" width="8" height="8" fill="var(--leaf)"/><rect x="184" y="80" width="8" height="8" fill="var(--leaf2)"/><rect x="192" y="80" width="8" height="8" fill="var(--leaf2)"/><rect x="200" y="80" width="8" height="8" fill="var(--leaf)"/><rect x="208" y="80" width="8" height="8" fill="var(--leaf)"/><rect x="176" y="88" width="8" height="8" fill="var(--leaf)"/><rect x="184" y="88" width="8" height="8" fill="var(--leaf)"/><rect x="192" y="88" width="8" height="8" fill="var(--leaf)"/><rect x="200" y="88" width="8" height="8" fill="var(--leaf)"/><rect x="208" y="88" width="8" height="8" fill="var(--leaf)"/><rect x="184" y="96" width="8" height="8" fill="var(--leaf2)"/><rect x="192" y="96" width="8" height="8" fill="var(--leaf)"/><rect x="200" y="96" width="8" height="8" fill="var(--leaf)"/><rect x="264" y="64" width="8" height="8" fill="var(--log)"/><rect x="264" y="72" width="8" height="8" fill="var(--log)"/><rect x="264" y="80" width="8" height="8" fill="var(--log)"/><rect x="264" y="88" width="8" height="8" fill="var(--log)"/><rect x="264" y="96" width="8" height="8" fill="var(--log)"/><rect x="256" y="48" width="8" height="8" fill="var(--cherry2)"/><rect x="264" y="48" width="8" height="8" fill="var(--cherry2)"/><rect x="272" y="48" width="8" height="8" fill="var(--cherry2)"/><rect x="248" y="56" width="8" height="8" fill="var(--cherry2)"/><rect x="256" y="56" width="8" height="8" fill="var(--cherry)"/><rect x="264" y="56" width="8" height="8" fill="var(--cherry)"/><rect x="272" y="56" width="8" height="8" fill="var(--cherry)"/><rect x="280" y="56" width="8" height="8" fill="var(--cherry)"/><rect x="248" y="64" width="8" height="8" fill="var(--cherry)"/><rect x="256" y="64" width="8" height="8" fill="var(--cherry)"/><rect x="264" y="64" width="8" height="8" fill="var(--cherry2)"/><rect x="272" y="64" width="8" height="8" fill="var(--cherry)"/><rect x="280" y="64" width="8" height="8" fill="var(--cherry)"/><rect x="256" y="72" width="8" height="8" fill="var(--cherry)"/><rect x="264" y="72" width="8" height="8" fill="var(--cherry)"/><rect x="272" y="72" width="8" height="8" fill="var(--cherry)"/><rect x="320" y="88" width="8" height="8" fill="var(--log)"/><rect x="320" y="96" width="8" height="8" fill="var(--log)"/><rect x="320" y="104" width="8" height="8" fill="var(--log)"/><rect x="320" y="112" width="8" height="8" fill="var(--log)"/><rect x="312" y="72" width="8" height="8" fill="var(--cherry)"/><rect x="320" y="72" width="8" height="8" fill="var(--cherry)"/><rect x="328" y="72" width="8" height="8" fill="var(--cherry2)"/><rect x="304" y="80" width="8" height="8" fill="var(--cherry)"/><rect x="312" y="80" width="8" height="8" fill="var(--cherry2)"/><rect x="320" y="80" width="8" height="8" fill="var(--cherry)"/><rect x="328" y="80" width="8" height="8" fill="var(--cherry)"/><rect x="336" y="80" width="8" height="8" fill="var(--cherry)"/><rect x="304" y="88" width="8" height="8" fill="var(--cherry)"/><rect x="312" y="88" width="8" height="8" fill="var(--cherry2)"/><rect x="320" y="88" width="8" height="8" fill="var(--cherry)"/><rect x="328" y="88" width="8" height="8" fill="var(--cherry)"/><rect x="336" y="88" width="8" height="8" fill="var(--cherry)"/><rect x="312" y="96" width="8" height="8" fill="var(--cherry)"/><rect x="320" y="96" width="8" height="8" fill="var(--cherry)"/><rect x="328" y="96" width="8" height="8" fill="var(--cherry)"/><rect x="368" y="88" width="8" height="8" fill="var(--log)"/><rect x="368" y="96" width="8" height="8" fill="var(--log)"/><rect x="368" y="104" width="8" height="8" fill="var(--log)"/><rect x="368" y="112" width="8" height="8" fill="var(--log)"/><rect x="360" y="72" width="8" height="8" fill="var(--cherry)"/><rect x="368" y="72" width="8" height="8" fill="var(--cherry2)"/><rect x="376" y="72" width="8" height="8" fill="var(--cherry2)"/><rect x="352" y="80" width="8" height="8" fill="var(--cherry)"/><rect x="360" y="80" width="8" height="8" fill="var(--cherry2)"/><rect x="368" y="80" width="8" height="8" fill="var(--cherry2)"/><rect x="376" y="80" width="8" height="8" fill="var(--cherry2)"/><rect x="384" y="80" width="8" height="8" fill="var(--cherry)"/><rect x="352" y="88" width="8" height="8" fill="var(--cherry)"/><rect x="360" y="88" width="8" height="8" fill="var(--cherry2)"/><rect x="368" y="88" width="8" height="8" fill="var(--cherry)"/><rect x="376" y="88" width="8" height="8" fill="var(--cherry)"/><rect x="384" y="88" width="8" height="8" fill="var(--cherry)"/><rect x="360" y="96" width="8" height="8" fill="var(--cherry)"/><rect x="368" y="96" width="8" height="8" fill="var(--cherry2)"/><rect x="376" y="96" width="8" height="8" fill="var(--cherry)"/><rect x="72" y="112" width="8" height="8" fill="var(--flower)"/><rect x="144" y="104" width="8" height="8" fill="var(--flower)"/><rect x="168" y="112" width="8" height="8" fill="var(--grass2)"/><rect x="240" y="96" width="8" height="8" fill="var(--flower)"/><rect x="288" y="104" width="8" height="8" fill="var(--grass2)"/><rect x="336" y="112" width="8" height="8" fill="var(--grass2)"/><rect x="48" y="240" width="8" height="8" fill="var(--stone)"/><rect x="56" y="240" width="8" height="8" fill="var(--stone)"/><rect x="392" y="216" width="8" height="8" fill="var(--stone)"/><rect x="400" y="216" width="8" height="8" fill="var(--stone)"/><rect x="400" y="224" width="8" height="8" fill="var(--stone)"/></svg>
+
+      <div class="faller" aria-hidden="true"></div>
+    </div>
+  </div>
+</header>
+
+<section id="features">
+  <div class="wrap">
+    <div class="eyebrow pixel">Features</div>
+    <h2>A home above the clouds</h2>
+    <p class="sub">SkyLands gives every player a personal island in a world of its own, built from real terrain and connected to your normal survival world.</p>
+    <div class="grid g3">
+      <div class="card">
+        <div class="icon" aria-hidden="true"><i style="background:var(--grass)"></i><i style="background:transparent"></i><i style="background:transparent"></i><i style="background:transparent"></i><i style="background:var(--grass)"></i><i style="background:var(--grass)"></i><i style="background:transparent"></i><i style="background:transparent"></i><i style="background:var(--grass)"></i><i style="background:var(--grass)"></i><i style="background:var(--grass)"></i><i style="background:transparent"></i><i style="background:var(--grass)"></i><i style="background:var(--grass)"></i><i style="background:var(--grass)"></i><i style="background:var(--grass)"></i></div>
+        <h3>Five island sizes</h3>
+        <p>From a cosy 32×32 Small island to a 512×512 Continental. Upgrade any time and the border grows with you.</p>
+      </div>
+      <div class="card">
+        <div class="icon" aria-hidden="true"><i style="background:var(--grass)"></i><i style="background:var(--grass)"></i><i style="background:var(--cherry)"></i><i style="background:var(--cherry)"></i><i style="background:var(--grass)"></i><i style="background:var(--grass)"></i><i style="background:var(--cherry)"></i><i style="background:var(--cherry)"></i><i style="background:var(--dirt)"></i><i style="background:var(--dirt)"></i><i style="background:var(--cherry2)"></i><i style="background:var(--cherry2)"></i><i style="background:var(--dirt)"></i><i style="background:var(--stone)"></i><i style="background:var(--dirt)"></i><i style="background:var(--stone)"></i></div>
+        <h3>Grows biome by biome</h3>
+        <p>New land attaches to your island's edge. Unlock a cherry grove, a desert or a snowy taiga as its own region.</p>
+      </div>
+      <div class="card">
+        <div class="icon" aria-hidden="true"><i style="background:transparent"></i><i style="background:#f2c9a0"></i><i style="background:transparent"></i><i style="background:transparent"></i><i style="background:transparent"></i><i style="background:var(--accent-2)"></i><i style="background:transparent"></i><i style="background:transparent"></i><i style="background:transparent"></i><i style="background:var(--accent-2)"></i><i style="background:transparent"></i><i style="background:transparent"></i><i style="background:#7cc4f5"></i><i style="background:transparent"></i><i style="background:#7cc4f5"></i><i style="background:transparent"></i></div>
+        <h3>Jump to the overworld</h3>
+        <p>Step off the edge and fall out of the sky, landing somewhere below your island. Open an elytra mid-fall to steer.</p>
+      </div>
+      <div class="card">
+        <div class="icon" aria-hidden="true"><i style="background:#2f6db5"></i><i style="background:#4a90d9"></i><i style="background:#4a90d9"></i><i style="background:#2f6db5"></i><i style="background:#4a90d9"></i><i style="background:#4a90d9"></i><i style="background:#4a90d9"></i><i style="background:#4a90d9"></i><i style="background:#4a90d9"></i><i style="background:#2f6db5"></i><i style="background:#2f6db5"></i><i style="background:#4a90d9"></i><i style="background:transparent"></i><i style="background:#4a90d9"></i><i style="background:#4a90d9"></i><i style="background:transparent"></i></div>
+        <h3>You set the rules</h3>
+        <p>Let visitors use doors but not chests. Let friends harvest crops but not break blocks. Every option is a toggle.</p>
+      </div>
+      <div class="card">
+        <div class="icon" aria-hidden="true"><i style="background:#8a5a1f"></i><i style="background:#b7791f"></i><i style="background:#b7791f"></i><i style="background:#8a5a1f"></i><i style="background:#b7791f"></i><i style="background:#b7791f"></i><i style="background:#b7791f"></i><i style="background:#b7791f"></i><i style="background:#8a5a1f"></i><i style="background:var(--flower)"></i><i style="background:var(--flower)"></i><i style="background:#8a5a1f"></i><i style="background:#b7791f"></i><i style="background:#b7791f"></i><i style="background:#b7791f"></i><i style="background:#b7791f"></i></div>
+        <h3>One menu for everything</h3>
+        <p>Type <code>/skyland</code>. Single-tap chest menus work the same on Java and on Bedrock through Geyser.</p>
+      </div>
+      <div class="card">
+        <div class="icon" aria-hidden="true"><i style="background:var(--leaf)"></i><i style="background:transparent"></i><i style="background:var(--leaf)"></i><i style="background:transparent"></i><i style="background:var(--grass)"></i><i style="background:var(--grass)"></i><i style="background:var(--grass)"></i><i style="background:var(--grass)"></i><i style="background:var(--dirt)"></i><i style="background:var(--dirt2)"></i><i style="background:var(--dirt)"></i><i style="background:var(--dirt)"></i><i style="background:var(--stone)"></i><i style="background:var(--stone2)"></i><i style="background:var(--stone)"></i><i style="background:var(--stone)"></i></div>
+        <h3>Real terrain</h3>
+        <p>Admins capture spheres of terrain from your own worlds. Islands keep their grass colour, sky and music.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <div class="eyebrow pixel">How it plays</div>
+    <h2>From first island to continent</h2>
+    <p class="sub">The whole loop lives in one menu. Nothing to type, no items to lose.</p>
+    <div class="grid g2 steps">
+      <div class="card step"><h3>Buy an island</h3><p>Pick a size, pick a biome, confirm. Your island rises from the clouds and you're teleported onto it.</p></div>
+      <div class="card step"><h3>Grow it outward</h3><p>Add more land of a biome you own, or unlock a new biome. It attaches to the edge as its own region, and the island stays one connected landmass.</p></div>
+      <div class="card step"><h3>Fall to the world below</h3><p>Jump off the edge. You land up to 200 blocks from directly below your island, and the landing that ends the fall does no damage.</p></div>
+      <div class="card step"><h3>Ride the wind home</h3><p><strong>Return to Island</strong> launches you up on a gust of wind and carries you back home a second later.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="menu">
+  <div class="wrap">
+    <div class="eyebrow pixel">The menu</div>
+    <h2>Everything in <code>/skyland</code></h2>
+    <p class="sub">Three buttons at the top. Everything else lives one tap deeper. Anything that costs money asks you to confirm first.</p>
+    <div class="grid g2" style="align-items:start">
+      <div>
+        <div class="chest" role="img" aria-label="Diagram of the top-level Skyland chest menu with three buttons">
+          <p class="chest-title">Skyland</p>
+          <div class="slots"><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot"><b style="background:#4cc27a"></b></div><div class="slot pane"></div><div class="slot"><b style="background:#e5b04f"></b></div><div class="slot pane"></div><div class="slot"><b style="background:#d9534f"></b></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div></div>
+        </div>
+        <div class="legend">
+          <div><span class="sw" style="background:#4cc27a"></span><span><strong>Return to Island</strong>: fly home, or visit friends' and public islands. Shows <strong>Buy an Island</strong> if you don't have one yet.</span></div>
+          <div><span class="sw" style="background:#e5b04f"></span><span><strong>Manage Island</strong>: grow, unlock biomes, upgrade, protection, friends.</span></div>
+          <div><span class="sw" style="background:#d9534f"></span><span><strong>Delete Island</strong>: two confirmations, then it crumbles into the clouds.</span></div>
+        </div>
+      </div>
+      <div class="card tree">
+        <ul>
+          <li><span class="t">Return to Island</span>
+            <ul>
+              <li>Return to My Island <small>— gust of wind home</small></li>
+              <li>Friends' Islands</li>
+              <li>Visit Islands <small>— everyone open to visitors</small></li>
+            </ul>
+          </li>
+          <li><span class="t">Manage Island</span>
+            <ul>
+              <li>Grow Land <small>— pick an owned biome</small></li>
+              <li>Unlock a Biome <small>— new region at the edge</small></li>
+              <li>Upgrade <small>— next size up</small></li>
+              <li>Protection <small>— Visitors · Friends · Island</small></li>
+              <li>Friends <small>— add from online players</small></li>
+              <li>Set Home Here</li>
+            </ul>
+          </li>
+          <li><span class="t">Delete Island</span>
+            <ul><li>Are you sure? → This can't be undone!</li></ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="sizes">
+  <div class="wrap">
+    <div class="eyebrow pixel">Island sizes</div>
+    <h2>Start small, end continental</h2>
+    <p class="sub">Default prices and limits. Every number is editable in <code>config.yml</code>.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Size</th><th>Footprint</th><th style="width:30%">Scale</th><th>Price</th><th>Starts with</th><th>Grows to</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Small</strong></td><td class="num">32 × 32</td><td><div class="tierbar" style="width:6.25%"></div></td><td class="num">5,000</td><td class="num">1 piece</td><td class="num">3 pieces</td></tr>
+          <tr><td><strong>Medium</strong></td><td class="num">64 × 64</td><td><div class="tierbar" style="width:12.5%"></div></td><td class="num">20,000</td><td class="num">3 pieces</td><td class="num">10 pieces</td></tr>
+          <tr><td><strong>Large</strong></td><td class="num">128 × 128</td><td><div class="tierbar" style="width:25%"></div></td><td class="num">75,000</td><td class="num">8 pieces</td><td class="num">30 pieces</td></tr>
+          <tr><td><strong>Extra Large</strong></td><td class="num">256 × 256</td><td><div class="tierbar" style="width:50%"></div></td><td class="num">250,000</td><td class="num">20 pieces</td><td class="num">90 pieces</td></tr>
+          <tr><td><strong>Continental</strong></td><td class="num">512 × 512</td><td><div class="tierbar" style="width:100%"></div></td><td class="num">1,000,000</td><td class="num">50 pieces</td><td class="num">300 pieces</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="protection">
+  <div class="wrap">
+    <div class="eyebrow pixel">Protection</div>
+    <h2>Your island, your rules</h2>
+    <p class="sub">Owners can always do everything. For everyone else, choose separately what visitors and friends may do. These are the defaults.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Action</th><th class="center">Visitors</th><th class="center">Friends</th></tr></thead>
+        <tbody>
+          <tr><td>Doors, trapdoors, fence gates</td><td class="center"><span class="yes" aria-label="allowed">✓</span></td><td class="center"><span class="yes" aria-label="allowed">✓</span></td></tr>
+          <tr><td>Break blocks</td><td class="center"><span class="no" aria-label="blocked">✕</span></td><td class="center"><span class="yes" aria-label="allowed">✓</span></td></tr>
+          <tr><td>Place blocks</td><td class="center"><span class="no" aria-label="blocked">✕</span></td><td class="center"><span class="yes" aria-label="allowed">✓</span></td></tr>
+          <tr><td>Harvest grown crops (and replant)</td><td class="center"><span class="no" aria-label="blocked">✕</span></td><td class="center"><span class="yes" aria-label="allowed">✓</span></td></tr>
+          <tr><td>Buttons, levers, pressure plates</td><td class="center"><span class="no" aria-label="blocked">✕</span></td><td class="center"><span class="yes" aria-label="allowed">✓</span></td></tr>
+          <tr><td>Chests, barrels, shulkers, hoppers</td><td class="center"><span class="no" aria-label="blocked">✕</span></td><td class="center"><span class="yes" aria-label="allowed">✓</span></td></tr>
+          <tr><td>Furnaces, smokers, blast furnaces</td><td class="center"><span class="no" aria-label="blocked">✕</span></td><td class="center"><span class="yes" aria-label="allowed">✓</span></td></tr>
+          <tr><td>Workstations: crafting, anvil, enchanting, brewing</td><td class="center"><span class="no" aria-label="blocked">✕</span></td><td class="center"><span class="yes" aria-label="allowed">✓</span></td></tr>
+          <tr><td>Redstone tweaks, beds, buckets</td><td class="center"><span class="no" aria-label="blocked">✕</span></td><td class="center"><span class="yes" aria-label="allowed">✓</span></td></tr>
+          <tr><td>Animals, villager trading, riding</td><td class="center"><span class="no" aria-label="blocked">✕</span></td><td class="center"><span class="yes" aria-label="allowed">✓</span></td></tr>
+          <tr><td>Item frames, armor stands, paintings</td><td class="center"><span class="no" aria-label="blocked">✕</span></td><td class="center"><span class="yes" aria-label="allowed">✓</span></td></tr>
+          <tr><td>Other blocks: cake, pots, signs, composters</td><td class="center"><span class="no" aria-label="blocked">✕</span></td><td class="center"><span class="yes" aria-label="allowed">✓</span></td></tr>
+          <tr><td>Trample farmland</td><td class="center"><span class="no" aria-label="blocked">✕</span></td><td class="center"><span class="no" aria-label="blocked">✕</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid g2" style="margin-top:18px">
+      <div class="card"><h3>Island settings</h3><p>Apply to the whole island: open to visitors (on), PvP, explosion damage, fire spread and mob griefing (all off).</p></div>
+      <div class="card"><h3>Farm-friendly</h3><p>Harvesting is separate from breaking. Friends can pick and replant your crops without being able to touch your build.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="setup">
+  <div class="wrap">
+    <div class="eyebrow pixel">Setup</div>
+    <h2>Up and running in minutes</h2>
+    <p class="sub">For server owners running Paper 26.3 on Java 25.</p>
+    <div class="grid g2 steps">
+      <div class="card step"><h3>Install</h3><p>Drop <code>skylands.jar</code> into <code>plugins/</code>. Optional: Vault plus an economy plugin. Without one, islands are free, which is handy for testing.</p></div>
+      <div class="card step"><h3>Start the server</h3><p>An empty sky world, <code>skyrealms_sky</code>, is created automatically. Multiverse is optional.</p></div>
+      <div class="card step"><h3>Capture biomes</h3><p>Stand in a biome and run <code>/skylandadmin capture cherry_grove 16</code>. Grab 4–5 spots per biome for variety.</p></div>
+      <div class="card step"><h3>Let players in</h3><p>Players type <code>/skyland</code> and buy their first island.</p></div>
+    </div>
+
+    <h3 style="margin-top:40px">Admin commands</h3>
+<pre><code>/skylandadmin preview &lt;radius&gt;                 show the capture sphere
+/skylandadmin capture &lt;biome&gt; &lt;radius&gt; [name]  save terrain as a piece
+/skylandadmin pieces                           list biomes and variants
+/skylandadmin give &lt;player&gt; &lt;size&gt; &lt;biome&gt;     free island
+/skylandadmin tp &lt;player&gt;                      go to an island
+/skylandadmin rebuild &lt;player&gt;                 re-paste an island
+/skylandadmin reload                           reload piece files</code></pre>
+
+    <h3 style="margin-top:28px">Build from source</h3>
+<pre><code>./gradlew build      # requires JDK 25; jar lands in build/libs/skylands.jar</code></pre>
+
+    <div class="callout" style="margin-top:24px">
+      <strong>Geyser + Floodgate:</strong> every screen uses plain single-tap chest menus with no typing,
+      so Bedrock players get the same experience as Java players. Friends are picked from a list of online players.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span><strong>SkyLands</strong> · a Paper plugin for floating-island survival</span>
+    <span>Not affiliated with Mojang or Microsoft.</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var root = document.documentElement, btn = document.getElementById('theme'), saved = null;
+  try { saved = localStorage.getItem('skylands-theme'); } catch (e) {}
+  if (saved) root.setAttribute('data-theme', saved);
+  btn.addEventListener('click', function () {
+    var dark = root.getAttribute('data-theme') === 'dark' ||
+      (!root.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    var next = dark ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('skylands-theme', next); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>
