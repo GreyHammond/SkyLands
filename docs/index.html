@@ -262,6 +262,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
       <a href="#features">Features</a>
       <a href="#menu">Menu</a>
       <a href="#grow">Gallery</a>
+      <a href="#levels">Levels</a>
       <a href="#protection">Protection</a>
       <a href="#commands">Commands</a>
       <a href="#setup">Setup</a>
@@ -273,7 +274,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 <header class="hero">
   <div class="wrap">
     <div>
-      <span class="tag pixel">v0.5.0 · Paper 26.3 · Java + Bedrock</span>
+      <span class="tag pixel">v0.6.0 · Paper 26.3 · Java + Bedrock</span>
       <h1>Your own island <em>in the sky.</em></h1>
       <p class="lede">Buy a floating island, grow it biome by biome, and jump off the edge to fall back to the world below.</p>
       <div class="ctas">
@@ -411,10 +412,12 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
               <li>Return to My Island <small>— gust of wind home</small></li>
               <li>Friends' Islands</li>
               <li>Visit Islands <small>— everyone open to visitors</small></li>
+              <li>Top Islands <small>— ranked by level</small></li>
             </ul>
           </li>
           <li><span class="t">Manage Island</span>
             <ul>
+              <li>Island Level <small>— XP bar, next unlock, all levels</small></li>
               <li>Grow Land <small>— add land of any biome you own</small></li>
               <li>Unlock a Biome <small>— makes it available in Grow Land</small></li>
               <li>Upgrade <small>— more room: bigger border, higher cap</small></li>
@@ -451,6 +454,44 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
         </tbody>
       </table>
     </div>
+  </div>
+</section>
+
+<section class="alt" id="levels">
+  <div class="wrap">
+    <div class="eyebrow pixel">Island levels</div>
+    <h2>Level 1 Castaway to level 100 Continental</h2>
+    <p class="sub">Islands earn XP for growing, building, farming and visitors. Levels unlock new biomes and titles, and the best islands climb the Top Islands board.</p>
+    <div class="grid g2" style="align-items:start">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Earn XP by</th><th>XP</th></tr></thead>
+          <tbody>
+            <tr><td>Growing land</td><td class="num">150 / piece</td></tr>
+            <tr><td>Unlocking a biome</td><td class="num">300</td></tr>
+            <tr><td>Upgrading</td><td class="num">500 – 10,000</td></tr>
+            <tr><td>Placing blocks that stay</td><td class="num">1 <span class="pill">1,500/day</span></td></tr>
+            <tr><td>Harvesting grown crops</td><td class="num">2 <span class="pill">800/day</span></td></tr>
+            <tr><td>Unique visitors</td><td class="num">25 <span class="pill">500/day</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Level</th><th>Unlocks</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td>Plains, Oak Forest, Desert, Beach · <em>Castaway</em></td></tr>
+            <tr><td class="num">5</td><td>Meadow, Hilly Plains, Shallow Ocean, Cherry Grove</td></tr>
+            <tr><td class="num">10</td><td><em>Settler</em></td></tr>
+            <tr><td class="num">15</td><td>Jungle, Badlands, Swamp</td></tr>
+            <tr><td class="num">30</td><td>Dark Oak Forest, Deep Ocean · <em>Sky Farmer</em></td></tr>
+            <tr><td class="num">50</td><td><em>Cloud Baron</em></td></tr>
+            <tr><td class="num">100</td><td><em>Continental</em></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="render-note">Every number lives in <code>levels.yml</code>: XP amounts, daily caps, the curve, biome levels, titles and optional level-up reward commands.</p>
   </div>
 </section>
 
@@ -517,6 +558,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
           <tr><td class="cmd">/skylandadmin prune exempt &lt;owner&gt;</td><td class="desc">Never auto-prune this island.</td></tr>
           <tr><td class="cmd">/skylandadmin restore &lt;owner&gt;</td><td class="desc">Bring back an archived island, exactly where it was.</td></tr>
           <tr><td class="cmd">/skylandadmin archives</td><td class="desc">List archived islands and days left to restore.</td></tr>
+          <tr><td class="cmd">/skylandadmin xp &lt;owner&gt; [add|set &lt;amount&gt;]</td><td class="desc">View or change an island's XP.</td></tr>
           <tr><td class="cmd">/skylandadmin reload</td><td class="desc">Reload custom biome pieces. Config changes need a restart.</td></tr>
           <tr><td class="cmd">/skylandadmin help</td><td class="desc">Show this list in game. Alias <code>/sla</code>.</td></tr>
         </tbody>

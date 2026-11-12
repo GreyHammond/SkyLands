@@ -152,6 +152,9 @@ public final class IslandManager {
         List<Double> home = s.getDoubleList("home");
         if (home.size() == 5) i.home = home.stream().mapToDouble(Double::doubleValue).toArray();
         i.pruneExempt = s.getBoolean("prune-exempt", false);
+        i.xp = s.getLong("xp", 0);
+        i.visitorsTotal = s.getLong("visitors", 0);
+        i.xpBackfilled = s.getBoolean("xp-backfilled", false);
         return i;
     }
 
@@ -170,6 +173,9 @@ public final class IslandManager {
         s.set("pieces", i.pieces.stream().map(PiecePlacement::serialize).toList());
         if (i.home != null) s.set("home", Arrays.stream(i.home).boxed().toList());
         if (i.pruneExempt) s.set("prune-exempt", true);
+        s.set("xp", i.xp);
+        s.set("visitors", i.visitorsTotal);
+        s.set("xp-backfilled", i.xpBackfilled);
     }
 
     private static void loadFlags(ConfigurationSection s, String path, Island i, Role role) {

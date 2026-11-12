@@ -17,6 +17,10 @@ public final class Island {
     public final Set<UUID> friends = new HashSet<>();
     /** Admin-set: never auto-pruned. */
     public boolean pruneExempt;
+    /** Island XP (level is derived from it), lifetime unique visits, and whether old XP was back-filled. */
+    public long xp;
+    public long visitorsTotal;
+    public boolean xpBackfilled;
     public final LinkedHashSet<String> biomes = new LinkedHashSet<>();
     public final List<PiecePlacement> pieces = new ArrayList<>();
     /** Home offset from the centre; null means "top of the centre column". */

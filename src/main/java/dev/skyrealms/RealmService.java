@@ -43,17 +43,23 @@ public final class RealmService {
             return false;
         }
         if (!plugin.biomes().startable(biome)) { Msg.error(p, "You can't start an island with that biome."); return false; }
+        if (plugin.xp().levels().biomeLevel(biome) > 1) {
+            Msg.error(p, "That biome unlocks at island level " + plugin.xp().levels().biomeLevel(biome) + ". Start with a level 1 biome.");
+            return false;
+        }
         if (!plugin.money().usable()) { Msg.error(p, "The economy isn't set up yet."); return false; }
         if (!plugin.money().charge(p, tier.price)) { Msg.error(p, "You need <white>" + money(tier.price) + "</white> for a " + tier.pretty() + " island."); return false; }
 
         Island island = plugin.islands().create(p.getUniqueId(), tier);
         Msg.send(p, "Raising your <white>" + tier.pretty() + "</white> <green>" + plugin.biomes().pretty(biome)
                 + "</green> island from the clouds...");
-        plugin.grower().growMany(plugin.skyWorld(), island, biome, tier.startPieces, () -> {
+        island.xpBackfilled = true;
+        int placed = plugin.grower().growMany(plugin.skyWorld(), island, biome, tier.startPieces, () -> {
             if (!p.isOnline()) return;
             p.teleportAsync(island.home(plugin.skyWorld(), plugin.baseY()));
             Msg.send(p, "Welcome home! Jump off the edge to drop into the overworld.");
-        });
+        }).size();
+        plugin.xp().add(island, (long) placed * plugin.xp().levels().buyPerPiece);
         plugin.islands().save();
         return true;
     }
@@ -67,6 +73,7 @@ public final class RealmService {
         if (!plugin.money().charge(p, cost)) { Msg.error(p, "Upgrading to " + next.pretty() + " costs <white>" + money(cost)); return false; }
         // Room only: the border and piece cap grow, and players add land with Grow Land.
         i.tier = next;
+        plugin.xp().add(i, plugin.xp().levels().upgradeXp(next));
         plugin.islands().save();
         Msg.send(p, "Your island is now <white>" + next.pretty() + "</white> (" + next.footprint + "x" + next.footprint
                 + "), with room for <white>" + next.maxPieces + "</white> pieces of land. Use <white>Grow Land</white> to fill it.");
@@ -87,6 +94,7 @@ public final class RealmService {
             Msg.error(p, "There's no room left inside your border. Upgrade to grow further.");
             return false;
         }
+        plugin.xp().add(i, plugin.xp().levels().growPiece);
         plugin.islands().save();
         return true;
     }
@@ -97,10 +105,17 @@ public final class RealmService {
         if (i == null) return false;
         if (!plugin.biomes().exists(biome)) { Msg.error(p, "That biome isn't available."); return false; }
         if (i.biomes.contains(biome)) { Msg.error(p, "You already have that biome. Use Grow Land to add more of it."); return false; }
+        int need = plugin.xp().levels().biomeLevel(biome);
+        if (plugin.xp().level(i) < need) {
+            Msg.error(p, plugin.biomes().pretty(biome) + " unlocks at island level <white>" + need + "</white>. Your island is level "
+                    + plugin.xp().level(i) + ".");
+            return false;
+        }
         double cost = unlockPrice(biome);
         String name = plugin.biomes().pretty(biome);
         if (!plugin.money().charge(p, cost)) { Msg.error(p, "Unlocking <white>" + name + "</white> costs <white>" + money(cost)); return false; }
         i.biomes.add(biome);
+        plugin.xp().add(i, plugin.xp().levels().unlockBiome);
         plugin.islands().save();
         Msg.send(p, "<green>" + name + "</green> unlocked! Use <white>Grow Land</white> to add it to your island."
                 + (i.pieces.size() >= i.tier.maxPieces ? " <yellow>(Your island is full, so upgrade first.)" : ""));

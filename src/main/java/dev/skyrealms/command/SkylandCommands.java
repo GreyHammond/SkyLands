@@ -115,6 +115,16 @@ public final class SkylandCommands {
                 .then(Commands.literal("exempt").then(Commands.argument("owner", StringArgumentType.word()).suggests(players(true))
                         .executes(ctx -> exempt(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "owner"))))));
 
+        // xp <owner> [add|set <amount>]
+        root.then(Commands.literal("xp").then(Commands.argument("owner", StringArgumentType.word()).suggests(players(true))
+                .executes(ctx -> xpInfo(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "owner")))
+                .then(Commands.literal("add").then(Commands.argument("amount", com.mojang.brigadier.arguments.LongArgumentType.longArg(1))
+                        .executes(ctx -> xpChange(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "owner"),
+                                com.mojang.brigadier.arguments.LongArgumentType.getLong(ctx, "amount"), true))))
+                .then(Commands.literal("set").then(Commands.argument("amount", com.mojang.brigadier.arguments.LongArgumentType.longArg(0))
+                        .executes(ctx -> xpChange(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "owner"),
+                                com.mojang.brigadier.arguments.LongArgumentType.getLong(ctx, "amount"), false))))));
+
         // restore <owner> / archives
         root.then(Commands.literal("restore").then(Commands.argument("owner", StringArgumentType.word()).suggests(archivedOwners())
                 .executes(ctx -> restore(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "owner")))));
@@ -212,6 +222,7 @@ public final class SkylandCommands {
                 "prune preview|run|exempt <owner> <dark_gray>- inactive island archiving",
                 "restore <owner> <dark_gray>- bring back an archived island",
                 "archives <dark_gray>- list archived islands",
+                "xp <owner> [add|set <amount>] <dark_gray>- view or change island XP",
                 "reload <dark_gray>- reload piece files"))
             to.sendMessage(Msg.c(" <aqua>/skylandadmin <gray>" + l));
         to.sendMessage(Msg.c(" <dark_gray>Sizes can also be an exact radius from " + MIN_RADIUS + " to " + MAX_RADIUS + "."));
@@ -269,6 +280,22 @@ public final class SkylandCommands {
 
     private static String nameOf(UUID id) { return Objects.toString(Bukkit.getOfflinePlayer(id).getName(), id.toString()); }
 
+    private int xpInfo(CommandSender to, String owner) {
+        Island i = plugin.islands().of(offline(owner).getUniqueId());
+        if (i == null) { Msg.error(to, owner + " doesn't have an island."); return 0; }
+        Msg.send(to, nameOf(i.owner) + "'s island: <gold>" + plugin.xp().badge(i) + "</gold>, " + String.format("%,d", i.xp)
+                + " XP, " + String.format("%,d", i.visitorsTotal) + " visits");
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int xpChange(CommandSender to, String owner, long amount, boolean add) {
+        Island i = plugin.islands().of(offline(owner).getUniqueId());
+        if (i == null) { Msg.error(to, owner + " doesn't have an island."); return 0; }
+        if (add) plugin.xp().add(i, amount); else plugin.xp().set(i, amount);
+        plugin.islands().save();
+        return xpInfo(to, owner);
+    }
+
     private int prunePreview(CommandSender to) {
         var list = plugin.archiver().candidates();
         Msg.send(to, list.isEmpty() ? "No islands are inactive for " + plugin.archiver().inactiveDays() + "+ days."
@@ -324,7 +351,9 @@ public final class SkylandCommands {
         if (plugin.islands().of(target.getUniqueId()) != null) { Msg.error(sender, playerName + " already has an island."); return 0; }
         if (!plugin.biomes().startable(biome)) { Msg.error(sender, "Can't start an island with biome <white>" + biome + "</white>."); return 0; }
         Island i = plugin.islands().create(target.getUniqueId(), tier);
-        plugin.grower().growMany(plugin.skyWorld(), i, biome, tier.startPieces, null);
+        i.xpBackfilled = true;
+        int placed = plugin.grower().growMany(plugin.skyWorld(), i, biome, tier.startPieces, null).size();
+        plugin.xp().add(i, (long) placed * plugin.xp().levels().buyPerPiece);
         plugin.islands().save();
         Msg.send(sender, "Created a " + tier.pretty() + " " + biome + " island for " + playerName + " at " + i.centerX + ", " + i.centerZ + ".");
         return Command.SINGLE_SUCCESS;

@@ -35,6 +35,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private Menus menus;
     private dev.skyrealms.island.ClearQueue clearer;
     private dev.skyrealms.island.IslandArchiver archiver;
+    private dev.skyrealms.level.XpService xp;
 
     @Override
     public void onEnable() {
@@ -72,6 +73,9 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         islands = new IslandManager(new File(getDataFolder(), "islands.yml"), spacing, getLogger());
         islands.load();
 
+        if (!new File(getDataFolder(), "levels.yml").exists()) saveResource("levels.yml", false);
+        xp = new dev.skyrealms.level.XpService(this, new dev.skyrealms.level.Levels(new File(getDataFolder(), "levels.yml")));
+
         // Vault registers its economy late, so look it up once everything has enabled.
         money = new Money(cfg.getConfigurationSection("economy"));
         Bukkit.getScheduler().runTask(this, () -> {
@@ -87,6 +91,12 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         archiver = new dev.skyrealms.island.IslandArchiver(this, cfg.getConfigurationSection("prune"));
         pm.registerEvents(archiver, this);
         pm.registerEvents(new MenuListener(), this);
+        pm.registerEvents(new dev.skyrealms.level.XpListener(this), this);
+        // Islands from before levels existed get XP for the land and biomes they already have.
+        Bukkit.getScheduler().runTask(this, () -> {
+            for (var i : islands.all()) xp.backfill(i);
+            islands.save();
+        });
         pm.registerEvents(new FallTransit(this, skyName, overName, cfg.getConfigurationSection("transit")), this);
         pm.registerEvents(new ProtectionListener(islands, skyName), this);
 
@@ -119,4 +129,5 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public Menus menus() { return menus; }
     public dev.skyrealms.island.ClearQueue clearer() { return clearer; }
     public dev.skyrealms.island.IslandArchiver archiver() { return archiver; }
+    public dev.skyrealms.level.XpService xp() { return xp; }
 }

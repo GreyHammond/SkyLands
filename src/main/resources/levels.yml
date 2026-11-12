@@ -1,0 +1,69 @@
+# ---------------------------------------------------------------
+#  SkyLands island levels
+#  XP belongs to the island. Owner and co-owner actions earn it.
+# ---------------------------------------------------------------
+
+max-level: 100
+
+# Total XP needed for level L = a * L^2 + b * L   (level 1 needs 0)
+curve:
+  a: 25
+  b: 75
+
+xp:
+  buy-per-piece: 150        # buying an island: per starting piece of land
+  grow-piece: 150           # each Grow Land piece
+  unlock-biome: 300
+  upgrade:
+    MEDIUM: 500
+    LARGE: 1500
+    EXTRA_LARGE: 4000
+    CONTINENTAL: 10000
+  place-block: 1            # blocks that stay (breaking takes it back)
+  place-block-daily-cap: 1500
+  harvest-crop: 2           # fully grown crops only
+  harvest-daily-cap: 800
+  unique-visitor: 25        # once per visitor per day; friends/co-owners don't count
+  visitor-daily-cap: 500
+
+# Level needed before a biome can be unlocked (or picked when buying).
+# Biomes not listed (e.g. custom captured ones) need level 1.
+biome-levels:
+  plains: 1
+  oak_forest: 1
+  desert: 1
+  beach: 1
+  meadow: 5
+  hilly_plains: 5
+  shallow_ocean: 5
+  cherry_grove: 5
+  jungle: 15
+  badlands: 15
+  swamp: 15
+  dark_oak_forest: 30
+  deep_ocean: 30
+
+# Titles: the highest one at or below the island's level is shown.
+titles:
+  1: Castaway
+  10: Settler
+  20: Homesteader
+  30: Sky Farmer
+  40: Cloud Walker
+  50: Cloud Baron
+  60: Wind Rider
+  70: Storm Keeper
+  80: Sky Lord
+  90: High Sovereign
+  100: Continental
+
+# Tell the whole server when an island reaches a level that's a multiple of this (0 = never).
+announce-every: 10
+
+# Optional console commands run when an island reaches a level.
+# Placeholders: {owner} (owner's name), {level}, {title}
+rewards:
+  # 10:
+  #   - "eco give {owner} 1000"
+  # 50:
+  #   - "give {owner} diamond 16"

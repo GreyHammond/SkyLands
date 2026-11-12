@@ -10,7 +10,7 @@ jump off the edge and you drop out of the sky, landing somewhere below your isla
 Everything a player does happens in one chest menu, `/skyland`, so it works the same for
 Java players and Bedrock players joining through **Geyser + Floodgate**.
 
-> **Download:** [`docs/skylands.jar`](docs/skylands.jar) (v0.5.0) · Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
+> **Download:** [`docs/skylands.jar`](docs/skylands.jar) (v0.6.0) · Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
 
 ---
 
@@ -33,6 +33,8 @@ Java players and Bedrock players joining through **Geyser + Floodgate**.
   buttons, chests, furnaces, workstations, harvesting, farmland trampling, animals and more.
 - **Bedrock-friendly GUI**: single-tap chest menus, no typing, and a confirm screen before
   anything costs money.
+- **Island levels 1–100**: islands earn XP for growing, building, farming and visitors.
+  Levels unlock biomes and titles, and the best islands show up in **Top Islands**.
 - **Co-owners and transfers**: share an island with co-owners who can manage it with you,
   or hand it to someone else entirely.
 - **Auto-prune with restore**: islands left alone for 30 days are archived (blocks, chests,
@@ -106,8 +108,10 @@ tiers, biome names and player names.
 ├── Return to Island           shows "Buy an Island" if you don't have one
 │   ├── Return to My Island    gust of wind → home (cooldown)
 │   ├── Friends' Islands       islands where you're a friend
-│   └── Visit Islands          every island open to visitors
+│   ├── Visit Islands          every island open to visitors
+│   └── Top Islands            ranked by level, then visits
 ├── Manage Island
+│   ├── Island Level           XP bar and next unlock; tap for all levels & unlocks
 │   ├── Grow Land              add land of any biome you own
 │   ├── Unlock a Biome         makes a new biome available in Grow Land
 │   ├── Upgrade                more room: bigger border and piece cap
@@ -215,6 +219,7 @@ their own neighbourhood too.
 | `prune exempt <owner>` | Toggle: never auto-prune this island |
 | `restore <owner>` | Restore an archived island |
 | `archives` | List archived islands and days left to restore |
+| `xp <owner> [add\|set <amount>]` | View or change an island's XP |
 | `reload` | Reload piece files |
 
 ### Permissions
@@ -285,6 +290,47 @@ Enterprise). On a free plan, the repository has to be public for Pages to work.
 
 ---
 
+## Island levels
+
+Islands earn XP and level up from **1 to 100**. Owner and co-owner actions count.
+
+| Action | XP | Limit |
+|---|---|---|
+| Buy an island | 150 per starting piece | once |
+| Grow Land | 150 per piece | |
+| Unlock a biome | 300 | |
+| Upgrade | Medium 500 · Large 1,500 · XL 4,000 · Continental 10,000 | |
+| Place a block that stays | 1 | breaking takes it back; 1,500/day |
+| Harvest a fully grown crop | 2 | 800/day |
+| Unique visitor | 25 | once per visitor per day; 500/day |
+
+**Curve:** total XP for level L = 25·L² + 75·L (level 10 = 3,250 · 50 = 66,250 · 100 = 257,500).
+Spending gets an island to about level 50; the rest takes real play.
+
+**Biomes unlock by level** (you still pay the unlock price):
+
+| Level | Biomes |
+|---|---|
+| 1 | Plains, Oak Forest, Desert, Beach |
+| 5 | Meadow, Hilly Plains, Shallow Ocean, Cherry Grove |
+| 15 | Jungle, Badlands, Swamp |
+| 30 | Dark Oak Forest, Deep Ocean |
+
+New islands start at level 1, so only level 1 biomes can be picked when buying. Biomes an
+island already owns stay usable.
+
+**Titles:** 1 Castaway · 10 Settler · 20 Homesteader · 30 Sky Farmer · 40 Cloud Walker ·
+50 Cloud Baron · 60 Wind Rider · 70 Storm Keeper · 80 Sky Lord · 90 High Sovereign · 100 Continental
+
+**Where it shows:** the Manage Island level card (XP bar and next unlock), a Levels & Unlocks
+screen, every island card in Visit Islands, **Top Islands**, and a banner when you walk onto an
+island ("Grey's Island, Lv 42 · Cloud Baron"). Level-ups show a title, fireworks, and a
+server-wide message every 10 levels.
+
+Everything is configurable in `plugins/SkyRealms/levels.yml`: XP amounts and caps, the curve,
+biome levels, titles, and optional reward commands per level (e.g. `eco give {owner} 1000`).
+Islands created before levels existed get XP back-filled from their land and biomes.
+
 ## Auto-prune
 
 An island is **inactive** when its owner and every co-owner have been offline for
@@ -315,7 +361,8 @@ Refunds give items back.
 
 ## Roadmap
 
-- Island levels and XP, unlocking biomes, underside themes and cosmetics
+- New biomes (Snowy, Mushroom, Lush Caverns, Volcanic, Crystal, Ancient), underside styles,
+  themes and cosmetics, all unlocked by island level
 - Native Bedrock forms through the Floodgate API (chest menus already work)
 - More built-in biomes (snowy taiga, savanna, mushroom fields, ...)
 - Island leaderboards and island levels

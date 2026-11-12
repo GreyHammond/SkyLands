@@ -78,6 +78,7 @@ public final class Menus {
         m.button(13, item(Material.PLAYER_HEAD, "<aqua>Friends' Islands", "<gray>Islands where you're a friend: <white>" + friendOf.size()),
                 pl -> islandList(pl, friendOf, "<dark_aqua>Friends' islands", 0, this::travel));
         m.button(15, item(Material.COMPASS, "<aqua>Visit Islands", "<gray>Every island open to visitors."), pl -> visit(pl, 0));
+        m.button(22, item(Material.GOLDEN_HELMET, "<gold>Top Islands", "<gray>The highest level islands", "<gray>on the server."), pl -> topIslands(pl, 0));
         m.button(18, back(), this::main);
         m.fill().open(p);
     }
@@ -87,6 +88,7 @@ public final class Menus {
         Island i = svc.owned(p);
         if (i == null) { main(p); return; }
         Menu m = new Menu(4, "<dark_aqua>Manage Island");
+        m.button(4, levelCard(i), this::levels);
         m.button(10, item(Material.WHEAT_SEEDS, "<green>Grow Land",
                 "<gray>Attach more of a biome you own.", "<gray>Cost: <gold>" + svc.money(svc.growPrice()) + " <gray>each",
                 "<gray>Pieces: <white>" + i.pieces.size() + "/" + i.tier.maxPieces), pl -> biomes(pl, Mode.GROW, null));
@@ -136,7 +138,7 @@ public final class Menus {
     }
 
     private org.bukkit.inventory.ItemStack info(Island i) {
-        return item(Material.BOOK, "<white>Your Island",
+        return item(Material.BOOK, "<white>Your Island", "<gold>" + plugin.xp().badge(i),
                 "<gray>Size: <white>" + i.tier.pretty() + " (" + i.tier.footprint + "x" + i.tier.footprint + ")",
                 "<gray>Land pieces: <white>" + i.pieces.size() + "/" + i.tier.maxPieces,
                 "<gray>Biomes: <green>" + String.join(", ", i.biomes),
@@ -181,6 +183,9 @@ public final class Menus {
         if (mode == Mode.BUY) list.removeIf(b -> !plugin.biomes().startable(b));
         if (mode == Mode.GROW && i != null) list.retainAll(i.biomes);
         if (mode == Mode.UNLOCK && i != null) list.removeAll(i.biomes);
+        var lv = plugin.xp().levels();
+        int islandLevel = mode == Mode.BUY || i == null ? 1 : plugin.xp().level(i);
+        if (mode != Mode.GROW) list.sort(Comparator.comparingInt(lv::biomeLevel));
         String title = switch (mode) {
             case BUY -> "<dark_aqua>Choose your biome";
             case GROW -> "<dark_aqua>Grow which biome?";
@@ -192,6 +197,13 @@ public final class Menus {
         for (String b : list) {
             if (slot >= (rows - 1) * 9) break;
             String style = plugin.biomes().builtIn(b) ? describe(b) : plugin.library().variants(b).size() + " captured terrain styles";
+            int need = lv.biomeLevel(b);
+            if (mode != Mode.GROW && need > islandLevel) {
+                m.button(slot++, item(Material.GRAY_DYE, "<gray>" + pretty(b) + " <dark_gray>(locked)", "<dark_gray>" + style,
+                        "<red>Unlocks at island level " + need,
+                        mode == Mode.BUY ? "<dark_gray>New islands start at level 1." : "<dark_gray>Your island is level " + islandLevel + "."), null);
+                continue;
+            }
             switch (mode) {
                 case BUY -> m.button(slot++, item(biomeIcon(b), "<green>" + pretty(b), "<gray>" + style,
                         "<gray>Island: <white>" + tier.pretty() + " for <gold>" + svc.money(tier.price)),
@@ -396,19 +408,99 @@ public final class Menus {
 
     private void islandList(Player p, List<Island> islands, String title, int page, Consumer<Player> back) {
         List<Island> sorted = islands.stream()
-                .sorted(Comparator.comparing((Island i) -> Bukkit.getPlayer(i.owner) == null).thenComparing(i -> -i.pieces.size()))
+                .sorted(Comparator.comparing((Island i) -> Bukkit.getPlayer(i.owner) == null).thenComparing(i -> -i.xp))
                 .toList();
+        showIslands(p, sorted, title, page, back, false);
+    }
+
+    /** Top Islands: everyone open to visitors (plus your own and friends'), ranked by level, then visits. */
+    public void topIslands(Player p, int page) {
+        List<Island> ranked = plugin.islands().all().stream()
+                .filter(i -> i.setting(Flag.VISITS) || i.roleOf(p.getUniqueId()) != Role.VISITOR)
+                .sorted(Comparator.comparingLong((Island i) -> -i.xp).thenComparingLong(i -> -i.visitorsTotal))
+                .toList();
+        showIslands(p, ranked, "<dark_aqua>Top Islands", page, this::travel, true);
+    }
+
+    private void showIslands(Player p, List<Island> list, String title, int page, Consumer<Player> back, boolean ranked) {
         Menu m = new Menu(6, title);
-        paged(m, sorted, page, i -> {
+        paged(m, list, page, i -> {
             OfflinePlayer o = Bukkit.getOfflinePlayer(i.owner);
-            return head(o, "<green>" + Objects.toString(o.getName(), "?") + "'s island",
-                    "<gray>" + i.tier.pretty() + " · " + String.join(", ", i.biomes),
+            String rank = ranked ? "<gold>#" + (list.indexOf(i) + 1) + " " : "";
+            Role r = i.roleOf(p.getUniqueId());
+            return head(o, rank + "<green>" + Objects.toString(o.getName(), "?") + "'s island",
+                    "<gold>" + plugin.xp().badge(i),
+                    "<gray>" + i.tier.pretty() + " · " + i.biomes.size() + " biomes · " + String.format("%,d", i.visitorsTotal) + " visits",
                     o.isOnline() ? "<green>Owner online" : "<gray>Owner offline",
-                    i.friends.contains(p.getUniqueId()) ? "<aqua>You're a friend here" : "", "<yellow>Tap to visit");
+                    r == Role.OWNER ? "<aqua>Your island" : r == Role.COOWNER ? "<aqua>You co-own this" : r == Role.FRIEND ? "<aqua>You're a friend here" : "",
+                    "<yellow>Tap to visit");
         }, (pl, i) -> { pl.closeInventory(); svc.visit(pl, Bukkit.getOfflinePlayer(i.owner)); },
-                pg -> islandList(p, islands, title, pg, back));
-        if (sorted.isEmpty()) m.button(22, item(Material.BARRIER, "<red>No islands here yet"), null);
+                pg -> showIslands(p, list, title, pg, back, ranked));
+        if (list.isEmpty()) m.button(22, item(Material.BARRIER, "<red>No islands here yet"), null);
         m.button(45, back(), back);
+        m.fill().open(p);
+    }
+
+    // ---- levels ----------------------------------------------------------------------------
+
+    private org.bukkit.inventory.ItemStack levelCard(Island i) {
+        var lv = plugin.xp().levels();
+        int level = plugin.xp().level(i);
+        List<String> lore = new ArrayList<>();
+        lore.add(plugin.xp().progressBar(i));
+        lore.add("<gray>Total XP: <white>" + String.format("%,d", i.xp));
+        String next = nextUnlock(level);
+        if (next != null) lore.add("<gray>Next: " + next);
+        lore.add("");
+        lore.add("<gray>Earn XP by growing, unlocking,");
+        lore.add("<gray>building, farming and visitors.");
+        lore.add("<yellow>Tap to see all unlocks");
+        return glow(item(Material.EXPERIENCE_BOTTLE, "<gold>Island Level " + level + " <gray>· <yellow>" + lv.title(level),
+                lore.toArray(String[]::new)));
+    }
+
+    /** "Lv 15: Jungle, Badlands" for the next level that unlocks something. */
+    private String nextUnlock(int level) {
+        var lv = plugin.xp().levels();
+        for (int l = level + 1; l <= lv.maxLevel; l++) {
+            List<String> what = unlocksAt(l);
+            if (!what.isEmpty()) return "<white>Lv " + l + "<gray>: " + String.join(", ", what);
+        }
+        return null;
+    }
+
+    private List<String> unlocksAt(int l) {
+        var lv = plugin.xp().levels();
+        List<String> out = new ArrayList<>();
+        for (String b : plugin.biomes().all()) if (lv.biomeLevel(b) == l && l > 1) out.add(pretty(b));
+        String t = lv.titles().get(l);
+        if (t != null) out.add("title \"" + t + "\"");
+        return out;
+    }
+
+    /** Every level that unlocks something, reached ones lit up. */
+    public void levels(Player p) {
+        Island i = plugin.islands().of(p.getUniqueId());
+        if (i == null) { main(p); return; }
+        var lv = plugin.xp().levels();
+        int level = plugin.xp().level(i);
+        TreeSet<Integer> milestones = new TreeSet<>(lv.titles().keySet());
+        for (String b : plugin.biomes().all()) if (lv.biomeLevel(b) > 1) milestones.add(lv.biomeLevel(b));
+        Menu m = new Menu(6, "<dark_aqua>Levels & Unlocks");
+        m.button(4, levelCard(i), null);
+        int slot = 9;
+        for (int l : milestones) {
+            if (slot >= 45) break;
+            boolean got = level >= l;
+            List<String> lore = new ArrayList<>();
+            for (String what : unlocksAt(l)) lore.add((got ? "<green>✔ " : "<gray>• ") + what);
+            if (l == 1) lore.add("<green>✔ Starting biomes: " + String.join(", ",
+                    plugin.biomes().all().stream().filter(b -> lv.biomeLevel(b) == 1 && plugin.biomes().builtIn(b)).map(this::pretty).toList()));
+            lore.add(got ? "<green>Reached" : "<gray>Needs " + String.format("%,d", lv.xpFor(l)) + " total XP");
+            m.button(slot++, item(got ? Material.LIME_DYE : Material.GRAY_DYE, (got ? "<green>" : "<gray>") + "Level " + l,
+                    lore.toArray(String[]::new)), null);
+        }
+        m.button(45, back(), this::manage);
         m.fill().open(p);
     }
 
