@@ -1,0 +1,66 @@
+# ---------------------------------------------------------------
+#  SkyRealms
+# ---------------------------------------------------------------
+
+worlds:
+  # Created automatically as an empty void world if it doesn't exist.
+  sky: skyrealms_sky
+  # Your normal survival world players fall down into.
+  overworld: world
+
+islands:
+  # Distance between island centres in the sky world. Must be bigger than the
+  # largest footprint (continental = 512). Overworld landings sit "under" these
+  # same X/Z coordinates, so this also spreads islands apart on the ground.
+  spacing: 2048
+  # Y level island centres are pasted at.
+  base-y: 180
+  # Random up/down jitter (blocks) for each attached piece, for a natural look.
+  piece-y-jitter: 3
+  # Blocks placed per server tick while pasting. Lower = less lag, slower paste.
+  blocks-per-tick: 20000
+
+# footprint  = width/length of the buildable square, in blocks
+# price      = cost to buy at this tier (upgrades cost the difference)
+# start-pieces = how many biome pieces you get when buying outright
+# max-pieces = how far the island can grow at this tier
+tiers:
+  SMALL:       { footprint: 32,  price: 5000,    start-pieces: 1,  max-pieces: 3 }
+  MEDIUM:      { footprint: 64,  price: 20000,   start-pieces: 3,  max-pieces: 10 }
+  LARGE:       { footprint: 128, price: 75000,   start-pieces: 8,  max-pieces: 30 }
+  EXTRA_LARGE: { footprint: 256, price: 250000,  start-pieces: 20, max-pieces: 90 }
+  CONTINENTAL: { footprint: 512, price: 1000000, start-pieces: 50, max-pieces: 300 }
+
+prices:
+  # Cost of attaching one extra piece of a biome you already own.
+  grow-piece: 1000
+  # Cost of unlocking a NEW biome region (this also attaches its first pieces).
+  biome-unlock-default: 10000
+  # How many pieces a newly unlocked biome region starts with.
+  biome-region-pieces: 2
+  # Per-biome overrides (folder name under plugins/SkyRealms/pieces/).
+  biome-unlock:
+    cherry_grove: 25000
+    mushroom_fields: 50000
+
+# Without Vault + an economy plugin, everything is free (handy for testing).
+economy:
+  require-vault: false
+
+transit:
+  # Falling below this Y in the sky world sends you down to the overworld.
+  depart-y: 100
+  # Y you appear at above the overworld.
+  arrive-y: 310
+  # Landing is a random spot up to this many blocks from directly-below.
+  max-landing-offset: 200
+  # >1 favours landings closer to directly-below; 1 = evenly spread.
+  landing-closeness-bias: 1.6
+  # Re-roll landing spots that are lava, fire, cactus, etc.
+  reroll-unsafe-landings: 8
+  # Minimum downward speed applied on arrival so you don't "hover".
+  min-arrive-speed: 1.0
+  # Seconds the one-time landing protection lasts before it expires.
+  protection-seconds: 90
+  # Seconds between /realm home uses (0 = no cooldown).
+  home-cooldown: 10
