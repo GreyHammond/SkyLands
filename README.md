@@ -1,12 +1,194 @@
-# SkyRealms
+# SkyLands
 
-A Paper 26.3 plugin: players **buy a floating island**, pick a biome, and **grow it outward**
-by attaching more land: more of a biome they own, or whole new biome regions. Jumping off
-the edge drops them into the overworld, landing roughly under their island.
+**Buy your own floating island. Grow it biome by biome. Jump off the edge to fall back to Earth.**
 
-![A Large island grown on a test server](docs/test-render-large.png)
+SkyLands (plugin name `SkyRealms`) is a Paper plugin for Minecraft **26.3**. Players buy a
+personal sky island in one of five sizes, pick its biome, and expand it outward by attaching
+new land, including whole new biome regions. The island sits above the normal overworld:
+jump off the edge and you drop out of the sky, landing somewhere below your island.
 
-## Build
+Everything a player does happens in one chest menu, `/skyland`, so it works the same for
+Java players and Bedrock players joining through **Geyser + Floodgate**.
+
+> Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
+
+---
+
+## Features
+
+- **Five island sizes**: Small 32×32 up to Continental 512×512, each with its own price.
+- **Real terrain**: islands are built from spheres of terrain you capture from your own
+  worlds. Grass colour, sky, fog and music match the biome they came from.
+- **Grows outward**: new land attaches to the edge of the island so it stays one connected
+  landmass. New biomes form their own region on the rim.
+- **Fall to the overworld**: drop off the edge and land up to 200 blocks from directly below
+  your island, in a random direction. The landing that ends the fall does no damage, and
+  you can open an elytra mid-fall.
+- **Return to Island**: a button in the menu launches you upward on a gust of wind and
+  carries you home.
+- **Owner-controlled protection**: separate settings for Visitors and Friends: doors,
+  buttons, chests, furnaces, workstations, harvesting, farmland trampling, animals and more.
+- **Bedrock-friendly GUI**: single-tap chest menus, no typing, and a confirm screen before
+  anything costs money.
+- **Vault economy**: works with any Vault economy plugin. Without one, everything is free,
+  which is handy for testing.
+- **Safe deletion**: wipes an island chunk by chunk in the background, without a lag spike.
+
+---
+
+## Quick start
+
+1. Install **Paper 26.3** (Java 25).
+2. Put `skylands.jar` (from the [Releases](../../releases) page) in `plugins/`. Optional: **Vault** plus an economy plugin
+   (EssentialsX, etc.).
+3. Start the server. The plugin creates an empty void world called `skyrealms_sky`.
+4. Capture some biome pieces (next section).
+5. Players type **`/skyland`**.
+
+### Capturing biome pieces (admins)
+
+Islands are built from *pieces*: spheres of real terrain.
+
+1. Stand in the middle of a nice spot in a biome, for example a cherry grove.
+2. `/skylandadmin preview 16` shows the sphere outline with particles.
+3. `/skylandadmin capture cherry_grove 16` saves it to
+   `plugins/SkyRealms/pieces/cherry_grove/cherry_grove_1.skyp`.
+4. Capture 4–5 spots per biome. Each one becomes a variant, picked at random and rotated
+   so repeats don't look copied.
+
+Every folder with at least one piece becomes a biome players can choose.
+
+Tips: radius 12–16 works well. A Small island is 32 wide, so its first piece needs
+radius ≤ 16. Air isn't saved, so pieces merge cleanly when they overlap. Water and lava on
+the outer edge of the sphere are skipped so they don't pour off the island forever.
+
+---
+
+## The `/skyland` menu
+
+```
+/skyland                       (aliases: /sl, /realm)
+├── Return to Island           shows "Buy an Island" if you don't have one
+│   ├── Return to My Island    gust of wind → home (cooldown)
+│   ├── Friends' Islands       islands where you're a friend
+│   └── Visit Islands          every island open to visitors
+├── Manage Island
+│   ├── Grow Land              add more of a biome you own
+│   ├── Unlock a Biome         add a new biome region at the edge
+│   ├── Upgrade                move up to the next size
+│   ├── Protection             Visitors · Friends · Island settings
+│   ├── Friends                add from online players, tap a head to remove
+│   ├── Set Home Here
+│   └── Island info
+└── Delete Island              two confirmations, then the island is wiped
+```
+
+Buying: **Buy an Island → size → biome → confirm**.
+
+### Island sizes (defaults)
+
+| Size | Footprint | Price | Starting pieces | Max pieces |
+|---|---|---|---|---|
+| Small | 32 × 32 | 5,000 | 1 | 3 |
+| Medium | 64 × 64 | 20,000 | 3 | 10 |
+| Large | 128 × 128 | 75,000 | 8 | 30 |
+| Extra Large | 256 × 256 | 250,000 | 20 | 90 |
+| Continental | 512 × 512 | 1,000,000 | 50 | 300 |
+
+Upgrading costs the difference between the two tier prices and adds bonus land. Growing
+costs 1,000 per piece. Unlocking a new biome costs 10,000 by default; you can price each
+biome separately in the config.
+
+---
+
+## Protection
+
+Owners can always do everything. For everyone else, the owner picks what **Visitors**
+(anyone) and **Friends** may do, in *Manage Island → Protection*.
+
+| Setting | Visitors | Friends |
+|---|:-:|:-:|
+| Doors, trapdoors, fence gates | ✅ | ✅ |
+| Break blocks | ❌ | ✅ |
+| Place blocks | ❌ | ✅ |
+| Harvest grown crops (and replant) | ❌ | ✅ |
+| Buttons, levers, pressure plates | ❌ | ✅ |
+| Chests, barrels, shulkers, hoppers | ❌ | ✅ |
+| Furnaces, smokers, blast furnaces | ❌ | ✅ |
+| Workstations (crafting, anvil, enchanting, brewing…) | ❌ | ✅ |
+| Redstone tweaks, beds, buckets | ❌ | ✅ |
+| Animals, villager trading, riding | ❌ | ✅ |
+| Item frames, armor stands, paintings | ❌ | ✅ |
+| Other blocks (cake, pots, signs, composters…) | ❌ | ✅ |
+| Trample farmland | ❌ | ❌ |
+
+Each screen has **Allow everything**, **Block everything** and **Reset to default** buttons.
+Harvesting is separate from breaking, so friends can farm for you without being able to
+damage your build.
+
+**Island settings** (apply to the whole island): Open to visitors (on) · PvP (off) ·
+Explosion damage (off) · Fire spread (off) · Mob griefing (off).
+
+---
+
+## Falling and returning
+
+- Falling below `transit.depart-y` in the sky world puts you high above the overworld at
+  the **same X/Z you jumped from**, plus a random offset of up to 200 blocks.
+- Your sideways momentum is kept, so you keep falling instead of hovering.
+- Landing spots on lava, fire, cactus or magma are re-rolled.
+- The landing that ends the fall does no damage. Normal falls are still dangerous.
+- *Return to Island* in the menu launches you upward and carries you home.
+
+Island centres are 2,048 blocks apart, so each player's landing area on the ground is
+their own neighbourhood too.
+
+---
+
+## Admin commands
+
+`/skylandadmin` (alias `/sla`), permission `skyrealms.admin` (ops by default)
+
+| Command | What it does |
+|---|---|
+| `capture <biome> <radius> [name]` | Save the sphere of terrain around you as a piece |
+| `preview <radius>` | Show the capture sphere outline |
+| `pieces` | List biomes and their variants |
+| `give <player> <size> <biome>` | Create an island for free |
+| `tp <player>` | Teleport to someone's island |
+| `rebuild <player>` | Re-paste every piece of an island |
+| `reload` | Reload piece files |
+
+`skyrealms.admin.bypass` lets a player build anywhere in the sky world.
+
+---
+
+## Configuration
+
+`plugins/SkyRealms/config.yml`:
+
+| Section | What it controls |
+|---|---|
+| `worlds` | Sky world name and the overworld players fall into |
+| `islands` | Island spacing, paste height, paste speed (blocks per tick) |
+| `tiers` | Footprint, price, starting and max pieces for each size |
+| `prices` | Grow price, biome unlock prices (per biome), refund on delete |
+| `biome-icons` | Menu icon for each biome |
+| `transit` | Fall height, landing spread, landing protection, return cooldown |
+| `return` | Strength and duration of the Return to Island launch |
+| `economy.require-vault` | Block purchases until a Vault economy exists |
+
+### Multiverse
+
+Not required: the plugin creates the sky world itself. To let Multiverse manage it instead:
+
+```
+/mv create skyrealms_sky normal -g SkyRealms
+```
+
+---
+
+## Building from source
 
 Requires JDK 25.
 
@@ -14,142 +196,22 @@ Requires JDK 25.
 ./gradlew build
 ```
 
-The jar is `build/libs/SkyRealms-0.3.0.jar`. Drop it in `plugins/`.
+The jar ends up at `build/libs/skylands.jar`.
 
-Optional: **Vault** plus an economy plugin. Without one, everything is free, which is handy for testing.
-Set `economy.require-vault: true` to block purchases until an economy exists.
+---
 
-## How it works
+## GitHub Pages
 
-### 1. Admins capture biome pieces
+The landing site is a single file at `docs/index.html`. To publish it:
+**Settings → Pages → Build and deployment → Deploy from a branch → `main` / `/docs`**.
 
-Islands are built from **pieces**: spheres of real terrain you grab from your own worlds.
+Note: GitHub Pages on a **private** repository needs a paid GitHub plan (Pro, Team or
+Enterprise). On a free plan, the repository has to be public for Pages to work.
 
-1. Go to a nice spot in a biome (say a cherry grove) and stand in the middle.
-2. `/skylandadmin preview 16` shows the sphere outline.
-3. `/skylandadmin capture cherry_grove 16` saves it as `plugins/SkyRealms/pieces/cherry_grove/cherry_grove_1.skyp`.
-4. Do this 4–5 times per biome in different spots. Each one becomes a random variant.
+---
 
-Every folder with at least one piece is a biome players can pick.
-
-Tips:
-- Only non-air blocks are saved, so pieces overlap and merge cleanly.
-- Water and lava on the outer 2-block shell are skipped so they don't pour off the island forever.
-- The real biome is saved per block, so grass colour, sky, fog and music match.
-- Radius 12–20 works well. A Small island is 32 wide, so its first piece needs radius ≤ 16.
-- Pieces are pasted with a random rotation and a little height jitter so repeats don't look copied.
-
-### 2. Players: everything is in `/skyland`
-
-`/skyland` (aliases `/sl`, `/realm`) opens a chest menu. There are no player subcommands and
-no items to lose. Every action is a single tap, so it works the same for Bedrock players
-through Geyser/Floodgate. Anything that costs money shows a **Yes/No confirm screen**.
-
-```
-/skyland
-├── Return to Island            (shows "Buy an Island" if you don't have one)
-│   ├── Return to My Island     gust of wind → home (cooldown)
-│   ├── Friends' Islands        islands where you're a friend
-│   └── Visit Islands           every island open to visitors
-├── Manage Island
-│   ├── Grow Land               pick an owned biome → confirm
-│   ├── Unlock a Biome          pick a new biome → confirm (attaches at the edge)
-│   ├── Upgrade                 next size tier → confirm
-│   ├── Protection              Visitors / Friends / Island settings
-│   ├── Friends                 tap a head to remove; "Add a friend" picks from online players
-│   ├── Set Home Here
-│   └── (island info)
-└── Delete Island               two confirm screens, then the island is wiped
-```
-
-Buying: Buy an Island → size → biome → confirm. The size screen also has a "Visit Islands"
-button so people can look around first.
-
-Growth rules: each new piece overlaps existing land so the island stays one continuous mass.
-Pieces of the same biome cluster together, new biome regions go on the rim, and nothing
-grows past the tier's border. When an island is full, players must upgrade.
-
-### 3. Island protection
-
-Owners choose what **Visitors** (everyone) and **Friends** can do, each toggled separately in
-the menu (Manage Island → Protection → Visitors / Friends). Owners can always do everything.
-
-| Option | Visitors default | Friends default |
-|---|---|---|
-| Doors, trapdoors, fence gates | ✅ | ✅ |
-| Break blocks / place blocks | ❌ | ✅ |
-| Harvest grown crops (and replant) | ❌ | ✅ |
-| Buttons, levers, pressure plates | ❌ | ✅ |
-| Chests, barrels, shulkers, hoppers | ❌ | ✅ |
-| Furnaces, smokers, blast furnaces | ❌ | ✅ |
-| Workstations (crafting, anvil, enchanting, brewing) | ❌ | ✅ |
-| Redstone tweaks, beds, buckets | ❌ | ✅ |
-| Animals (hurt, breed, shear, leash), villager trading, riding | ❌ | ✅ |
-| Item frames, armor stands, paintings | ❌ | ✅ |
-| Other blocks (cake, pots, signs, composters, ...) | ❌ | ✅ |
-| **Trample farmland** | ❌ | ❌ |
-
-Each screen also has **Allow everything**, **Block everything** and **Reset to default** buttons.
-
-Harvesting is separate from breaking, so friends can farm for you without being able to
-tear up your build. Replanting seeds counts as harvesting, not placing.
-
-**Island settings** (whole island): Open to visitors (on), PvP (off), Explosion damage (off),
-Fire spread (off), Mob griefing: trampling, endermen, etc. (off).
-
-Monsters can always be fought. Ender chests are always usable, since they're personal storage.
-
-### 4. Falling to the overworld
-
-- Falling below `transit.depart-y` in the sky world teleports you to `arrive-y` above the overworld.
-- You land at the **same X/Z you jumped from**, plus a random offset of up to `max-landing-offset`
-  (200) blocks in any direction. `landing-closeness-bias` makes nearby landings more common
-  than far ones.
-- Your sideways momentum is kept, so you keep falling instead of hovering.
-- The landing that ends the fall takes **no fall damage**. Protection ends once you're on the
-  ground (or after `protection-seconds`), so it can't be exploited.
-- Landing spots on lava, fire, cactus, magma and similar blocks are re-rolled.
-- **Elytra works naturally**: deploy it during the fall and glide wherever you like.
-
-### 5. Going back up
-
-`/skyland` → Return to Island → Return to My Island. A gust of wind throws you upward, then
-carries you home a second later. Launch strength, delay and cooldown are set in `config.yml`
-(`return:` and `transit.home-cooldown`).
-
-### 6. Deleting an island
-
-`/skyland` → Delete Island, then two confirmations. Anyone standing on the island is sent to
-overworld spawn. Every block and entity in the island's area is wiped in the background
-(chunk by chunk, no lag spike), and the player can buy a new island right away.
-`prices.delete-refund-percent` controls how much of the tier price comes back (default 0).
-
-Island centres sit `islands.spacing` (2048) blocks apart, so each player's landing zone on
-the ground is their own area too.
-
-### Admin
-
-`/skylandadmin capture | preview | pieces | give <player> <tier> <biome> | tp <player> | rebuild <player> | reload` (alias `/sla`)
-
-Permissions: `skyrealms.admin` (op), `skyrealms.admin.bypass` (build anywhere in the sky world).
-
-### Multiverse
-
-Not required: the plugin creates the void sky world itself. If you'd rather have Multiverse
-manage it, create it with generator `SkyRealms`:
-
-```
-/mv create skyrealms_sky normal -g SkyRealms
-```
-
-## Config
-
-See `config.yml`: tier footprints, prices and piece counts, biome unlock prices, paste speed,
-and transit settings.
-
-## Not built yet (next steps)
+## Roadmap
 
 - Native Bedrock forms through the Floodgate API (chest menus already work)
-- Deleting or resetting an island and clearing its blocks
-- Saving chest or sign contents in captured pieces (terrain blocks only)
-- An island-wide biome map or per-region claim flags
+- Saving chest and sign contents in captured pieces (terrain only for now)
+- Island leaderboards and island levels

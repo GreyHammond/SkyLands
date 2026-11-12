@@ -23,6 +23,10 @@ tasks.withType<JavaCompile> {
     options.release.set(25)
 }
 
+tasks.jar {
+    archiveFileName.set("skylands.jar")
+}
+
 tasks.processResources {
     filesMatching("plugin.yml") { expand("version" to project.version) }
 }
