@@ -100,7 +100,7 @@ public enum TerrainBiome {
             case OAK_FOREST -> r < 0.035 ? TreeType.TREE : (r < 0.042 ? TreeType.BIG_TREE : (r < 0.05 ? TreeType.BIRCH : null));
             case DARK_OAK_FOREST -> r < 0.045 ? TreeType.DARK_OAK : (r < 0.048 ? TreeType.RED_MUSHROOM
                     : (r < 0.051 ? TreeType.BROWN_MUSHROOM : null));
-            case CHERRY_GROVE -> r < 0.022 ? TreeType.CHERRY : null;
+            case CHERRY_GROVE -> r < 0.045 ? TreeType.CHERRY : null;
             case JUNGLE -> r < 0.012 ? TreeType.JUNGLE : (r < 0.035 ? TreeType.SMALL_JUNGLE : (r < 0.06 ? TreeType.JUNGLE_BUSH : null));
             case SWAMP -> r < 0.012 ? TreeType.SWAMP : null;
             default -> null;

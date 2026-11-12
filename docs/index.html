@@ -215,6 +215,33 @@ td.num { font-variant-numeric: tabular-nums; }
   padding: 14px 18px; border-radius: 0 var(--radius) var(--radius) 0; color: var(--text); font-size: 15px;
 }
 
+/* growth gallery */
+.grow { display: grid; grid-template-columns: 1fr 300px; gap: 24px; align-items: center; }
+@media (max-width: 860px) { .grow { grid-template-columns: 1fr; } }
+.grow-stage {
+  position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--sky-top), var(--sky-bottom)); aspect-ratio: 915 / 594;
+}
+.grow-stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; opacity: 0; transition: opacity .5s ease; }
+.grow-stage img.on { opacity: 1; }
+.grow-steps { display: grid; gap: 8px; }
+.grow-steps button {
+  text-align: left; font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px 14px; cursor: pointer; display: grid; grid-template-columns: 32px 1fr; gap: 10px; align-items: center;
+}
+.grow-steps button .n { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--surface-2); font-family: "Silkscreen", monospace; font-size: 13px; }
+.grow-steps button small { display: block; color: var(--muted); font-size: 13px; }
+.grow-steps button[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+.grow-steps button[aria-pressed="true"] .n { background: var(--accent); color: var(--accent-ink); }
+.render-note { color: var(--muted); font-size: 13px; margin-top: 10px; }
+.side-shot { margin-top: 18px; border-radius: var(--radius); border: 1px solid var(--line); background: linear-gradient(180deg, var(--sky-top), var(--sky-bottom)); overflow: hidden; }
+.side-shot img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+
+/* commands */
+.cmd { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 14px; white-space: nowrap; }
+td.desc { color: var(--muted); }
+.pill { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); color: var(--muted); }
+
 footer { padding: 40px 0 56px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); }
 footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 </style>
@@ -234,7 +261,9 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <div class="navlinks">
       <a href="#features">Features</a>
       <a href="#menu">Menu</a>
+      <a href="#grow">Gallery</a>
       <a href="#protection">Protection</a>
+      <a href="#commands">Commands</a>
       <a href="#setup">Setup</a>
       <button class="theme-btn" id="theme" type="button" aria-label="Toggle dark mode">◐</button>
     </div>
@@ -244,7 +273,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 <header class="hero">
   <div class="wrap">
     <div>
-      <span class="tag pixel">v0.4.0 · Paper 26.3 · Java + Bedrock</span>
+      <span class="tag pixel">v0.4.1 · Paper 26.3 · Java + Bedrock</span>
       <h1>Your own island <em>in the sky.</em></h1>
       <p class="lede">Buy a floating island, grow it biome by biome, and jump off the edge to fall back to the world below.</p>
       <div class="ctas">
@@ -314,6 +343,32 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
       <div class="card step"><h3>Fall to the world below</h3><p>Jump off the edge. You land up to 200 blocks from directly below your island, and the landing that ends the fall does no damage.</p></div>
       <div class="card step"><h3>Ride the wind home</h3><p><strong>Return to Island</strong> launches you up on a gust of wind and carries you back home a second later.</p></div>
     </div>
+  </div>
+</section>
+
+<section id="grow">
+  <div class="wrap">
+    <div class="eyebrow pixel">Watch it grow</div>
+    <h2>From a speck of forest to a floating continent</h2>
+    <p class="sub">One island, grown step by step the way a player would. Every expansion attaches to the edge, and all the water sits at one sea level.</p>
+    <div class="grow">
+      <div class="grow-stage" id="growStage">
+        <img src="img/stage-1.png" alt="Stage 1: a small oak forest island with a rocky underside" loading="lazy">
+        <img src="img/stage-2.png" alt="Stage 2: upgraded to Medium with a shallow ocean added" loading="lazy">
+        <img src="img/stage-3.png" alt="Stage 3: a cherry grove attached to the island" loading="lazy">
+        <img src="img/stage-4.png" alt="Stage 4: upgraded to Large with desert and badlands regions" loading="lazy">
+        <img src="img/stage-5.png" class="on" alt="Stage 5: a large island with forest, cherry grove, desert, badlands, beach and two oceans">
+      </div>
+      <div class="grow-steps" id="growSteps">
+        <button type="button" aria-pressed="false"><span class="n">1</span><span>Small island<small>Oak Forest, 32 × 32</small></span></button>
+        <button type="button" aria-pressed="false"><span class="n">2</span><span>Upgrade + ocean<small>Medium, adds Shallow Ocean</small></span></button>
+        <button type="button" aria-pressed="false"><span class="n">3</span><span>New biome<small>Cherry Grove attaches at the edge</small></span></button>
+        <button type="button" aria-pressed="false"><span class="n">4</span><span>Upgrade + biomes<small>Large, adds Desert and Badlands</small></span></button>
+        <button type="button" aria-pressed="true"><span class="n">5</span><span>Fully grown<small>Beach, Deep Ocean, more forest</small></span></button>
+      </div>
+    </div>
+    <div class="side-shot"><img src="img/final-side.png" alt="Side view of the finished island showing the rounded top and rocky spikes underneath" loading="lazy"></div>
+    <p class="render-note">Renders of real islands generated by the plugin on a Paper 26.3 test server, drawn from the block data.</p>
   </div>
 </section>
 
@@ -414,6 +469,56 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
   </div>
 </section>
 
+<section id="commands">
+  <div class="wrap">
+    <div class="eyebrow pixel">Commands &amp; permissions</div>
+    <h2>One command for players. A handful for admins.</h2>
+    <p class="sub">Every admin command has Tab completion: press Tab to cycle through sizes, island tiers, biomes and player names.</p>
+
+    <h3>Players</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Command</th><th>What it does</th><th>Permission</th></tr></thead>
+        <tbody>
+          <tr><td class="cmd">/skyland</td><td class="desc">Opens the Skyland menu: buy, return, visit, manage, protect and delete. Aliases <code>/sl</code>, <code>/realm</code>.</td><td><span class="pill">skyrealms.use</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:32px">Admins</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td class="cmd">/skylandadmin give &lt;player&gt; &lt;size&gt; &lt;biome&gt;</td><td class="desc">Create an island for a player, free of charge.</td></tr>
+          <tr><td class="cmd">/skylandadmin tp &lt;owner&gt;</td><td class="desc">Teleport to someone's island.</td></tr>
+          <tr><td class="cmd">/skylandadmin rebuild &lt;owner&gt;</td><td class="desc">Restore missing terrain on an island. Never overwrites builds.</td></tr>
+          <tr><td class="cmd">/skylandadmin pieces</td><td class="desc">List built-in biomes and any custom captured biomes.</td></tr>
+          <tr><td class="cmd">/skylandadmin capture &lt;biome&gt; [size] [name]</td><td class="desc"><em>Optional.</em> Save the terrain around you as a custom biome piece. Size: small, medium, large or huge.</td></tr>
+          <tr><td class="cmd">/skylandadmin preview [size]</td><td class="desc"><em>Optional.</em> Show the capture sphere with particles.</td></tr>
+          <tr><td class="cmd">/skylandadmin reload</td><td class="desc">Reload custom biome pieces. Config changes need a restart.</td></tr>
+          <tr><td class="cmd">/skylandadmin help</td><td class="desc">Show this list in game. Alias <code>/sla</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:32px">Permissions <span class="pill">LuckPerms ready</span></h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Node</th><th>Default</th><th>Grants</th></tr></thead>
+        <tbody>
+          <tr><td class="cmd">skyrealms.use</td><td>everyone</td><td class="desc">Use <code>/skyland</code> and everything in the menu.</td></tr>
+          <tr><td class="cmd">skyrealms.admin</td><td>op</td><td class="desc">All admin commands, plus every node below.</td></tr>
+          <tr><td class="cmd">skyrealms.admin.bypass</td><td>op</td><td class="desc">Build and interact on any island, ignoring its protection.</td></tr>
+          <tr><td class="cmd">skyrealms.bypass.cooldown</td><td>op</td><td class="desc">No cooldown on Return to Island.</td></tr>
+          <tr><td class="cmd">skyrealms.bypass.closed</td><td>op</td><td class="desc">Visit islands that are closed to visitors.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="render-note">Works with LuckPerms or any Bukkit permissions plugin. Example: <code>/lp group moderator permission set skyrealms.bypass.closed true</code></p>
+  </div>
+</section>
+
 <section class="alt" id="setup">
   <div class="wrap">
     <div class="eyebrow pixel">Setup</div>
@@ -426,19 +531,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
       <div class="card step"><h3>Let players in</h3><p>Players type <code>/skyland</code> and buy their first island.</p></div>
     </div>
 
-    <h3 style="margin-top:40px">Admin commands</h3>
-<pre><code>/skylandadmin preview [size]                   (optional) show the capture sphere
-/skylandadmin capture &lt;biome&gt; [size] [name]    (optional) save a custom biome piece
-                  size = small | medium | large | huge
-/skylandadmin pieces                           list biomes and variants
-/skylandadmin give &lt;player&gt; &lt;size&gt; &lt;biome&gt;     free island
-/skylandadmin tp &lt;player&gt;                      go to an island
-/skylandadmin rebuild &lt;player&gt;                 restore missing terrain
-/skylandadmin reload                           reload piece files
-
-Every argument has Tab completion: sizes, tiers, biomes and player names.</code></pre>
-
-    <h3 style="margin-top:28px">Build from source</h3>
+    <h3 style="margin-top:40px">Build from source</h3>
 <pre><code>./gradlew build      # requires JDK 25; jar lands in build/libs/skylands.jar</code></pre>
 
     <div class="callout" style="margin-top:24px">
@@ -456,6 +549,27 @@ Every argument has Tab completion: sizes, tiers, biomes and player names.</code>
 </footer>
 
 <script>
+(function () {
+  var stage = document.getElementById('growStage'), steps = document.getElementById('growSteps');
+  if (!stage || !steps) return;
+  var imgs = stage.querySelectorAll('img'), btns = steps.querySelectorAll('button'), cur = imgs.length - 1, timer = null;
+  function show(i) {
+    cur = i;
+    imgs.forEach(function (im, k) { im.classList.toggle('on', k === i); });
+    btns.forEach(function (b, k) { b.setAttribute('aria-pressed', k === i ? 'true' : 'false'); });
+  }
+  btns.forEach(function (b, k) { b.addEventListener('click', function () { stop(); show(k); }); });
+  function stop() { if (timer) { clearInterval(timer); timer = null; } }
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (e.isIntersecting && !timer) { show(0); timer = setInterval(function () { show((cur + 1) % imgs.length); }, 1800); }
+        else if (!e.isIntersecting) stop();
+      });
+    }, { threshold: 0.4 }).observe(stage);
+  }
+})();
 (function () {
   var root = document.documentElement, btn = document.getElementById('theme'), saved = null;
   try { saved = localStorage.getItem('skylands-theme'); } catch (e) {}

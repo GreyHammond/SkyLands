@@ -3,12 +3,24 @@ version: '${version}'
 main: dev.skyrealms.SkyRealmsPlugin
 api-version: '26.3'
 description: Buyable floating islands that grow outward, with a fall-to-overworld transit.
-softdepend: [Vault, Multiverse-Core]
+softdepend: [Vault, Multiverse-Core, LuckPerms]
 permissions:
   skyrealms.use:
+    description: Use /skyland (buy, manage, visit and return to islands).
     default: true
   skyrealms.admin:
+    description: Use /skylandadmin and all admin abilities.
     default: op
+    children:
+      skyrealms.admin.bypass: true
+      skyrealms.bypass.cooldown: true
+      skyrealms.bypass.closed: true
   skyrealms.admin.bypass:
-    description: Build on any island.
+    description: Build and interact on any island, ignoring its protection settings.
+    default: op
+  skyrealms.bypass.cooldown:
+    description: No cooldown on Return to Island.
+    default: op
+  skyrealms.bypass.closed:
+    description: Visit islands that are closed to visitors.
     default: op

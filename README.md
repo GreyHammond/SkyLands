@@ -10,7 +10,7 @@ jump off the edge and you drop out of the sky, landing somewhere below your isla
 Everything a player does happens in one chest menu, `/skyland`, so it works the same for
 Java players and Bedrock players joining through **Geyser + Floodgate**.
 
-> **Download:** [`docs/skylands.jar`](docs/skylands.jar) (v0.4.0) · Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
+> **Download:** [`docs/skylands.jar`](docs/skylands.jar) (v0.4.1) · Landing page: `docs/index.html` (see [GitHub Pages](#github-pages) below).
 
 ---
 
@@ -188,7 +188,19 @@ their own neighbourhood too.
 | `rebuild <player>` | Restore missing terrain on an island (never overwrites builds) |
 | `reload` | Reload piece files |
 
-`skyrealms.admin.bypass` lets a player build anywhere in the sky world.
+### Permissions
+
+Works with **LuckPerms** or any Bukkit permissions plugin.
+
+| Node | Default | Grants |
+|---|---|---|
+| `skyrealms.use` | everyone | Use `/skyland` and everything in the menu |
+| `skyrealms.admin` | op | All admin commands, plus every node below |
+| `skyrealms.admin.bypass` | op | Build and interact on any island, ignoring its protection |
+| `skyrealms.bypass.cooldown` | op | No cooldown on Return to Island |
+| `skyrealms.bypass.closed` | op | Visit islands that are closed to visitors |
+
+Example: `/lp group moderator permission set skyrealms.bypass.closed true`
 
 ---
 

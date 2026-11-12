@@ -116,7 +116,7 @@ public final class RealmService {
 
     /** Seconds left on the return-home cooldown, or 0. */
     public long cooldownLeft(Player p) {
-        if (p.hasPermission("skyrealms.admin")) return 0;
+        if (p.hasPermission("skyrealms.bypass.cooldown")) return 0;
         long cd = plugin.getConfig().getLong("transit.home-cooldown", 10) * 1000L;
         Long last = homeCooldowns.get(p.getUniqueId());
         long left = last == null ? 0 : cd - (System.currentTimeMillis() - last);
@@ -165,7 +165,7 @@ public final class RealmService {
     public boolean visit(Player p, OfflinePlayer owner) {
         Island i = plugin.islands().of(owner.getUniqueId());
         if (i == null) { Msg.error(p, owner.getName() + " doesn't have an island."); return false; }
-        if (!i.setting(Flag.VISITS) && i.roleOf(p.getUniqueId()) == Role.VISITOR && !p.hasPermission("skyrealms.admin")) {
+        if (!i.setting(Flag.VISITS) && i.roleOf(p.getUniqueId()) == Role.VISITOR && !p.hasPermission("skyrealms.bypass.closed")) {
             Msg.error(p, owner.getName() + "'s island is closed to visitors.");
             return false;
         }
