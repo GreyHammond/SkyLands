@@ -27,7 +27,7 @@ public enum Flag {
     OTHER(Scope.ROLE, Material.FLOWER_POT, "Other blocks", "Cake, flower pots, composters, signs, jukeboxes, bells, etc.", false, true),
 
     // ---- whole island -------------------------------------------------------
-    VISITS(Scope.ISLAND, Material.OAK_SIGN, "Open to visitors", "Other players can /realm visit your island", true, true),
+    VISITS(Scope.ISLAND, Material.OAK_SIGN, "Open to visitors", "Other players can visit your island from the menu", true, true),
     PVP(Scope.ISLAND, Material.IRON_SWORD, "PvP", "Players can fight each other here", false, false),
     EXPLOSIONS(Scope.ISLAND, Material.TNT, "Explosion damage", "Creepers and TNT break blocks", false, false),
     FIRE_SPREAD(Scope.ISLAND, Material.FLINT_AND_STEEL, "Fire spread", "Fire spreads and burns blocks", false, false),

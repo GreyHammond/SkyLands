@@ -47,7 +47,6 @@ public final class RealmService {
             if (!p.isOnline()) return;
             p.teleportAsync(island.home(plugin.skyWorld(), plugin.baseY()));
             Msg.send(p, "Welcome home! Jump off the edge to drop into the overworld.");
-            if (plugin.getConfig().getBoolean("sky-feather.give-on-buy", true)) giveFeather(p, false);
         });
         for (int n = 1; n < tier.startPieces; n++) plugin.grower().grow(plugin.skyWorld(), island, biome, null);
         plugin.islands().save();
@@ -114,7 +113,7 @@ public final class RealmService {
 
     // ---- travel ----------------------------------------------------------------
 
-    /** Seconds left on the shared home/feather cooldown, or 0. */
+    /** Seconds left on the return-home cooldown, or 0. */
     public long cooldownLeft(Player p) {
         if (p.hasPermission("skyrealms.admin")) return 0;
         long cd = plugin.getConfig().getLong("transit.home-cooldown", 10) * 1000L;
@@ -134,7 +133,7 @@ public final class RealmService {
         return true;
     }
 
-    /** Sky Feather: a gust throws you upward, then the wind carries you home. */
+    /** "Return to Island": a gust throws you upward, then the wind carries you home. */
     public void launchHome(Player p) {
         Island i = plugin.islands().of(p.getUniqueId());
         if (i == null) { Msg.error(p, "You don't have an island to fly to yet."); return; }
@@ -143,8 +142,8 @@ public final class RealmService {
         if (left > 0) { p.sendActionBar(Msg.c("<red>The wind needs " + left + "s to gather again.")); return; }
         homeCooldowns.put(p.getUniqueId(), System.currentTimeMillis());
         p.leaveVehicle();
-        int ticks = Math.max(5, plugin.getConfig().getInt("sky-feather.launch-ticks", 20));
-        p.setVelocity(p.getVelocity().setY(plugin.getConfig().getDouble("sky-feather.launch-power", 1.8)));
+        int ticks = Math.max(5, plugin.getConfig().getInt("return.launch-ticks", 20));
+        p.setVelocity(p.getVelocity().setY(plugin.getConfig().getDouble("return.launch-power", 1.8)));
         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_BREEZE_WIND_BURST, 1f, 1f);
         p.getWorld().spawnParticle(Particle.GUST_EMITTER_SMALL, p.getLocation(), 1);
         int[] age = {0};
@@ -215,15 +214,34 @@ public final class RealmService {
         plugin.islands().save();
     }
 
-    // ---- items --------------------------------------------------------------------
+    // ---- deleting ------------------------------------------------------------------
 
-    public void giveFeather(Player p, boolean tellIfHave) {
-        for (var item : p.getInventory().getContents()) {
-            if (plugin.feather().is(item)) { if (tellIfHave) Msg.error(p, "You already have a Sky Feather."); return; }
+    public double deleteRefund(Island i) {
+        double spent = i.tier.price;
+        return spent * Math.max(0, Math.min(100, plugin.getConfig().getDouble("prices.delete-refund-percent", 0))) / 100.0;
+    }
+
+    /** Removes the island, sends anyone standing on it to the overworld, and wipes its blocks in the background. */
+    public boolean deleteIsland(Player p) {
+        Island i = owned(p);
+        if (i == null) return false;
+        World ground = Bukkit.getWorld(plugin.getConfig().getString("worlds.overworld", "world"));
+        Location safe = ground != null ? ground.getSpawnLocation() : Bukkit.getWorlds().get(0).getSpawnLocation();
+        for (Player other : plugin.skyWorld().getPlayers()) {
+            if (i.containsLand(other.getX(), other.getZ())) {
+                other.teleportAsync(safe);
+                if (!other.equals(p)) Msg.send(other, "The island you were on has been removed by its owner.");
+            }
         }
-        var left = p.getInventory().addItem(plugin.feather().create());
-        left.values().forEach(it -> p.getWorld().dropItem(p.getLocation(), it));
-        Msg.send(p, "You got a <aqua>Sky Feather</aqua>. Right-click it anywhere to fly home.");
+        if (p.getWorld().equals(plugin.skyWorld()) && i.containsLand(p.getX(), p.getZ())) p.teleportAsync(safe);
+        plugin.islands().remove(i);
+        plugin.islands().save();
+        plugin.clearer().clear(plugin.skyWorld(), i.centerX, i.centerZ, i.half() + 48);
+        double refund = deleteRefund(i);
+        plugin.money().refund(p, refund);
+        Msg.send(p, "Your island crumbles into the clouds." + (refund > 0 ? " You got <gold>" + money(refund) + "</gold> back." : "")
+                + " You can buy a new one any time.");
+        return true;
     }
 
     public Island owned(Player p) {

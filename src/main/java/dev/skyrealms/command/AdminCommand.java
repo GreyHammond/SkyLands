@@ -58,7 +58,7 @@ public final class AdminCommand implements TabExecutor {
 
     private void capture(CommandSender sender, String[] args) {
         if (!(sender instanceof Player p)) { Msg.error(sender, "Players only."); return; }
-        if (args.length < 3) { Msg.error(p, "Usage: /realmadmin capture <biome> <radius> [name]"); return; }
+        if (args.length < 3) { Msg.error(p, "Usage: /skylandadmin capture <biome> <radius> [name]"); return; }
         String biome = args[1].toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_]", "");
         int radius;
         try { radius = Integer.parseInt(args[2]); } catch (NumberFormatException e) { Msg.error(p, "Radius must be a number."); return; }
@@ -95,7 +95,7 @@ public final class AdminCommand implements TabExecutor {
 
     private void pieces(CommandSender sender) {
         if (plugin.library().biomes().isEmpty()) {
-            Msg.send(sender, "No pieces yet. Go to a biome and run <white>/realmadmin capture <biome> <radius>");
+            Msg.send(sender, "No pieces yet. Go to a biome and run <white>/skylandadmin capture <biome> <radius>");
             return;
         }
         for (String b : plugin.library().biomes()) {
@@ -105,7 +105,7 @@ public final class AdminCommand implements TabExecutor {
     }
 
     private void give(CommandSender sender, String[] args) {
-        if (args.length < 4) { Msg.error(sender, "Usage: /realmadmin give <player> <tier> <biome>"); return; }
+        if (args.length < 4) { Msg.error(sender, "Usage: /skylandadmin give <player> <tier> <biome>"); return; }
         @SuppressWarnings("deprecation") OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
         if (plugin.islands().of(target.getUniqueId()) != null) { Msg.error(sender, "They already have an island."); return; }
         Tier tier = Tier.parse(args[2]);

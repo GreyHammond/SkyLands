@@ -57,6 +57,13 @@ public final class IslandManager {
         byCell.put(key(cell[0], cell[1]), island);
     }
 
+    /** Forget an island. Its grid cell isn't reused, so a half-cleared area never gets a new owner. */
+    public void remove(Island island) {
+        byOwner.remove(island.owner);
+        int[] cell = spiral(island.index);
+        byCell.remove(key(cell[0], cell[1]), island);
+    }
+
     private static long key(int gx, int gz) { return ((long) gx << 32) | (gz & 0xffffffffL); }
 
     /** Square spiral around the origin: 0 -> (0,0), 1 -> (1,0), 2 -> (1,1), ... Index 0 is left free for a spawn. */
