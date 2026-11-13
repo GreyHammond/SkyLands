@@ -274,28 +274,35 @@ public final class RealmService {
     public void launchHome(Player p) {
         Island i = plugin.islands().of(p.getUniqueId());
         if (i == null) { Msg.error(p, "You don't have an island to fly to yet."); return; }
-        if (p.getWorld().equals(plugin.skyWorld())) { home(p); return; }
         long left = cooldownLeft(p);
         if (left > 0) { p.sendActionBar(Msg.c("<red>The wind needs " + left + "s to gather again.")); return; }
         homeCooldowns.put(p.getUniqueId(), System.currentTimeMillis());
         p.leaveVehicle();
         int ticks = Math.max(5, plugin.getConfig().getInt("return.launch-ticks", 20));
-        p.setVelocity(p.getVelocity().setY(plugin.getConfig().getDouble("return.launch-power", 1.8)));
+        double power = Math.max(0.5, plugin.getConfig().getDouble("return.launch-power", 2.2));
+        p.setVelocity(p.getVelocity().setY(power));
         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_BREEZE_WIND_BURST, 1f, 1f);
         p.getWorld().spawnParticle(Particle.GUST_EMITTER_SMALL, p.getLocation(), 1);
         int[] age = {0};
         Bukkit.getScheduler().runTaskTimer(plugin, task -> {
-            if (!p.isOnline()) { task.cancel(); return; }
-            if (age[0]++ * 2 < ticks) {
-                p.getWorld().spawnParticle(Particle.CLOUD, p.getLocation(), 6, 0.3, 0.1, 0.3, 0.02);
+            if (!p.isOnline() || p.isDead()) { task.cancel(); return; }
+            if (++age[0] < ticks) {
+                // The gust keeps pushing, so you're still rising (never falling) when the wind takes you home.
+                org.bukkit.util.Vector v = p.getVelocity();
+                if (v.getY() < power) p.setVelocity(v.setY(power));
+                p.setFallDistance(0);
+                if (age[0] % 2 == 0) p.getWorld().spawnParticle(Particle.CLOUD, p.getLocation(), 6, 0.3, 0.1, 0.3, 0.02);
+                if (age[0] % 6 == 0) p.getWorld().playSound(p.getLocation(), Sound.ENTITY_BREEZE_WIND_BURST, 0.5f, 1.3f);
                 return;
             }
             task.cancel();
+            p.setVelocity(new org.bukkit.util.Vector());
             p.teleportAsync(i.home(plugin.skyWorld())).thenRun(() -> {
                 p.setFallDistance(0);
+                p.setVelocity(new org.bukkit.util.Vector());
                 p.playSound(p.getLocation(), Sound.ENTITY_PHANTOM_FLAP, 0.8f, 1.4f);
             });
-        }, 1L, 2L);
+        }, 1L, 1L);
     }
 
     public boolean visit(Player p, OfflinePlayer owner) {

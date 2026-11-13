@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------
 
 # Don't change: used to update older configs.
-config-version: 2
+config-version: 3
 
 worlds:
   # Created automatically as an empty void world if it doesn't exist.
@@ -80,9 +80,11 @@ capture-sizes:
 biome-icons:
   mushroom_fields: RED_MUSHROOM
 
-# "Return to Island" effect: an upward gust, then the wind carries you home.
+# "Return to Island" and /ihome: a gust lifts you (and keeps lifting), then the wind carries you home
+# while you're still rising.
 return:
-  launch-power: 1.8
+  # Upward speed of the gust in blocks per tick (2.2 rises about 40 blocks in a second).
+  launch-power: 2.2
   # Ticks in the air before arriving home (20 ticks = 1 second).
   launch-ticks: 20
 

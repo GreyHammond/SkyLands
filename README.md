@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.12.1-2f9e5a">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.12.2-2f9e5a">
   <img alt="Paper 26.3" src="https://img.shields.io/badge/Paper-26.3-1e88e5">
   <img alt="Java 25" src="https://img.shields.io/badge/Java-25-e76f00">
   <img alt="Bedrock ready" src="https://img.shields.io/badge/Bedrock-Geyser%20%2B%20Floodgate-6a1b9a">
@@ -138,7 +138,7 @@ on Java** and **native Bedrock forms** for players joining through Geyser + Floo
 
 Everything is in one menu (aliases `/sl`, `/realm`). Anything that costs money asks you to confirm.
 
-**`/ihome`** takes you straight to your island home (named so it never clashes with Essentials'
+**`/ihome`** flies you to your island home on a gust of wind, just like Return to Island (named so it never clashes with Essentials'
 `/home`). `/ihome set` moves your home to where you're standing; `/ihome reset` clears it.
 Until you set a home, you always arrive on **dry, solid ground** near your island's centre, never
 in a pond or on a tree.
@@ -340,7 +340,10 @@ stop *natural* spawning: spawn eggs, spawners, breeding and anything you bring s
   offset of up to 200 blocks. Your momentum is kept and an elytra works mid-fall.
 - The landing that ends the fall does no damage; normal falls still hurt. Unsafe spots (lava,
   cactus, magma) are re-rolled.
-- **Return to Island** launches you upward on a gust of wind and carries you home (with a cooldown).
+- **Return to Island** (and `/ihome`) launches you upward on a gust of wind that keeps lifting you
+  for a second, then carries you home while you're still rising (with a cooldown). Height and
+  timing are set in the `return` section of `config.yml`.
+- The rushing wind of a fall stops the moment you touch down.
 
 ## Bedrock players
 
@@ -585,6 +588,7 @@ The jar is written to `build/libs/skylands.jar`. The website is a single file at
 
 | Version | Highlights |
 |---|---|
+| **0.12.2** | Return to Island flies higher and arrives while you're still rising; `/ihome` uses the same gust; the wind sound stops as you land |
 | **0.12.1** | Startup banner in the server console with version, credits and website |
 | **0.12.0** | Islands sit below the clouds; explore under your island without being teleported (fall hands off at Y −40); safe arrival on solid ground; `/ihome`; pick an underside or theme for a new island; land goes on the side you choose; island-wide mob spawning switches |
 | **0.11.0** | No more valleys between expansions; level and unlocks survive deleting an island; convert an existing underside; Ruins chains fixed |

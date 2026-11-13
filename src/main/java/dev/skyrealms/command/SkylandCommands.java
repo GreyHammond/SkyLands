@@ -72,7 +72,7 @@ public final class SkylandCommands {
         return Commands.literal("ihome")
                 .requires(src -> src.getSender().hasPermission("skyrealms.use"))
                 .executes(ctx -> {
-                    if (ctx.getSource().getExecutor() instanceof Player p) plugin.service().home(p);
+                    if (ctx.getSource().getExecutor() instanceof Player p) plugin.service().launchHome(p);
                     else Msg.error(ctx.getSource().getSender(), "Players only.");
                     return Command.SINGLE_SUCCESS;
                 })

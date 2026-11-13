@@ -89,6 +89,12 @@ public final class SkyRealmsPlugin extends JavaPlugin {
             getLogger().info("Config updated: new islands generate at Y " + cfg.getInt("islands.base-y")
                     + ", falls hand off at Y " + cfg.getDouble("transit.depart-y") + ". Existing islands stay where they are.");
         }
+        if (cfg.getInt("config-version", 1) < 3) {
+            // v0.12.2: the return gust now keeps lifting; raise the untouched old default for a higher flight.
+            if (cfg.getDouble("return.launch-power", 1.8) == 1.8) cfg.set("return.launch-power", 2.2);
+            cfg.set("config-version", 3);
+            saveConfig();
+        }
         baseY = cfg.getInt("islands.base-y", 140);
         IslandManager.newSeaY = baseY;
         IslandManager.legacySeaY = cfg.getInt("islands.legacy-base-y", baseY);

@@ -135,6 +135,7 @@ public final class FallTransit implements Listener {
         }
         if (e.getCause() == EntityDamageEvent.DamageCause.FALL && protectedFalls.remove(id) != null) {
             e.setCancelled(true);
+            p.stopSound(Sound.ITEM_ELYTRA_FLYING);
             groundedChecks.remove(id);
             p.getWorld().spawnParticle(Particle.CLOUD, p.getLocation(), 20, 0.4, 0.1, 0.4, 0.02);
         }
@@ -147,9 +148,11 @@ public final class FallTransit implements Listener {
         while (it.hasNext()) {
             var entry = it.next();
             Player p = Bukkit.getPlayer(entry.getKey());
+            if (p != null && now > entry.getValue()) p.stopSound(Sound.ITEM_ELYTRA_FLYING);
             if (p == null || now > entry.getValue()) { it.remove(); groundedChecks.remove(entry.getKey()); continue; }
             @SuppressWarnings("deprecation") boolean grounded = p.isOnGround() || p.isInWater();
             if (grounded && !p.isGliding()) {
+                p.stopSound(Sound.ITEM_ELYTRA_FLYING);           // the wind ends the moment you touch down
                 int n = groundedChecks.merge(entry.getKey(), 1, Integer::sum);
                 if (n >= 2) { it.remove(); groundedChecks.remove(entry.getKey()); }
             } else {

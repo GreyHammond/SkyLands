@@ -310,11 +310,11 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 <header class="hero">
   <div class="wrap">
     <div>
-      <span class="tag pixel">v0.12.1 · Paper 26.3 · Java + Bedrock</span>
+      <span class="tag pixel">v0.12.2 · Paper 26.3 · Java + Bedrock</span>
       <h1>Your own island <em>in the sky.</em></h1>
       <p class="lede">Buy a floating island, grow it biome by biome, and jump off the edge to fall back to the world below.</p>
       <div class="ctas">
-        <a class="btn btn-primary" href="https://github.com/GreyHammond/SkyLands/raw/main/docs/skylands.jar">Download skylands.jar <span style="font-weight:500;opacity:.8">v0.12.1</span></a>
+        <a class="btn btn-primary" href="https://github.com/GreyHammond/SkyLands/raw/main/docs/skylands.jar">Download skylands.jar <span style="font-weight:500;opacity:.8">v0.12.2</span></a>
         <a class="btn btn-ghost" href="https://github.com/GreyHammond/SkyLands">View on GitHub</a>
       </div>
       <p class="req">Paper 26.3 · Java 25 · optional: Vault, Geyser + Floodgate, LuckPerms</p>
@@ -394,7 +394,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
       <div class="card step"><h3>Buy an island</h3><p>Pick a size, a biome and (once you've unlocked some) an underside style or theme, then confirm. You arrive on dry, solid ground, never in a pond. <code>/ihome</code> takes you back any time.</p></div>
       <div class="card step"><h3>Grow it outward</h3><p>Unlock new biomes, then use <strong>Grow Land</strong> and choose where it goes: automatic, a compass direction, or <strong>toward where you're standing</strong>. Land only goes on the side you pick (no room? you aren't charged). Oceans grown side by side join into one sea.</p></div>
       <div class="card step"><h3>Fall to the world below</h3><p>Islands float below the clouds, and you can explore under yours freely: the fall only hands off at Y −40. Jump off the edge. You land up to 200 blocks from directly below your island, and the landing that ends the fall does no damage.</p></div>
-      <div class="card step"><h3>Ride the wind home</h3><p><strong>Return to Island</strong> launches you up on a gust of wind and carries you back home a second later.</p></div>
+      <div class="card step"><h3>Ride the wind home</h3><p><strong>Return to Island</strong> (or <code>/ihome</code>) launches you up on a gust of wind that keeps lifting you, then carries you home while you're still soaring.</p></div>
     </div>
   </div>
 </section>
@@ -713,7 +713,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
         <thead><tr><th>Command</th><th>What it does</th><th>Permission</th></tr></thead>
         <tbody>
           <tr><td class="cmd">/skyland</td><td class="desc">Opens the Skyland menu: buy, return, visit, manage, protect and delete. Aliases <code>/sl</code>, <code>/realm</code>.</td><td><span class="pill">skyrealms.use</span></td></tr>
-          <tr><td class="cmd">/ihome</td><td class="desc">Go to your island home. Until you set one, you land on safe solid ground near the centre. Won't clash with Essentials' <code>/home</code>.</td><td><span class="pill">skyrealms.use</span></td></tr>
+          <tr><td class="cmd">/ihome</td><td class="desc">Fly to your island home on a gust of wind. Until you set one, you land on safe solid ground near the centre. Won't clash with Essentials' <code>/home</code>.</td><td><span class="pill">skyrealms.use</span></td></tr>
           <tr><td class="cmd">/ihome set|reset</td><td class="desc">Set your home where you're standing, or clear it.</td><td><span class="pill">skyrealms.use</span></td></tr>
         </tbody>
       </table>
@@ -786,6 +786,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <div class="eyebrow pixel">What's new</div>
     <h2>Changelog</h2>
     <div class="changelog">
+      <div><b>0.12.2</b><span>Return to Island flies higher and arrives mid-flight; <code>/ihome</code> uses the same gust; the fall's wind sound stops as you land.</span></div>
       <div><b>0.12.1</b><span>Startup banner in the server console with version, credits and website.</span></div>
       <div><b>0.12.0</b><span>Islands sit below the clouds; explore under your island without being teleported; safe arrival on solid ground and <code>/ihome</code>; pick an underside or theme for a new island; land goes on the side you choose; island-wide mob spawning switches. Existing islands stay where they are.</span></div>
       <div><b>0.11.0</b><span>No more valleys between expansions; your level and unlocks survive deleting an island; convert an existing island's underside.</span></div>
