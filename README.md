@@ -19,6 +19,7 @@
 </p>
 
 <p align="center">
+  <a href="https://greyhammond.github.io/SkyLands/"><strong>Website</strong></a> ·
   <a href="docs/skylands.jar"><strong>Download skylands.jar</strong></a> ·
   <a href="#installation">Installation</a> ·
   <a href="#player-guide">Player guide</a> ·
@@ -65,6 +66,7 @@ on Java** and **native Bedrock forms** for players joining through Geyser + Floo
 - [FAQ](#faq)
 - [Building from source](#building-from-source)
 - [Changelog](#changelog)
+- [Support](#support)
 - [License](#license)
 
 ## Highlights
@@ -487,9 +489,8 @@ Requires JDK 25.
 ./gradlew build
 ```
 
-The jar is written to `build/libs/skylands.jar`. The landing page is a single file at
-`docs/index.html`; to publish it, enable **Settings → Pages → Deploy from a branch → `main` / `/docs`**
-(GitHub Pages on a private repository needs a paid GitHub plan).
+The jar is written to `build/libs/skylands.jar`. The website is a single file at
+`docs/index.html`, published with GitHub Pages from the `main` branch's `/docs` folder.
 
 ## Changelog
 
@@ -503,6 +504,13 @@ The jar is written to `build/libs/skylands.jar`. The landing page is a single fi
 | **0.5.0** | Co-owners, island transfer, item currency, auto-prune with restore |
 | **0.4.x** | Built-in generated terrain with one shared sea level; upgrades add room only |
 | **0.3.x** | All-in-one `/skyland` menu, named capture sizes, Tab completion |
+
+## Support
+
+- 🐛 **Found a bug or have an idea?** [Open an issue](https://github.com/GreyHammond/SkyLands/issues).
+  Please include your Paper version, the SkyLands version (shown on server start), and any
+  console errors.
+- 💬 **Using a modified version?** Please report problems to whoever made that version.
 
 ## License
 
