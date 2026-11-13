@@ -20,4 +20,29 @@ public final class Credits {
 
     public static final String ATTRIBUTION = "SkyLands by Hammond Digital Studios";
     public static final String LICENSE = "GPL-3.0 with attribution terms (see NOTICE)";
+    public static final String WEBSITE = "https://greyhammond.github.io/SkyLands/";
+
+    private static final String[] LOGO = {
+            "  ____  _          _                    _     ",
+            " / ___|| | ___   _| |    __ _ _ __   __| |___ ",
+            " \\___ \\| |/ / | | | |   / _` | '_ \\ / _` / __|",
+            "  ___) |   <| |_| | |__| (_| | | | | (_| \\__ \\",
+            " |____/|_|\\_\\\\__, |_____\\__,_|_| |_|\\__,_|___/",
+            "             |___/                            ",
+    };
+
+    /** The startup banner shown in the server console. */
+    public static void banner(org.bukkit.command.CommandSender console, String version) {
+        net.kyori.adventure.text.format.NamedTextColor aqua = net.kyori.adventure.text.format.NamedTextColor.AQUA;
+        String rule = "==================================================";
+        console.sendMessage(net.kyori.adventure.text.Component.text(rule, aqua));
+        for (String line : LOGO) console.sendMessage(net.kyori.adventure.text.Component.text(line, aqua));
+        console.sendMessage(net.kyori.adventure.text.Component.text("  SkyLands ", net.kyori.adventure.text.format.NamedTextColor.DARK_AQUA)
+                .append(net.kyori.adventure.text.Component.text("v" + version, net.kyori.adventure.text.format.NamedTextColor.YELLOW)));
+        console.sendMessage(net.kyori.adventure.text.Component.text("  Released by ", net.kyori.adventure.text.format.NamedTextColor.GRAY)
+                .append(net.kyori.adventure.text.Component.text("Hammond Digital Studios", net.kyori.adventure.text.format.NamedTextColor.WHITE)));
+        console.sendMessage(net.kyori.adventure.text.Component.text("  " + LICENSE, net.kyori.adventure.text.format.NamedTextColor.GRAY));
+        console.sendMessage(net.kyori.adventure.text.Component.text("  " + WEBSITE, net.kyori.adventure.text.format.NamedTextColor.BLUE));
+        console.sendMessage(net.kyori.adventure.text.Component.text(rule, aqua));
+    }
 }

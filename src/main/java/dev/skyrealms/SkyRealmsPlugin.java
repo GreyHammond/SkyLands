@@ -54,7 +54,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        getLogger().info(Credits.ATTRIBUTION + " - v" + getPluginMeta().getVersion() + " - " + Credits.LICENSE);
+        Credits.banner(Bukkit.getConsoleSender(), getPluginMeta().getVersion());
         saveDefaultConfig();
         FileConfiguration cfg = getConfig();
         Tier.load(cfg.getConfigurationSection("tiers"));
