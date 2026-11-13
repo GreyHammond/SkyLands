@@ -292,7 +292,6 @@ public final class RealmService {
                 if (v.getY() < power) p.setVelocity(v.setY(power));
                 p.setFallDistance(0);
                 if (age[0] % 2 == 0) p.getWorld().spawnParticle(Particle.CLOUD, p.getLocation(), 6, 0.3, 0.1, 0.3, 0.02);
-                if (age[0] % 6 == 0) p.getWorld().playSound(p.getLocation(), Sound.ENTITY_BREEZE_WIND_BURST, 0.5f, 1.3f);
                 return;
             }
             task.cancel();
@@ -300,7 +299,6 @@ public final class RealmService {
             p.teleportAsync(i.home(plugin.skyWorld())).thenRun(() -> {
                 p.setFallDistance(0);
                 p.setVelocity(new org.bukkit.util.Vector());
-                p.playSound(p.getLocation(), Sound.ENTITY_PHANTOM_FLAP, 0.8f, 1.4f);
             });
         }, 1L, 1L);
     }

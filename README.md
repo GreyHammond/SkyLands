@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.12.2-2f9e5a">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.12.3-2f9e5a">
   <img alt="Paper 26.3" src="https://img.shields.io/badge/Paper-26.3-1e88e5">
   <img alt="Java 25" src="https://img.shields.io/badge/Java-25-e76f00">
   <img alt="Bedrock ready" src="https://img.shields.io/badge/Bedrock-Geyser%20%2B%20Floodgate-6a1b9a">
@@ -588,6 +588,7 @@ The jar is written to `build/libs/skylands.jar`. The website is a single file at
 
 | Version | Highlights |
 |---|---|
+| **0.12.3** | Return flight plays a single gust sound |
 | **0.12.2** | Return to Island flies higher and arrives while you're still rising; `/ihome` uses the same gust; the wind sound stops as you land |
 | **0.12.1** | Startup banner in the server console with version, credits and website |
 | **0.12.0** | Islands sit below the clouds; explore under your island without being teleported (fall hands off at Y −40); safe arrival on solid ground; `/ihome`; pick an underside or theme for a new island; land goes on the side you choose; island-wide mob spawning switches |

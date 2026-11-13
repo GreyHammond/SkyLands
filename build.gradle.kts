@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "dev.skyrealms"
-version = "0.12.2"
+version = "0.12.3"
 
 repositories {
     mavenCentral()
