@@ -193,8 +193,7 @@ public final class FormMenus {
             if (mode != Mode.GROW && need > level) { locked.add(biomeName(biome) + " (Lv " + need + ")"); continue; }
             String n = biomeName(biome);
             switch (mode) {
-                case BUY -> b.add(btn(G + n, null, pl -> confirm(pl, "Buy a " + tier.pretty() + " " + n + " island?", tier.price,
-                        yes -> svc.buy(yes, tier, biome), back -> biomes(back, Mode.BUY, tier))));
+                case BUY -> b.add(btn(G + n, null, pl -> newIslandStyle(pl, tier, biome)));
                 case GROW -> {
                     boolean fresh = i != null && i.pieces.stream().noneMatch(pc -> pc.biome().equals(biome));
                     b.add(btn(G + n + "\n" + DG + (fresh ? "New! Starts at your island's edge" : "Add one more piece"), null,
@@ -216,6 +215,24 @@ public final class FormMenus {
         if (!locked.isEmpty()) content += "\n\n" + DG + "Locked: " + String.join(", ", locked);
         if (b.size() == 1) content += "\n\n" + Y + (mode == Mode.UNLOCK ? "Nothing to unlock right now." : "Nothing here yet.");
         simple(p, title, content, b);
+    }
+
+    /** Pick the underside style or theme for a new island (only what the player has unlocked). */
+    public void newIslandStyle(Player p, Tier tier, String biome) {
+        var styles = svc.startUndersides(p.getUniqueId());
+        var themes = svc.startThemes(p.getUniqueId());
+        String n = biomeName(biome);
+        java.util.function.Function<String, Consumer<Player>> buyWith = style -> pl ->
+                confirm(pl, "Buy a " + tier.pretty() + " " + n + " island?", tier.price,
+                        yes -> svc.buy(yes, tier, biome, style), back -> newIslandStyle(back, tier, biome));
+        if (styles.size() <= 1 && themes.isEmpty()) { buyWith.apply(null).accept(p); return; }
+        List<Btn> b = new ArrayList<>();
+        b.add(btn(G + "Keep " + (plugin.progress().has(p.getUniqueId()) ? "my saved style" : "Rock") + "\n" + DG + "Use what you had before", null, buyWith.apply(null)));
+        for (var st : styles) b.add(btn(A + st.displayName + " underside\n" + DG + st.description, null, buyWith.apply("underside:" + st.id)));
+        for (var t : themes) b.add(btn(P + t.displayName + " theme\n" + DG + UndersideStyle.byId(t.underside).displayName + " underside · "
+                + t.particles.displayName + " · " + t.border.displayName + " border", null, buyWith.apply("theme:" + t.id)));
+        b.add(btn(GR + "Back", null, pl -> biomes(pl, Mode.BUY, tier)));
+        simple(p, "Style your new island", GR + "Pick an underside style or a theme. Name, particles and border can be set from Cosmetics after buying.", b);
     }
 
     /** Where should the new land go? */

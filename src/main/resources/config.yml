@@ -2,6 +2,9 @@
 #  SkyRealms
 # ---------------------------------------------------------------
 
+# Don't change: used to update older configs.
+config-version: 2
+
 worlds:
   # Created automatically as an empty void world if it doesn't exist.
   sky: skyrealms_sky
@@ -13,9 +16,11 @@ islands:
   # largest footprint (continental = 512). Overworld landings sit "under" these
   # same X/Z coordinates, so this also spreads islands apart on the ground.
   spacing: 2048
-  # Sea level for every island: all ocean, shore and swamp water sits at exactly this Y.
+  # Sea level for new islands: all ocean, shore and swamp water sits at exactly this Y.
   # Land rises above it, ocean floors and the rocky undersides hang below it.
-  base-y: 180
+  # 140 keeps land below the clouds (about Y 192). Each island remembers the height it was
+  # built at, so changing this only affects islands bought afterwards.
+  base-y: 140
   # Random up/down jitter (blocks) for each attached piece, for a natural look.
   piece-y-jitter: 3
   # Blocks placed per server tick while pasting. Lower = less lag, slower paste.
@@ -118,8 +123,10 @@ prune:
   check-every-hours: 6
 
 transit:
-  # Falling below this Y in the sky world sends you down to the overworld.
-  depart-y: 100
+  # Falling below this Y in the sky world sends you down to the overworld. Keep it well
+  # under the island undersides (they can hang 120+ blocks below sea level) so players can
+  # explore beneath their islands. The sky world's floor is Y -64.
+  depart-y: -40
   # Y you appear at above the overworld.
   arrive-y: 310
   # Landing is a random spot up to this many blocks from directly-below.

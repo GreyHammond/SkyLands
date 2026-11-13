@@ -77,7 +77,21 @@ public final class SkyRealmsPlugin extends JavaPlugin {
                     + (Tier.CONTINENTAL.footprint + 64));
             spacing = Tier.CONTINENTAL.footprint + 64;
         }
-        baseY = cfg.getInt("islands.base-y", 180);
+        if (cfg.getInt("config-version", 1) < 2) {
+            // v0.12: islands sat inside the cloud layer and falls ended early. Lower the old defaults;
+            // existing islands keep the height they were built at.
+            int oldBase = cfg.getInt("islands.base-y", 180);
+            cfg.set("islands.legacy-base-y", oldBase);
+            if (oldBase == 180) cfg.set("islands.base-y", 140);
+            if (cfg.getDouble("transit.depart-y", 100) == 100) cfg.set("transit.depart-y", -40);
+            cfg.set("config-version", 2);
+            saveConfig();
+            getLogger().info("Config updated: new islands generate at Y " + cfg.getInt("islands.base-y")
+                    + ", falls hand off at Y " + cfg.getDouble("transit.depart-y") + ". Existing islands stay where they are.");
+        }
+        baseY = cfg.getInt("islands.base-y", 140);
+        IslandManager.newSeaY = baseY;
+        IslandManager.legacySeaY = cfg.getInt("islands.legacy-base-y", baseY);
 
         library = new PieceLibrary(new File(getDataFolder(), "pieces"), getLogger());
         library.reload();

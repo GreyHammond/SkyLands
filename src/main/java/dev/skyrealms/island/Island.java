@@ -41,6 +41,8 @@ public final class Island {
     public final List<PiecePlacement> pieces = new ArrayList<>();
     /** Home offset from the centre; null means "top of the centre column". */
     public double[] home;          // dx, y, dz, yaw, pitch
+    /** This island's sea level. Fixed when the island is made, so changing islands.base-y only affects new islands. */
+    public int seaY = 180;
 
     private final EnumSet<Flag> visitorFlags = EnumSet.noneOf(Flag.class);
     private final EnumSet<Flag> friendFlags = EnumSet.noneOf(Flag.class);
@@ -111,12 +113,47 @@ public final class Island {
         return Math.abs(x - centerX) <= h && Math.abs(z - centerZ) <= h;
     }
 
-    public Location home(World world, int baseY) {
+    /** The home the owner set, or else the nearest safe solid ground to the island's centre. */
+    public Location home(World world) {
         if (home != null) {
             return new Location(world, centerX + home[0], home[1], centerZ + home[2], (float) home[3], (float) home[4]);
         }
+        Location safe = safeSpot(world);
+        if (safe != null) return safe;
         int y = world.getHighestBlockYAt(centerX, centerZ, org.bukkit.HeightMap.MOTION_BLOCKING_NO_LEAVES);
-        if (y < baseY - 64) y = baseY; // nothing pasted yet
+        if (y < seaY - 64) y = seaY; // nothing pasted yet
         return new Location(world, centerX + 0.5, y + 1, centerZ + 0.5);
+    }
+
+    private static final java.util.Set<org.bukkit.Material> UNSAFE_FLOOR = java.util.EnumSet.of(
+            org.bukkit.Material.MAGMA_BLOCK, org.bukkit.Material.CACTUS, org.bukkit.Material.CAMPFIRE,
+            org.bukkit.Material.SOUL_CAMPFIRE, org.bukkit.Material.POWDER_SNOW, org.bukkit.Material.POINTED_DRIPSTONE,
+            org.bukkit.Material.SWEET_BERRY_BUSH);
+
+    /** Searches outward from the centre for dry solid ground with two free blocks above it. */
+    public Location safeSpot(World world) {
+        int max = half() + 8;
+        for (int r = 0; r <= max; r += 2) {
+            for (int dx = -r; dx <= r; dx += 2) {
+                for (int dz = -r; dz <= r; dz += 2) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;   // only the ring at this distance
+                    Location l = standable(world, centerX + dx, centerZ + dz);
+                    if (l != null) return l;
+                }
+            }
+        }
+        return null;
+    }
+
+    private Location standable(World w, int x, int z) {
+        org.bukkit.block.Block top = w.getHighestBlockAt(x, z, org.bukkit.HeightMap.MOTION_BLOCKING_NO_LEAVES);
+        if (top.getY() < seaY - 64) return null;
+        org.bukkit.Material m = top.getType();
+        if (!m.isSolid() || top.isLiquid() || UNSAFE_FLOOR.contains(m) || org.bukkit.Tag.LEAVES.isTagged(m)) return null;
+        if (top.getBlockData() instanceof org.bukkit.block.data.Waterlogged wl && wl.isWaterlogged()) return null;
+        org.bukkit.block.Block feet = top.getRelative(org.bukkit.block.BlockFace.UP), head = feet.getRelative(org.bukkit.block.BlockFace.UP);
+        if (!feet.isPassable() || feet.isLiquid() || !head.isPassable() || head.isLiquid()) return null;
+        if (feet.getType() == org.bukkit.Material.FIRE || feet.getType() == org.bukkit.Material.SWEET_BERRY_BUSH) return null;
+        return new Location(w, x + 0.5, top.getY() + 1, z + 0.5);
     }
 }

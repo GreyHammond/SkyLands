@@ -55,7 +55,7 @@ public final class FallTransit implements Listener {
         this.plugin = plugin;
         this.skyWorld = skyWorld;
         this.overworld = overworld;
-        this.departY = cfg.getDouble("depart-y", 100);
+        this.departY = cfg.getDouble("depart-y", -40);
         this.arriveY = cfg.getDouble("arrive-y", 310);
         this.maxOffset = Math.max(0, cfg.getDouble("max-landing-offset", 200));
         this.closenessBias = Math.max(0.1, cfg.getDouble("landing-closeness-bias", 1.6));

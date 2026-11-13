@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.11.0-2f9e5a">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.12.0-2f9e5a">
   <img alt="Paper 26.3" src="https://img.shields.io/badge/Paper-26.3-1e88e5">
   <img alt="Java 25" src="https://img.shields.io/badge/Java-25-e76f00">
   <img alt="Bedrock ready" src="https://img.shields.io/badge/Bedrock-Geyser%20%2B%20Floodgate-6a1b9a">
@@ -138,6 +138,11 @@ on Java** and **native Bedrock forms** for players joining through Geyser + Floo
 
 Everything is in one menu (aliases `/sl`, `/realm`). Anything that costs money asks you to confirm.
 
+**`/ihome`** takes you straight to your island home (named so it never clashes with Essentials'
+`/home`). `/ihome set` moves your home to where you're standing; `/ihome reset` clears it.
+Until you set a home, you always arrive on **dry, solid ground** near your island's centre, never
+in a pond or on a tree.
+
 ```
 /skyland
 ├── Return to Island            "Buy an Island" if you don't have one
@@ -162,16 +167,27 @@ Everything is in one menu (aliases `/sl`, `/realm`). Anything that costs money a
     Restore My Island           appears if your island was archived
 ```
 
-**Buying:** Buy an Island → size → biome → confirm. New islands start at level 1, so only
-level 1 biomes can be picked. Shallow and Deep Ocean can only be added later.
+**Buying:** Buy an Island → size → biome → **style** → confirm. New islands start at level 1, so
+only level 1 biomes can be picked. Shallow and Deep Ocean can only be added later.
+
+**Style your new island:** if you've unlocked underside styles or themes before (your level is
+saved when you delete an island), you can pick one before the land is made: keep your saved style,
+choose any unlocked underside, or choose a theme (underside, particles and border in one). The
+starting land is built in that style from the first block. Players with nothing unlocked yet skip
+this step.
 
 **Growing:** unlock a biome, then use **Grow Land** and choose **where it goes**:
 
 - **Automatic**: the island picks a good spot (a new biome starts at the edge; more of a biome
   clusters with it).
-- **Toward where I'm standing**: stand at the edge you want, and the land attaches as close to you
-  as it fits.
-- **A compass direction**: North, North-East, East, … (north is toward −Z).
+- **Toward where I'm standing**: stand at the edge you want, and the land attaches on **your side**
+  of the island.
+- **A compass direction**: North, North-East, East, … (north is toward −Z). Land only ever goes on
+  that side.
+
+If there's no room on the side you asked for, nothing is placed and **you aren't charged**: try
+another side, choose Automatic, or upgrade. In Automatic, a first Shallow or Deep Ocean (or beach)
+prefers to sit next to your beaches, deserts and swamps.
 
 New land always touches the island and stays inside your border. Oceans grown next to each other
 **join into one body of water**, with no sand bars between them.
@@ -308,12 +324,19 @@ Default settings (change them in **Manage Island → Protection**):
 | Other blocks (cake, pots, signs, composters) | ❌ | ✅ |
 | Trample farmland | ❌ | ❌ |
 
-**Island settings:** open to visitors (on) · PvP · explosion damage · fire spread · mob griefing
-(all off). **Transfer:** the new owner takes over and the old owner immediately becomes a visitor.
+**Island settings:** open to visitors (on) · hostile mob spawning (on) · peaceful mob spawning
+(on) · PvP · explosion damage · fire spread · mob griefing (all off).
+
+The two **mob spawning** switches cover the whole island (not plots or areas within it) and only
+stop *natural* spawning: spawn eggs, spawners, breeding and anything you bring still work. **Transfer:** the new owner takes over and the old owner immediately becomes a visitor.
 
 ### Falling and returning
 
-- Fall below the island and you appear high above the overworld at the **same X/Z**, plus a random
+- Islands float below the clouds (new islands have their sea level at Y 140, clouds are at
+  about Y 192), so the sky stays clear above you.
+- You can explore and build under your island freely: the fall only hands off to the overworld at
+  **Y −40**, far below even the deepest underside.
+- Fall past that and you appear high above the overworld at the **same X/Z**, plus a random
   offset of up to 200 blocks. Your momentum is kept and an elytra works mid-fall.
 - The landing that ends the fall does no damage; normal falls still hurt. Unsafe spots (lava,
   cactus, magma) are re-rolled.
@@ -338,7 +361,7 @@ Without Floodgate, everyone gets chest menus and the form code is never loaded.
 
 ### Commands
 
-Players only need `/skyland`. Admin commands (`/skylandadmin`, alias `/sla`) all have
+Players only need `/skyland` (and `/ihome` for a quick trip home). Admin commands (`/skylandadmin`, alias `/sla`) all have
 **Tab completion**: press Tab to cycle through sizes, tiers, biomes and player names.
 
 | Command | Description |
@@ -406,13 +429,13 @@ SkyLands creates two files in `plugins/SkyRealms/`. Restart the server after edi
 | Section | Controls |
 |---|---|
 | `worlds` | The sky world's name and the overworld players fall into |
-| `islands` | Island spacing, sea level (`base-y`), build speed (blocks per tick) |
+| `islands` | Island spacing, sea level for new islands (`base-y`, default 140), build speed (blocks per tick) |
 | `terrain` | Size range of each piece of land |
 | `tiers` | Footprint, price, starting and maximum land for each size |
 | `prices` | Grow price, biome unlock prices (per biome), underside restyle price, refund on delete |
 | `economy` | `currency: vault` or `item`, plus the item, its value and an optional token name |
 | `prune` | Auto-prune on/off, inactive days (30), restore window (14), check interval |
-| `transit` | Fall height, landing spread, landing protection, return cooldown |
+| `transit` | Where the fall hands off (`depart-y`, default −40), landing spread, landing protection, return cooldown |
 | `return` | Strength and duration of the Return to Island launch |
 | `bedrock` | Native Bedrock forms on/off, form button icons |
 | `cosmetics` | Island name length and banned words |
@@ -464,6 +487,11 @@ rewards:
 - **Performance:** terrain is planned off the main thread and placed a slice per tick. Particles
   are sent only to players on that island.
 
+**Upgrading from 0.11 or older:** on first start, 0.12 updates an untouched `base-y: 180` to
+140 and `depart-y: 100` to −40, and logs it. Each island remembers the height it was built at, so
+**existing islands stay exactly where they are** and keep growing at their own height; only islands
+bought afterwards are lower. Values you changed yourself are left alone.
+
 ## FAQ
 
 <details>
@@ -476,7 +504,8 @@ No. New land only fills empty space. Upgrading only enlarges the border and the 
 <summary><strong>Can I choose where new land goes?</strong></summary>
 
 Yes. After picking a biome in Grow Land, choose Automatic, a compass direction, or **Toward where
-I'm standing**. The land attaches as close as it fits, touching the island and inside the border.
+I'm standing**. The land only goes on the side you chose, touching the island and inside the
+border. If there's no room there, nothing is placed and you aren't charged.
 </details>
 
 <details>
@@ -485,6 +514,27 @@ I'm standing**. The land attaches as close as it fits, touching the island and i
 No. Your island's XP (and so its level and everything it unlocked), your unlocked biomes, underside
 style and cosmetics are saved to you. Your next island starts with all of it, so you can delete a
 starter island and rebuild it the way you want. The same happens if an archived island expires.
+</details>
+
+<details>
+<summary><strong>Can I pick my underside or theme for a brand-new island?</strong></summary>
+
+Yes. When you buy, after choosing the biome, pick any underside style or theme you've unlocked
+(your level carries over from a deleted island). The starting land is built in that style.
+</details>
+
+<details>
+<summary><strong>Why is my old island higher than my friend's new one?</strong></summary>
+
+Islands bought before 0.12 keep the height they were built at, so nothing gets cut in half. New
+islands sit lower, under the clouds.
+</details>
+
+<details>
+<summary><strong>Can I turn off mob spawning?</strong></summary>
+
+Yes, for the whole island: Protection → Island settings → Hostile mob spawning / Peaceful mob
+spawning. Spawn eggs, spawners and breeding still work.
 </details>
 
 <details>
@@ -535,6 +585,7 @@ The jar is written to `build/libs/skylands.jar`. The website is a single file at
 
 | Version | Highlights |
 |---|---|
+| **0.12.0** | Islands sit below the clouds; explore under your island without being teleported (fall hands off at Y −40); safe arrival on solid ground; `/ihome`; pick an underside or theme for a new island; land goes on the side you choose; island-wide mob spawning switches |
 | **0.11.0** | No more valleys between expansions; level and unlocks survive deleting an island; convert an existing underside; Ruins chains fixed |
 | **0.10.0** | Choose where new land goes; oceans join seamlessly without sand bars |
 | **0.9.1** | Licensed under GPL-3.0 with attribution terms; in-game credits |

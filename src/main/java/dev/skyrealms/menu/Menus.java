@@ -225,8 +225,7 @@ public final class Menus {
             switch (mode) {
                 case BUY -> m.button(slot++, item(biomeIcon(b), "<green>" + pretty(b), "<gray>" + style,
                         "<gray>Island: <white>" + tier.pretty() + " for <gold>" + svc.money(tier.price)),
-                        pl -> confirm(pl, "Buy a " + tier.pretty() + " " + pretty(b) + " island?", tier.price,
-                                yes -> { yes.closeInventory(); svc.buy(yes, tier, b); }, back -> biomes(back, Mode.BUY, tier)));
+                        pl -> newIslandStyle(pl, tier, b));
                 case GROW -> m.button(slot++, item(biomeIcon(b), "<green>" + pretty(b),
                         i != null && i.pieces.stream().noneMatch(pc -> pc.biome().equals(b))
                                 ? "<yellow>New! First piece attaches at your island's edge" : "<gray>Attach one more piece",
@@ -244,6 +243,34 @@ public final class Menus {
                     mode == Mode.UNLOCK ? "<gray>You own every biome!" : "<gray>No biomes are set up yet."), null);
         }
         m.button((rows - 1) * 9, back(), mode == Mode.BUY ? this::buyTier : this::manage);
+        m.fill().open(p);
+    }
+
+    /** Pick the underside style or theme for a new island (only what the player has unlocked). */
+    public void newIslandStyle(Player p, Tier tier, String biome) {
+        var styles = svc.startUndersides(p.getUniqueId());
+        var themes = svc.startThemes(p.getUniqueId());
+        java.util.function.Function<String, Consumer<Player>> buyWith = style -> pl ->
+                confirm(pl, "Buy a " + tier.pretty() + " " + pretty(biome) + " island?", tier.price,
+                        yes -> { yes.closeInventory(); svc.buy(yes, tier, biome, style); }, back -> newIslandStyle(back, tier, biome));
+        if (styles.size() <= 1 && themes.isEmpty()) { buyWith.apply(null).accept(p); return; }   // nothing to choose yet
+        String saved = plugin.progress().has(p.getUniqueId()) ? "your saved style" : "Rock";
+        Menu m = new Menu(4, "<dark_aqua>Style your new island");
+        m.button(4, glow(item(Material.BOOK, "<green>Keep " + saved, "<gray>Use what you had before.", "<yellow>Tap to continue")), buyWith.apply(null));
+        int slot = 9;
+        for (var st : styles) {
+            if (slot > 17) break;
+            m.button(slot++, item(st.icon, "<aqua>" + st.displayName + " underside", "<gray>" + st.description), buyWith.apply("underside:" + st.id));
+        }
+        slot = 18;
+        for (var t : themes) {
+            if (slot > 26) break;
+            m.button(slot++, item(t.icon, "<light_purple>" + t.displayName + " theme",
+                    "<gray>" + dev.skyrealms.terrain.UndersideStyle.byId(t.underside).displayName + " underside · " + t.particles.displayName
+                            + " · " + t.border.displayName + " border"), buyWith.apply("theme:" + t.id));
+        }
+        m.button(31, item(Material.PAINTING, "<white>More later", "<gray>Name, particles and border can be", "<gray>set from Cosmetics after buying."), null);
+        m.button(27, back(), pl -> biomes(pl, Mode.BUY, tier));
         m.fill().open(p);
     }
 

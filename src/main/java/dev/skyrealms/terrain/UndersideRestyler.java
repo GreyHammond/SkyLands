@@ -90,17 +90,17 @@ public final class UndersideRestyler extends BukkitRunnable {
 
     private void column(Job j, int x, int z) {
         World w = j.world;
-        Material atSea = w.getBlockAt(x, seaY, z).getType();
+        Material atSea = w.getBlockAt(x, j.island.seaY, z).getType();
         if (atSea.isAir()) return;                       // not part of the island (or an islet above it)
         int limit;                                       // only change blocks at or below this height
         if (WATER_STUFF.contains(atSea)) {
-            int y = seaY;
+            int y = j.island.seaY;
             while (y > w.getMinHeight() + 1 && WATER_STUFF.contains(w.getBlockAt(x, y, z).getType())) y--;
             limit = y - 3;                               // keep the sea floor and its sand
         } else {
-            limit = seaY - 4;                            // well below any land surface and its soil layers
+            limit = j.island.seaY - 4;                            // well below any land surface and its soil layers
         }
-        int floor = Math.max(w.getMinHeight() + 1, seaY - 140), bottom = Integer.MIN_VALUE;
+        int floor = Math.max(w.getMinHeight() + 1, j.island.seaY - 140), bottom = Integer.MIN_VALUE;
         boolean changed = false;
         for (int y = limit; y >= floor; y--) {
             Material m = w.getBlockAt(x, y, z).getType();

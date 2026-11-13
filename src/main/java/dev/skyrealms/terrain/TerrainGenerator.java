@@ -72,7 +72,12 @@ public final class TerrainGenerator extends BukkitRunnable {
      * used for the overall shape. {@code done} runs on the main thread when finished.
      */
     public void generate(World world, long seed, List<Blob> all, List<Blob> targets, boolean hasExistingLand, Runnable done) {
-        jobs.add(new Job(world, seed, List.copyOf(all), List.copyOf(targets), hasExistingLand, done));
+        generate(world, seed, seaY, all, targets, hasExistingLand, done);
+    }
+
+    /** As above, for an island whose sea level is {@code islandSeaY}. */
+    public void generate(World world, long seed, int islandSeaY, List<Blob> all, List<Blob> targets, boolean hasExistingLand, Runnable done) {
+        jobs.add(new Job(world, seed, islandSeaY, List.copyOf(all), List.copyOf(targets), hasExistingLand, done));
     }
 
     // =========================================================================================
@@ -82,6 +87,8 @@ public final class TerrainGenerator extends BukkitRunnable {
     private final class Job {
         final World world;
         final long seed;
+        /** This island's sea level (hides the generator's default). */
+        final int seaY;
         final List<Blob> all, targets;
         final boolean hasOld;
         final Runnable done;
@@ -108,8 +115,9 @@ public final class TerrainGenerator extends BukkitRunnable {
         int cursor, treeCursor;
         final Set<Long> chunks = new HashSet<>();
 
-        Job(World world, long seed, List<Blob> all, List<Blob> targets, boolean hasOld, Runnable done) {
+        Job(World world, long seed, int seaY, List<Blob> all, List<Blob> targets, boolean hasOld, Runnable done) {
             this.world = world;
+            this.seaY = seaY;
             this.seed = seed;
             this.all = all;
             this.targets = targets;

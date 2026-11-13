@@ -33,6 +33,9 @@ import java.util.Random;
  *  - Everything stays inside the tier's footprint.
  */
 public final class IslandGrower {
+    /** Biomes that belong together along a coastline. */
+    private static final java.util.Set<String> SHORE = java.util.Set.of("shallow_ocean", "deep_ocean", "beach", "desert", "swamp");
+
     /** Variant name used for generated (built-in biome) land. */
     public static final String GENERATED = "gen";
 
@@ -86,8 +89,8 @@ public final class IslandGrower {
                 int lo = Math.max(5, Math.min(minRadius, hi - 3));
                 int r = lo + rng.nextInt(hi - lo + 1);
                 if (island.pieces.isEmpty()) r = Math.min(r, (int) Math.round(island.half() * 0.65));
-                p = findSpot(island, biome, GENERATED, r, target);
-                if (p == null && r > lo) p = findSpot(island, biome, GENERATED, lo, target); // squeeze a smaller piece in
+                p = findSpot(island, biome, GENERATED, target != null ? hi : r, target);
+                if (p == null && target == null && r > lo) p = findSpot(island, biome, GENERATED, lo, null); // squeeze a smaller piece in
             } else {
                 Piece piece = library.random(biome, rng);
                 if (piece == null) break;
@@ -103,7 +106,7 @@ public final class IslandGrower {
         if (added.isEmpty()) return added;
         if (tb != null) {
             List<TerrainGenerator.Blob> targets = added.stream().map(p -> blob(island, p)).toList();
-            terrain.generate(world, seed(island), blobs(island), targets, hadLand, done);
+            terrain.generate(world, seed(island), island.seaY, blobs(island), targets, hadLand, done);
         } else {
             for (int n = 0; n < added.size(); n++) {
                 paste(world, island, added.get(n), pastes.get(n), n == added.size() - 1 ? done : null);
@@ -123,7 +126,7 @@ public final class IslandGrower {
             paste(world, island, p, piece, null);
             n++;
         }
-        if (!gen.isEmpty()) terrain.generate(world, seed(island), blobs(island), gen, true, null);
+        if (!gen.isEmpty()) terrain.generate(world, seed(island), island.seaY, blobs(island), gen, true, null);
         return n;
     }
 
@@ -140,7 +143,7 @@ public final class IslandGrower {
     }
 
     private void paste(World world, Island island, PiecePlacement p, Piece piece, Runnable done) {
-        paster.paste(world, piece, island.centerX + p.dx(), baseY + p.dy(), island.centerZ + p.dz(), p.rot(), done);
+        paster.paste(world, piece, island.centerX + p.dx(), island.seaY + p.dy(), island.centerZ + p.dz(), p.rot(), done);
     }
 
     private PiecePlacement findSpot(Island island, String biome, String variant, int rn, double[] target) {
@@ -156,6 +159,14 @@ public final class IslandGrower {
         List<PiecePlacement> sameBiome = island.pieces.stream().filter(p -> p.biome().equals(biome)).toList();
         boolean newRegion = sameBiome.isEmpty();
 
+        if (newRegion && SHORE.contains(biome)) {
+            // A first ocean or beach attaches next to existing water, beach, desert or swamp if there is any.
+            List<PiecePlacement> shore = island.pieces.stream().filter(p -> SHORE.contains(p.biome())).toList();
+            if (!shore.isEmpty()) {
+                PiecePlacement near = bestCandidate(island, shore, biome, variant, rn, rot, dy, false);
+                if (near != null) return near;
+            }
+        }
         PiecePlacement spot = bestCandidate(island, newRegion ? island.pieces : sameBiome, biome, variant, rn, rot, dy, newRegion);
         if (spot == null && !newRegion) {
             // That biome's region is boxed in; let it spill out from any edge instead.
@@ -164,29 +175,58 @@ public final class IslandGrower {
         return spot;
     }
 
-    /** The valid attached spot closest to the player's chosen point. */
-    private PiecePlacement towardTarget(Island island, String biome, String variant, int rn, int rot, int dy, double[] target) {
+    /**
+     * Placement the player asked for. The land must attach on the chosen side: within about 50
+     * degrees of the direction from the island centre to {@code target}, as close to the target as
+     * possible. If a normal-size piece won't fit there, smaller ones are tried. If nothing fits on
+     * that side it returns null; it never puts the land somewhere else.
+     */
+    private PiecePlacement towardTarget(Island island, String biome, String variant, int maxR, int rot, int dy, double[] target) {
         int half = island.half();
-        double edgeAllowance = rn * 0.8;
-        double[] best = null;
-        double bestDist = Double.MAX_VALUE;
-        for (int attempt = 0; attempt < 400; attempt++) {
-            PiecePlacement a = island.pieces.get(rng.nextInt(island.pieces.size()));
-            double angle = rng.nextDouble() * Math.PI * 2;
-            double dist = (a.radius() + rn) * (0.55 + rng.nextDouble() * 0.25);
-            double x = a.dx() + Math.cos(angle) * dist;
-            double z = a.dz() + Math.sin(angle) * dist;
-            if (Math.abs(x) + edgeAllowance > half || Math.abs(z) + edgeAllowance > half) continue;
-            boolean ok = true;
-            for (PiecePlacement o : island.pieces) {
-                if (Math.hypot(o.dx() - x, o.dz() - z) < (o.radius() + rn) * 0.5) { ok = false; break; }
+        double tLen = Math.hypot(target[0], target[1]);
+        boolean sector = tLen > half * 0.2;
+        double tAngle = Math.atan2(target[1], target[0]);
+        for (int rn = maxR; rn >= 5; rn -= 2) {
+            double[] best = null;
+            double bestDist = Double.MAX_VALUE;
+            for (int attempt = 0; attempt < 900; attempt++) {
+                PiecePlacement a = island.pieces.get(rng.nextInt(island.pieces.size()));
+                double angle = rng.nextDouble() * Math.PI * 2;
+                double dist = (a.radius() + rn) * (0.45 + rng.nextDouble() * 0.40);
+                double x = a.dx() + Math.cos(angle) * dist;
+                double z = a.dz() + Math.sin(angle) * dist;
+                if (Math.abs(x) > half - rn * 0.2 || Math.abs(z) > half - rn * 0.2) continue;   // centre inside the border
+                if (sector) {
+                    double diff = Math.abs(Math.atan2(Math.sin(Math.atan2(z, x) - tAngle), Math.cos(Math.atan2(z, x) - tAngle)));
+                    if (diff > Math.toRadians(50)) continue;                                   // must be on the chosen side
+                }
+                if (newGround(island, x, z, rn) < 0.30) continue;                              // must add real new land
+                double d = Math.hypot(x - target[0], z - target[1]);
+                if (d < bestDist) { bestDist = d; best = new double[]{x, z}; }
             }
-            if (!ok) continue;
-            double d = Math.hypot(x - target[0], z - target[1]);
-            if (d < bestDist) { bestDist = d; best = new double[]{x, z}; }
+            if (best != null) return new PiecePlacement(biome, variant, (int) Math.round(best[0]), dy, (int) Math.round(best[1]), rot, rn);
         }
-        if (best == null) return null;
-        return new PiecePlacement(biome, variant, (int) Math.round(best[0]), dy, (int) Math.round(best[1]), rot, rn);
+        return null;
+    }
+
+    /** Fraction of a new piece's area not already covered by existing pieces (sampled). */
+    private static double newGround(Island island, double x, double z, int rn) {
+        int total = 0, fresh = 0;
+        for (int ring = 0; ring <= 3; ring++) {
+            double rr = rn * ring / 3.5;
+            int pts = ring == 0 ? 1 : ring * 8;
+            for (int k = 0; k < pts; k++) {
+                double ang = Math.PI * 2 * k / pts;
+                double px = x + Math.cos(ang) * rr, pz = z + Math.sin(ang) * rr;
+                total++;
+                boolean covered = false;
+                for (PiecePlacement o : island.pieces) {
+                    if (Math.hypot(o.dx() - px, o.dz() - pz) < o.radius() * 0.9) { covered = true; break; }
+                }
+                if (!covered) fresh++;
+            }
+        }
+        return fresh / (double) total;
     }
 
     private PiecePlacement bestCandidate(Island island, List<PiecePlacement> anchors, String biome,

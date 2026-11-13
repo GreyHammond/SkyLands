@@ -50,6 +50,7 @@ public final class SkylandCommands {
     public void register(Commands commands) {
         commands.register(skyland(), "Open the Skyland menu", List.of("sl", "realm"));
         commands.register(admin(), "Skyland admin tools", List.of("sla", "realmadmin"));
+        commands.register(ihome(), "Go to your island home (/ihome set to move it)", List.of());
     }
 
     // ---- /skyland ------------------------------------------------------------------
@@ -62,6 +63,29 @@ public final class SkylandCommands {
                     else Msg.error(ctx.getSource().getSender(), "Players only.");
                     return Command.SINGLE_SUCCESS;
                 })
+                .build();
+    }
+
+    // ---- /ihome (island home; named so it never clashes with Essentials' /home) ----------
+
+    private LiteralCommandNode<CommandSourceStack> ihome() {
+        return Commands.literal("ihome")
+                .requires(src -> src.getSender().hasPermission("skyrealms.use"))
+                .executes(ctx -> {
+                    if (ctx.getSource().getExecutor() instanceof Player p) plugin.service().home(p);
+                    else Msg.error(ctx.getSource().getSender(), "Players only.");
+                    return Command.SINGLE_SUCCESS;
+                })
+                .then(Commands.literal("set").executes(ctx -> {
+                    if (ctx.getSource().getExecutor() instanceof Player p) plugin.service().setHome(p);
+                    else Msg.error(ctx.getSource().getSender(), "Players only.");
+                    return Command.SINGLE_SUCCESS;
+                }))
+                .then(Commands.literal("reset").executes(ctx -> {
+                    if (ctx.getSource().getExecutor() instanceof Player p) plugin.service().resetHome(p);
+                    else Msg.error(ctx.getSource().getSender(), "Players only.");
+                    return Command.SINGLE_SUCCESS;
+                }))
                 .build();
     }
 
@@ -374,7 +398,7 @@ public final class SkylandCommands {
         if (!(src.getExecutor() instanceof Player p)) { Msg.error(src.getSender(), "Players only."); return 0; }
         Island i = plugin.islands().of(offline(owner).getUniqueId());
         if (i == null) { Msg.error(p, owner + " doesn't have an island."); return 0; }
-        p.teleportAsync(i.home(plugin.skyWorld(), plugin.baseY()));
+        p.teleportAsync(i.home(plugin.skyWorld()));
         return Command.SINGLE_SUCCESS;
     }
 

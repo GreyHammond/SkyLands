@@ -45,7 +45,27 @@ public final class RealmService {
 
     // ---- buying & growing -------------------------------------------------------
 
-    public boolean buy(Player p, Tier tier, String biome) {
+    public boolean buy(Player p, Tier tier, String biome) { return buy(p, tier, biome, null); }
+
+    /** Underside styles a player may pick for a new island (unlocked at their starting level). */
+    public java.util.List<dev.skyrealms.terrain.UndersideStyle> startUndersides(java.util.UUID player) {
+        int lv = startLevel(player);
+        return java.util.Arrays.stream(dev.skyrealms.terrain.UndersideStyle.values())
+                .filter(st -> plugin.xp().levels().undersideLevel(st.id) <= lv).toList();
+    }
+
+    /** Themes a player may pick for a new island. */
+    public java.util.List<dev.skyrealms.cosmetic.Cosmetics.Theme> startThemes(java.util.UUID player) {
+        int lv = startLevel(player);
+        return java.util.Arrays.stream(dev.skyrealms.cosmetic.Cosmetics.Theme.values())
+                .filter(t -> plugin.cosmetics().need(t) <= lv).toList();
+    }
+
+    /**
+     * Buy an island with a chosen look: {@code style} is "theme:&lt;id&gt;", "underside:&lt;id&gt;", or null to keep
+     * the saved (or default) style.
+     */
+    public boolean buy(Player p, Tier tier, String biome, String style) {
         Island existing = plugin.islands().of(p.getUniqueId());
         if (existing != null) {
             Msg.error(p, existing.owner.equals(p.getUniqueId()) ? "You already have an island. Upgrade it instead."
@@ -68,12 +88,24 @@ public final class RealmService {
         island.xpBackfilled = true;
         // Bring back the level, unlocked biomes, underside style and cosmetics from a deleted island.
         boolean restored = plugin.progress().apply(p.getUniqueId(), island);
+        if (style != null) {
+            int lv = Math.max(startLevel, plugin.xp().level(island));
+            if (style.startsWith("theme:")) {
+                var t = dev.skyrealms.cosmetic.Cosmetics.Theme.byId(style.substring(6));
+                if (t != null && plugin.cosmetics().need(t) <= lv) {
+                    island.theme = t.id; island.underside = t.underside; island.particles = t.particles.id; island.border = t.border.id;
+                }
+            } else if (style.startsWith("underside:")) {
+                var st = dev.skyrealms.terrain.UndersideStyle.byId(style.substring(10));
+                if (plugin.xp().levels().undersideLevel(st.id) <= lv) { island.underside = st.id; island.theme = null; }
+            }
+        }
         if (restored) Msg.send(p, "Your progress came with you: <gold>" + plugin.xp().badge(island) + "</gold>, "
                 + island.biomes.size() + " biomes unlocked, " + dev.skyrealms.terrain.UndersideStyle.byId(island.underside).displayName
                 + " underside.");
         int placed = plugin.grower().growMany(plugin.skyWorld(), island, biome, tier.startPieces, () -> {
             if (!p.isOnline()) return;
-            p.teleportAsync(island.home(plugin.skyWorld(), plugin.baseY()));
+            p.teleportAsync(island.home(plugin.skyWorld()));
             Msg.send(p, "Welcome home! Jump off the edge to drop into the overworld.");
         }).size();
         plugin.xp().add(island, (long) placed * plugin.xp().levels().buyPerPiece);
@@ -98,7 +130,7 @@ public final class RealmService {
         plugin.xp().add(i, plugin.xp().levels().upgradeXp(next));
         // Floating islets sat just outside the old border; move them out past the new one.
         if (!i.islets.isEmpty()) dev.skyrealms.cosmetic.Islets.apply(plugin.skyWorld(), i,
-                dev.skyrealms.cosmetic.Cosmetics.DecorationSet.byId(i.decorations), plugin.baseY());
+                dev.skyrealms.cosmetic.Cosmetics.DecorationSet.byId(i.decorations), i.seaY);
         plugin.islands().save();
         Msg.send(p, "Your island is now <white>" + next.pretty() + "</white> (" + next.footprint + "x" + next.footprint
                 + "), with room for <white>" + next.maxPieces + "</white> pieces of land. Use <white>Grow Land</white> to fill it.");
@@ -145,7 +177,13 @@ public final class RealmService {
         if (plugin.grower().growMany(plugin.skyWorld(), i, biome, 1, target,
                 () -> Msg.send(p, "New <green>" + plugin.biomes().pretty(b) + "</green> land has attached" + whereText + ".")).isEmpty()) {
             plugin.money().refund(p, cost);
-            Msg.error(p, "There's no room left inside your border. Upgrade to grow further.");
+            if (target != null) {
+                String side = where == Placement.HERE ? "near where you're standing" : "on the " + where.label.toLowerCase() + " side";
+                Msg.error(p, "There's no room " + side + " inside your border. Try another side, choose Automatic, or upgrade."
+                        + (cost > 0 ? " You weren't charged." : ""));
+            } else {
+                Msg.error(p, "There's no room left inside your border. Upgrade to grow further.");
+            }
             return false;
         }
         plugin.xp().add(i, plugin.xp().levels().growPiece);
@@ -228,7 +266,7 @@ public final class RealmService {
         if (left > 0) { Msg.error(p, "Wait " + left + "s before going home again."); return false; }
         homeCooldowns.put(p.getUniqueId(), System.currentTimeMillis());
         p.leaveVehicle();
-        p.teleportAsync(i.home(plugin.skyWorld(), plugin.baseY())).thenRun(() -> p.setFallDistance(0));
+        p.teleportAsync(i.home(plugin.skyWorld())).thenRun(() -> p.setFallDistance(0));
         return true;
     }
 
@@ -253,7 +291,7 @@ public final class RealmService {
                 return;
             }
             task.cancel();
-            p.teleportAsync(i.home(plugin.skyWorld(), plugin.baseY())).thenRun(() -> {
+            p.teleportAsync(i.home(plugin.skyWorld())).thenRun(() -> {
                 p.setFallDistance(0);
                 p.playSound(p.getLocation(), Sound.ENTITY_PHANTOM_FLAP, 0.8f, 1.4f);
             });
@@ -268,7 +306,7 @@ public final class RealmService {
             return false;
         }
         p.leaveVehicle();
-        p.teleportAsync(i.home(plugin.skyWorld(), plugin.baseY()));
+        p.teleportAsync(i.home(plugin.skyWorld()));
         Msg.send(p, "Visiting " + owner.getName() + "'s island.");
         return true;
     }
@@ -282,7 +320,17 @@ public final class RealmService {
         }
         i.home = new double[]{loc.getX() - i.centerX, loc.getY(), loc.getZ() - i.centerZ, loc.getYaw(), loc.getPitch()};
         plugin.islands().save();
-        Msg.send(p, "Home set.");
+        Msg.send(p, "Home set. <gray>/ihome</gray> brings you back here.");
+        return true;
+    }
+
+    /** Forget the set home, so /ihome finds safe ground near the island's centre again. */
+    public boolean resetHome(Player p) {
+        Island i = owned(p);
+        if (i == null) return false;
+        i.home = null;
+        plugin.islands().save();
+        Msg.send(p, "Home cleared. <gray>/ihome</gray> now takes you to safe ground near your island's centre.");
         return true;
     }
 
@@ -429,7 +477,7 @@ public final class RealmService {
             switch (result) {
                 case "ok" -> {
                     Island i = plugin.islands().of(p.getUniqueId());
-                    if (i != null && p.isOnline()) p.teleportAsync(i.home(plugin.skyWorld(), plugin.baseY()));
+                    if (i != null && p.isOnline()) p.teleportAsync(i.home(plugin.skyWorld()));
                     Msg.send(p, "Welcome back! Your island is exactly as you left it.");
                 }
                 case "has-island" -> Msg.error(p, "You already have an island, so the archived one can't be restored.");

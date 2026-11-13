@@ -216,6 +216,20 @@ public final class ProtectionListener implements Listener {
         if (settingOff(e.getBlock().getLocation(), Flag.FIRE_SPREAD)) e.setCancelled(true);
     }
 
+    /** Island-wide natural spawning toggles. Spawn eggs, breeding, spawners and commands always work. */
+    @EventHandler(ignoreCancelled = true)
+    public void onSpawn(CreatureSpawnEvent e) {
+        if (!inSky(e.getLocation().getWorld())) return;
+        switch (e.getSpawnReason()) {
+            case NATURAL, JOCKEY, CHUNK_GEN, PATROL, MOUNT, REINFORCEMENTS, VILLAGE_INVASION, RAID, TRAP -> { }
+            default -> { return; }
+        }
+        Island i = islandAt(e.getLocation());
+        if (i == null) return;
+        boolean hostile = e.getEntity() instanceof Enemy;
+        if (hostile ? !i.setting(Flag.MONSTER_SPAWNS) : !i.setting(Flag.ANIMAL_SPAWNS)) e.setCancelled(true);
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onMobChangeBlock(EntityChangeBlockEvent e) {
         Entity en = e.getEntity();

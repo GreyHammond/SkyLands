@@ -74,7 +74,7 @@ public final class CosmeticService {
     public boolean setDecorations(Player p, Cosmetics.DecorationSet set) {
         Island i = plugin.service().owned(p);
         if (i == null || !check(p, i, set, set.displayName)) return false;
-        Islets.apply(plugin.skyWorld(), i, set, plugin.baseY());
+        Islets.apply(plugin.skyWorld(), i, set, i.seaY);
         plugin.islands().save();
         Msg.send(p, set == Cosmetics.DecorationSet.NONE ? "Floating decorations removed."
                 : "<aqua>" + set.displayName + "</aqua> now float around your island.");

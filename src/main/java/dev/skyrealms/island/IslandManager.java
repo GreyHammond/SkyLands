@@ -80,10 +80,16 @@ public final class IslandManager {
         return i != null && i.containsLand(x, z) ? i : null;
     }
 
+    /** Sea level for new islands (islands.base-y). */
+    public static int newSeaY = 140;
+    /** Sea level assumed for islands saved before each island remembered its own. */
+    public static int legacySeaY = 180;
+
     public Island create(UUID owner, Tier tier) {
         int index = nextIndex++;
         int[] cell = spiral(index);
         Island island = new Island(owner, index, cell[0] * spacing, cell[1] * spacing, tier);
+        island.seaY = newSeaY;
         register(island);
         return island;
     }
@@ -157,6 +163,11 @@ public final class IslandManager {
         loadFlags(s, "flags.visitors", i, Role.VISITOR);
         loadFlags(s, "flags.friends", i, Role.FRIEND);
         loadFlags(s, "flags.island", i, null);
+        if (s.getInt("flags-version", 1) < 2) {          // settings added later default to on for older islands
+            i.set(null, Flag.MONSTER_SPAWNS, true);
+            i.set(null, Flag.ANIMAL_SPAWNS, true);
+        }
+        i.seaY = s.getInt("sea-y", legacySeaY);
         i.biomes.addAll(s.getStringList("biomes"));
         for (Map<?, ?> p : s.getMapList("pieces")) i.pieces.add(PiecePlacement.deserialize(p));
         List<Double> home = s.getDoubleList("home");
@@ -188,6 +199,8 @@ public final class IslandManager {
         s.set("flags.visitors", i.flags(Role.VISITOR).stream().map(Enum::name).toList());
         s.set("flags.friends", i.flags(Role.FRIEND).stream().map(Enum::name).toList());
         s.set("flags.island", i.flags(null).stream().map(Enum::name).toList());
+        s.set("flags-version", 2);
+        s.set("sea-y", i.seaY);
         s.set("biomes", new ArrayList<>(i.biomes));
         s.set("pieces", i.pieces.stream().map(PiecePlacement::serialize).toList());
         if (i.home != null) s.set("home", Arrays.stream(i.home).boxed().toList());

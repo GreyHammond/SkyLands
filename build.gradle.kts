@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "dev.skyrealms"
-version = "0.11.0"
+version = "0.12.0"
 
 repositories {
     mavenCentral()
@@ -33,5 +33,6 @@ tasks.jar {
 }
 
 tasks.processResources {
+    inputs.property("version", project.version)
     filesMatching("plugin.yml") { expand("version" to project.version) }
 }

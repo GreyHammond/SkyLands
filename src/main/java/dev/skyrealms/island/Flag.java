@@ -41,7 +41,9 @@ public enum Flag {
     PVP(Scope.ISLAND, Material.IRON_SWORD, "PvP", "Players can fight each other here", false, false),
     EXPLOSIONS(Scope.ISLAND, Material.TNT, "Explosion damage", "Creepers and TNT break blocks", false, false),
     FIRE_SPREAD(Scope.ISLAND, Material.FLINT_AND_STEEL, "Fire spread", "Fire spreads and burns blocks", false, false),
-    MOB_GRIEF(Scope.ISLAND, Material.ZOMBIE_HEAD, "Mob griefing", "Mobs trample farmland and break/take blocks", false, false);
+    MOB_GRIEF(Scope.ISLAND, Material.ZOMBIE_HEAD, "Mob griefing", "Mobs trample farmland and break/take blocks", false, false),
+    MONSTER_SPAWNS(Scope.ISLAND, Material.ZOMBIE_SPAWN_EGG, "Hostile mob spawning", "Zombies, creepers and other monsters spawn naturally", true, true),
+    ANIMAL_SPAWNS(Scope.ISLAND, Material.COW_SPAWN_EGG, "Peaceful mob spawning", "Animals, fish and bats spawn naturally", true, true);
 
     public enum Scope { ROLE, ISLAND }
 
