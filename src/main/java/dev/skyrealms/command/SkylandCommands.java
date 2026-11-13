@@ -1,3 +1,13 @@
+/*
+ * SkyLands (SkyRealms) - floating-island survival for Paper
+ * Copyright (C) 2026 Hammond Digital Studios
+ *
+ * This program is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU General Public License version 3, together with the additional terms in the NOTICE
+ * file (section 7: you must keep the attribution "SkyLands by Hammond Digital Studios" and mark
+ * modified versions). This program is distributed WITHOUT ANY WARRANTY. See the LICENSE and
+ * NOTICE files, or <https://www.gnu.org/licenses/>.
+ */
 package dev.skyrealms.command;
 
 import com.mojang.brigadier.Command;
@@ -211,6 +221,7 @@ public final class SkylandCommands {
 
     private int help(CommandSender to) {
         Msg.send(to, "<white>Admin commands <dark_gray>(press Tab to see options)");
+        to.sendMessage(Msg.c(" <dark_gray>" + dev.skyrealms.Credits.ATTRIBUTION + " · v" + plugin.getPluginMeta().getVersion()));
         String sizes = String.join("|", sizes());
         for (String l : List.of(
                 "capture <biome> [" + sizes + "] [name] <dark_gray>- save the terrain around you as a piece",

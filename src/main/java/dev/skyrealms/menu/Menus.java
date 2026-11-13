@@ -1,3 +1,13 @@
+/*
+ * SkyLands (SkyRealms) - floating-island survival for Paper
+ * Copyright (C) 2026 Hammond Digital Studios
+ *
+ * This program is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU General Public License version 3, together with the additional terms in the NOTICE
+ * file (section 7: you must keep the attribution "SkyLands by Hammond Digital Studios" and mark
+ * modified versions). This program is distributed WITHOUT ANY WARRANTY. See the LICENSE and
+ * NOTICE files, or <https://www.gnu.org/licenses/>.
+ */
 package dev.skyrealms.menu;
 
 import dev.skyrealms.RealmService;
@@ -62,6 +72,8 @@ public final class Menus {
                     pl -> confirm(pl, "Stop co-owning " + nameOf(i.owner) + "'s island?", 0,
                             yes -> { yes.closeInventory(); svc.leaveIsland(yes); }, this::main));
         }
+        m.button(26, item(Material.KNOWLEDGE_BOOK, "<aqua>About", "<white>" + dev.skyrealms.Credits.ATTRIBUTION,
+                "<gray>Version " + plugin.getPluginMeta().getVersion(), "<dark_gray>Licensed under GPL-3.0"), null);
         m.fill().open(p);
     }
 

@@ -9,12 +9,13 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.9.0-2f9e5a">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.9.1-2f9e5a">
   <img alt="Paper 26.3" src="https://img.shields.io/badge/Paper-26.3-1e88e5">
   <img alt="Java 25" src="https://img.shields.io/badge/Java-25-e76f00">
   <img alt="Bedrock ready" src="https://img.shields.io/badge/Bedrock-Geyser%20%2B%20Floodgate-6a1b9a">
   <img alt="Vault" src="https://img.shields.io/badge/economy-Vault%20or%20items-f9a825">
   <img alt="LuckPerms" src="https://img.shields.io/badge/permissions-LuckPerms%20ready-00897b">
+  <a href="LICENSE"><img alt="License: GPL-3.0 with attribution" src="https://img.shields.io/badge/license-GPL--3.0%20%2B%20attribution-blue"></a>
 </p>
 
 <p align="center">
@@ -64,6 +65,7 @@ on Java** and **native Bedrock forms** for players joining through Geyser + Floo
 - [FAQ](#faq)
 - [Building from source](#building-from-source)
 - [Changelog](#changelog)
+- [License](#license)
 
 ## Highlights
 
@@ -493,6 +495,7 @@ The jar is written to `build/libs/skylands.jar`. The landing page is a single fi
 
 | Version | Highlights |
 |---|---|
+| **0.9.1** | Licensed under GPL-3.0 with attribution terms; in-game credits |
 | **0.9.0** | Native Bedrock forms through Floodgate |
 | **0.8.0** | Cosmetics and themes: island names, particles, border styles, floating islets |
 | **0.7.0** | Six new biomes and eight underside styles |
@@ -501,9 +504,30 @@ The jar is written to `build/libs/skylands.jar`. The landing page is a single fi
 | **0.4.x** | Built-in generated terrain with one shared sea level; upgrades add room only |
 | **0.3.x** | All-in-one `/skyland` menu, named capture sizes, Tab completion |
 
+## License
+
+**SkyLands by Hammond Digital Studios.** Copyright © 2026 Hammond Digital Studios.
+
+SkyLands is free software, licensed under the [GNU General Public License v3.0](LICENSE) with
+additional terms under section 7 of that license, set out in the [`NOTICE`](NOTICE) file.
+
+In plain terms (the `LICENSE` and `NOTICE` files are what count):
+
+- ✅ You can **use** SkyLands on any server, free of charge.
+- ✅ You can **study, modify and share** it, including modified versions.
+- 📄 If you share it or a modified version, you must also share the **source code** under the
+  same license (GPL-3.0).
+- 🏷️ You must **keep the attribution** "SkyLands by Hammond Digital Studios" everywhere it appears:
+  the in-game menus, the startup message, `plugin.yml`, the source headers and `NOTICE`.
+- ✏️ Modified versions must be **clearly marked as modified** (a different name or version label,
+  and a note in their credits).
+- 🚫 You can't use the names "SkyLands" or "Hammond Digital Studios" to **promote or endorse** a
+  modified version.
+- ⚠️ SkyLands comes **without any warranty**.
+
 ---
 
 <p align="center">
-  Made by <strong>Hammond Digital Studios</strong>.<br>
+  Made by <strong>Hammond Digital Studios</strong> · <a href="LICENSE">GPL-3.0</a> with <a href="NOTICE">attribution terms</a>.<br>
   <sub>SkyLands is not affiliated with Mojang Studios or Microsoft. Minecraft is a trademark of Mojang Studios.</sub>
 </p>

@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "dev.skyrealms"
-version = "0.9.0"
+version = "0.9.1"
 
 repositories {
     mavenCentral()
@@ -28,6 +28,8 @@ tasks.withType<JavaCompile> {
 
 tasks.jar {
     archiveFileName.set("skylands.jar")
+    // Ship the license and the attribution terms inside the jar.
+    from("LICENSE", "NOTICE")
 }
 
 tasks.processResources {
