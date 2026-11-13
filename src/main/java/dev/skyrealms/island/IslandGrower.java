@@ -66,6 +66,14 @@ public final class IslandGrower {
      * pass so they blend into a single landmass. {@code done} runs once, when all of it is built.
      */
     public List<PiecePlacement> growMany(World world, Island island, String biome, int count, Runnable done) {
+        return growMany(world, island, biome, count, null, done);
+    }
+
+    /**
+     * Like growMany, but each piece attaches as close as it can to {@code target}, an offset
+     * {dx, dz} from the island centre (null = automatic placement).
+     */
+    public List<PiecePlacement> growMany(World world, Island island, String biome, int count, double[] target, Runnable done) {
         List<PiecePlacement> added = new ArrayList<>();
         List<Piece> pastes = new ArrayList<>();
         TerrainBiome tb = TerrainBiome.byId(biome);
@@ -78,12 +86,12 @@ public final class IslandGrower {
                 int lo = Math.max(5, Math.min(minRadius, hi - 3));
                 int r = lo + rng.nextInt(hi - lo + 1);
                 if (island.pieces.isEmpty()) r = Math.min(r, (int) Math.round(island.half() * 0.65));
-                p = findSpot(island, biome, GENERATED, r);
-                if (p == null && r > lo) p = findSpot(island, biome, GENERATED, lo); // squeeze a smaller piece in
+                p = findSpot(island, biome, GENERATED, r, target);
+                if (p == null && r > lo) p = findSpot(island, biome, GENERATED, lo, target); // squeeze a smaller piece in
             } else {
                 Piece piece = library.random(biome, rng);
                 if (piece == null) break;
-                p = findSpot(island, biome, piece.name, piece.radius);
+                p = findSpot(island, biome, piece.name, piece.radius, target);
                 if (p != null) pastes.add(piece);
             }
             if (p == null) break;
@@ -135,13 +143,15 @@ public final class IslandGrower {
         paster.paste(world, piece, island.centerX + p.dx(), baseY + p.dy(), island.centerZ + p.dz(), p.rot(), done);
     }
 
-    private PiecePlacement findSpot(Island island, String biome, String variant, int rn) {
+    private PiecePlacement findSpot(Island island, String biome, String variant, int rn, double[] target) {
         boolean gen = GENERATED.equals(variant);
         int rot = gen ? 0 : rng.nextInt(4);
         int dy = gen || yJitter <= 0 ? 0 : rng.nextInt(yJitter * 2 + 1) - yJitter;
         if (island.pieces.isEmpty()) {
             return new PiecePlacement(biome, variant, 0, 0, 0, rot, rn);
         }
+
+        if (target != null) return towardTarget(island, biome, variant, rn, rot, dy, target);
 
         List<PiecePlacement> sameBiome = island.pieces.stream().filter(p -> p.biome().equals(biome)).toList();
         boolean newRegion = sameBiome.isEmpty();
@@ -152,6 +162,31 @@ public final class IslandGrower {
             spot = bestCandidate(island, island.pieces, biome, variant, rn, rot, dy, true);
         }
         return spot;
+    }
+
+    /** The valid attached spot closest to the player's chosen point. */
+    private PiecePlacement towardTarget(Island island, String biome, String variant, int rn, int rot, int dy, double[] target) {
+        int half = island.half();
+        double edgeAllowance = rn * 0.8;
+        double[] best = null;
+        double bestDist = Double.MAX_VALUE;
+        for (int attempt = 0; attempt < 400; attempt++) {
+            PiecePlacement a = island.pieces.get(rng.nextInt(island.pieces.size()));
+            double angle = rng.nextDouble() * Math.PI * 2;
+            double dist = (a.radius() + rn) * (0.55 + rng.nextDouble() * 0.25);
+            double x = a.dx() + Math.cos(angle) * dist;
+            double z = a.dz() + Math.sin(angle) * dist;
+            if (Math.abs(x) + edgeAllowance > half || Math.abs(z) + edgeAllowance > half) continue;
+            boolean ok = true;
+            for (PiecePlacement o : island.pieces) {
+                if (Math.hypot(o.dx() - x, o.dz() - z) < (o.radius() + rn) * 0.5) { ok = false; break; }
+            }
+            if (!ok) continue;
+            double d = Math.hypot(x - target[0], z - target[1]);
+            if (d < bestDist) { bestDist = d; best = new double[]{x, z}; }
+        }
+        if (best == null) return null;
+        return new PiecePlacement(biome, variant, (int) Math.round(best[0]), dy, (int) Math.round(best[1]), rot, rn);
     }
 
     private PiecePlacement bestCandidate(Island island, List<PiecePlacement> anchors, String biome,

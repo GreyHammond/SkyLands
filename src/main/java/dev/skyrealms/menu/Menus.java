@@ -230,9 +230,8 @@ public final class Menus {
                 case GROW -> m.button(slot++, item(biomeIcon(b), "<green>" + pretty(b),
                         i != null && i.pieces.stream().noneMatch(pc -> pc.biome().equals(b))
                                 ? "<yellow>New! First piece attaches at your island's edge" : "<gray>Attach one more piece",
-                        "<gray>Cost: <gold>" + svc.money(svc.growPrice())),
-                        pl -> confirm(pl, "Grow more " + pretty(b) + "?", svc.growPrice(),
-                                yes -> { svc.grow(yes, b); biomes(yes, Mode.GROW, null); }, back -> biomes(back, Mode.GROW, null)));
+                        "<gray>Cost: <gold>" + svc.money(svc.growPrice()), "<yellow>Tap to choose where it goes"),
+                        pl -> placement(pl, b));
                 case UNLOCK -> m.button(slot++, item(biomeIcon(b), "<light_purple>" + pretty(b), "<gray>" + style,
                         "<gray>Unlocks it for Grow Land", "<gray>Cost: <gold>" + svc.money(svc.unlockPrice(b))),
                         pl -> confirm(pl, "Unlock " + pretty(b) + "?", svc.unlockPrice(b),
@@ -245,6 +244,35 @@ public final class Menus {
                     mode == Mode.UNLOCK ? "<gray>You own every biome!" : "<gray>No biomes are set up yet."), null);
         }
         m.button((rows - 1) * 9, back(), mode == Mode.BUY ? this::buyTier : this::manage);
+        m.fill().open(p);
+    }
+
+    /** Where should the new land go? A compass, plus "toward where I'm standing". */
+    public void placement(Player p, String biome) {
+        Island i = svc.owned(p);
+        if (i == null) return;
+        Menu m = new Menu(3, "<dark_aqua>Where should it go?");
+        java.util.function.Function<RealmService.Placement, Consumer<Player>> pick = where -> pl ->
+                confirm(pl, "Grow " + pretty(biome) + (where == RealmService.Placement.AUTO ? "" : " (" + where.label.toLowerCase() + ")") + "?",
+                        svc.growPrice(), yes -> { svc.grow(yes, biome, where); biomes(yes, Mode.GROW, null); }, back -> placement(back, biome));
+        int[][] compass = {{3, 7}, {4, 0}, {5, 1}, {12, 6}, {14, 2}, {21, 5}, {22, 4}, {23, 3}}; // slot, index into N..NW
+        RealmService.Placement[] dirs = {RealmService.Placement.N, RealmService.Placement.NE, RealmService.Placement.E, RealmService.Placement.SE,
+                RealmService.Placement.S, RealmService.Placement.SW, RealmService.Placement.W, RealmService.Placement.NW};
+        for (int[] c : compass) {
+            RealmService.Placement d = dirs[c[1]];
+            m.button(c[0], item(Material.ARROW, "<white>" + d.label, "<gray>Attach on the " + d.label.toLowerCase() + " side."), pick.apply(d));
+        }
+        m.button(13, glow(item(Material.COMPASS, "<green>Automatic", "<gray>Let the island choose a good spot.")), pick.apply(RealmService.Placement.AUTO));
+        if (svc.canPlaceHere(p, i)) {
+            m.button(10, glow(item(Material.RECOVERY_COMPASS, "<aqua>Toward where I'm standing",
+                    "<gray>Attaches as close to you", "<gray>as it can fit.")), pick.apply(RealmService.Placement.HERE));
+        } else {
+            m.button(10, item(Material.GRAY_DYE, "<gray>Toward where I'm standing", "<dark_gray>Stand on your island (or at its edge)",
+                    "<dark_gray>to use this."), null);
+        }
+        m.button(16, item(Material.BOOK, "<white>Tips", "<gray>North is toward -Z on your", "<gray>coordinates.",
+                "<gray>Land must touch your island and", "<gray>stay inside your border."), null);
+        m.button(18, back(), pl -> biomes(pl, Mode.GROW, null));
         m.fill().open(p);
     }
 

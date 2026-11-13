@@ -198,8 +198,7 @@ public final class FormMenus {
                 case GROW -> {
                     boolean fresh = i != null && i.pieces.stream().noneMatch(pc -> pc.biome().equals(biome));
                     b.add(btn(G + n + "\n" + DG + (fresh ? "New! Starts at your island's edge" : "Add one more piece"), null,
-                            pl -> confirm(pl, "Grow more " + n + "?", svc.growPrice(),
-                                    yes -> { svc.grow(yes, biome); biomes(yes, Mode.GROW, null); }, back -> biomes(back, Mode.GROW, null))));
+                            pl -> placement(pl, biome)));
                 }
                 case UNLOCK -> b.add(btn(P + n + "\n" + O + svc.money(svc.unlockPrice(biome)), null,
                         pl -> confirm(pl, "Unlock " + n + "? You can then grow it with Grow Land.", svc.unlockPrice(biome),
@@ -217,6 +216,30 @@ public final class FormMenus {
         if (!locked.isEmpty()) content += "\n\n" + DG + "Locked: " + String.join(", ", locked);
         if (b.size() == 1) content += "\n\n" + Y + (mode == Mode.UNLOCK ? "Nothing to unlock right now." : "Nothing here yet.");
         simple(p, title, content, b);
+    }
+
+    /** Where should the new land go? */
+    public void placement(Player p, String biome) {
+        Island i = svc.owned(p);
+        if (i == null) return;
+        String n = biomeName(biome);
+        List<Btn> b = new ArrayList<>();
+        for (RealmService.Placement where : RealmService.Placement.values()) {
+            if (where == RealmService.Placement.HERE && !svc.canPlaceHere(p, i)) continue;
+            String label = switch (where) {
+                case AUTO -> G + "Automatic\n" + DG + "Let the island choose a good spot";
+                case HERE -> A + "Toward where I'm standing\n" + DG + "As close to you as it fits";
+                default -> W + where.label + " side";
+            };
+            b.add(btn(label, where == RealmService.Placement.AUTO ? "textures/items/compass_item" : null,
+                    pl -> confirm(pl, "Grow " + n + (where == RealmService.Placement.AUTO ? "" : " (" + where.label.toLowerCase() + ")") + "?",
+                            svc.growPrice(), yes -> { svc.grow(yes, biome, where); biomes(yes, Mode.GROW, null); }, back -> placement(back, biome))));
+        }
+        b.add(btn(GR + "Back", null, pl -> biomes(pl, Mode.GROW, null)));
+        String content = GR + "Pick where the new " + n + " land attaches. It has to touch your island and stay inside your border."
+                + (svc.canPlaceHere(p, i) ? "" : "\n\n" + DG + "Stand on your island to use \"Toward where I'm standing\".")
+                + "\n" + DG + "North is toward -Z.";
+        simple(p, "Where should it go?", content, b);
     }
 
     // =========================================================================================

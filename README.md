@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.9.1-2f9e5a">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.10.0-2f9e5a">
   <img alt="Paper 26.3" src="https://img.shields.io/badge/Paper-26.3-1e88e5">
   <img alt="Java 25" src="https://img.shields.io/badge/Java-25-e76f00">
   <img alt="Bedrock ready" src="https://img.shields.io/badge/Bedrock-Geyser%20%2B%20Floodgate-6a1b9a">
@@ -147,7 +147,7 @@ Everything is in one menu (aliases `/sl`, `/realm`). Anything that costs money a
 │   └── Top Islands             ranked by level, then visits
 ├── Manage Island
 │   ├── Island Level            XP bar, next unlock, all levels & unlocks
-│   ├── Grow Land               add land of any biome you own
+│   ├── Grow Land               add land of any biome you own, and choose where it goes
 │   ├── Unlock a Biome          make a new biome available in Grow Land
 │   ├── Upgrade                 more room: bigger border, higher piece cap
 │   ├── Underside Style         what hangs under new land
@@ -165,8 +165,16 @@ Everything is in one menu (aliases `/sl`, `/realm`). Anything that costs money a
 **Buying:** Buy an Island → size → biome → confirm. New islands start at level 1, so only
 level 1 biomes can be picked. Shallow and Deep Ocean can only be added later.
 
-**Growing:** unlock a biome, then use **Grow Land**. A new biome's first piece attaches at your
-island's edge; more pieces cluster with it.
+**Growing:** unlock a biome, then use **Grow Land** and choose **where it goes**:
+
+- **Automatic**: the island picks a good spot (a new biome starts at the edge; more of a biome
+  clusters with it).
+- **Toward where I'm standing**: stand at the edge you want, and the land attaches as close to you
+  as it fits.
+- **A compass direction**: North, North-East, East, … (north is toward −Z).
+
+New land always touches the island and stays inside your border. Oceans grown next to each other
+**join into one body of water**, with no sand bars between them.
 
 ### Island sizes
 
@@ -443,6 +451,9 @@ rewards:
 - **Sea level:** sea water is only placed where all four sides are held in; otherwise that column
   becomes a sand rim. Lakes form only inside land ringed by higher ground.
 - **Growth never breaks builds:** new land only fills empty space and blends into the existing edge.
+  The only existing columns it may rebuild are sand rims at sea level and plain open water (water,
+  seagrass and kelp on a natural floor), so neighbouring oceans join seamlessly. Water is only ever
+  deepened, never turned into land.
 - **Performance:** terrain is planned off the main thread and placed a slice per tick. Particles
   are sent only to players on that island.
 
@@ -452,6 +463,13 @@ rewards:
 <summary><strong>Does growing or upgrading change land I've built on?</strong></summary>
 
 No. New land only fills empty space. Upgrading only enlarges the border and the piece cap.
+</details>
+
+<details>
+<summary><strong>Can I choose where new land goes?</strong></summary>
+
+Yes. After picking a biome in Grow Land, choose Automatic, a compass direction, or **Toward where
+I'm standing**. The land attaches as close as it fits, touching the island and inside the border.
 </details>
 
 <details>
@@ -496,6 +514,7 @@ The jar is written to `build/libs/skylands.jar`. The website is a single file at
 
 | Version | Highlights |
 |---|---|
+| **0.10.0** | Choose where new land goes; oceans join seamlessly without sand bars |
 | **0.9.1** | Licensed under GPL-3.0 with attribution terms; in-game credits |
 | **0.9.0** | Native Bedrock forms through Floodgate |
 | **0.8.0** | Cosmetics and themes: island names, particles, border styles, floating islets |

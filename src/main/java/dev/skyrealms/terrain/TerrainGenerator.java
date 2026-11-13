@@ -90,6 +90,9 @@ public final class TerrainGenerator extends BukkitRunnable {
         int minX, minZ, w, h;
         boolean[] existing;
         int[] oldTop;
+        /** Existing columns that may be rebuilt so pieces join cleanly: sand rims and plain water. */
+        boolean[] replaceable, oldWater, oldLip;
+        int[] oldFloor;
 
         // plan output
         byte[] kind;
@@ -129,6 +132,10 @@ public final class TerrainGenerator extends BukkitRunnable {
             w = (int) Math.ceil(x1) + STITCH - minX + 1; h = (int) Math.ceil(z1) + STITCH - minZ + 1;
             existing = new boolean[w * h];
             oldTop = new int[w * h];
+            replaceable = new boolean[w * h];
+            oldWater = new boolean[w * h];
+            oldLip = new boolean[w * h];
+            oldFloor = new int[w * h];
             if (!hasOld) return;
             for (int x = minX; x < minX + w; x++) {
                 for (int z = minZ; z < minZ + h; z++) {
@@ -136,8 +143,31 @@ public final class TerrainGenerator extends BukkitRunnable {
                     int i = idx(x, z);
                     existing[i] = true;
                     oldTop[i] = Math.min(seaY + 40, world.getHighestBlockYAt(x, z, HeightMap.MOTION_BLOCKING_NO_LEAVES));
+                    classifyOld(x, z, i);
                 }
             }
+        }
+
+        private static final Set<Material> WATER_STUFF = EnumSet.of(Material.WATER, Material.SEAGRASS,
+                Material.TALL_SEAGRASS, Material.KELP, Material.KELP_PLANT);
+        private static final Set<Material> NATURAL_FLOOR = EnumSet.of(Material.SAND, Material.RED_SAND, Material.GRAVEL,
+                Material.CLAY, Material.MUD, Material.SANDSTONE, Material.DIRT, Material.STONE, Material.BASALT);
+
+        /** Is this existing column a sand rim or plain sea water we may rebuild? (main thread) */
+        void classifyOld(int x, int z, int i) {
+            Material above = world.getBlockAt(x, seaY + 1, z).getType();
+            if (!above.isAir() && above != Material.LILY_PAD) return;
+            Material at = world.getBlockAt(x, seaY, z).getType();
+            if (at == Material.SAND || at == Material.RED_SAND) {
+                // Generated land always stands at least 2 above sea level, so sand exactly at sea level is a rim.
+                replaceable[i] = true; oldLip[i] = true; oldFloor[i] = seaY;
+                return;
+            }
+            if (at != Material.WATER) return;
+            int y = seaY;
+            while (y > world.getMinHeight() + 1 && WATER_STUFF.contains(world.getBlockAt(x, y, z).getType())) y--;
+            if (!NATURAL_FLOOR.contains(world.getBlockAt(x, y, z).getType())) return; // something a player put there
+            replaceable[i] = true; oldWater[i] = true; oldFloor[i] = y;
         }
 
         // ---- planning (async, pure math) ----------------------------------------------------
@@ -165,7 +195,7 @@ public final class TerrainGenerator extends BukkitRunnable {
             for (int x = minX; x < minX + w; x++) {
                 for (int z = minZ; z < minZ + h; z++) {
                     int i = idx(x, z);
-                    if (existing[i]) continue;
+                    if (existing[i] && !replaceable[i]) continue;
                     double edgeNoise = noise.fbm(x * 0.05, z * 0.05, 3) * 0.22 + noise.fbm(x * 0.17 + 500, z * 0.17, 2) * 0.07;
 
                     double mTarget = Double.MAX_VALUE;
@@ -174,7 +204,8 @@ public final class TerrainGenerator extends BukkitRunnable {
                         double d = Math.hypot(x - b.x, z - b.z) / b.r;
                         if (d < mTarget) { mTarget = d; colStyle = b.style == null ? UndersideStyle.ROCK : b.style; }
                     }
-                    if (mTarget + edgeNoise >= 1) continue;
+                    double reachLimit = !existing[i] ? 1 : oldLip[i] ? 1.6 : 1.35;
+                    if (mTarget + edgeNoise >= reachLimit) continue;
 
                     double m = Double.MAX_VALUE, wSum = 0, hSum = 0, bestW = -1, cone = 0;
                     TerrainBiome best = null;
@@ -216,6 +247,10 @@ public final class TerrainGenerator extends BukkitRunnable {
                     }
 
                     int t = seaY + (int) Math.round(rel);
+                    if (existing[i] && oldWater[i]) {
+                        if (t > seaY) continue;                  // never turn existing water into land
+                        t = Math.min(t, oldFloor[i]);            // only ever deepen water, never raise its floor
+                    }
                     double dc = Math.hypot(x - centroidX, z - centroidZ) / extent;
                     if (dc < 1) cone = Math.max(cone, Math.min(120, extent * 1.15) * Math.pow(1 - dc, 1.3)
                             * (0.85 + 0.3 * noise.fbm(x * 0.08 + 900, z * 0.08, 2)));
@@ -224,6 +259,7 @@ public final class TerrainGenerator extends BukkitRunnable {
                             + (noise.random(x, 0, z, 7) < 0.05 ? 2 + noise.random(x, 1, z, 8) * 4 : 0);
                     int b = seaY - (int) Math.round(thick);
                     if (b > t - 4) b = t - 4;
+                    if (existing[i]) existing[i] = false;        // this column is now being rebuilt
                     b = Math.max(b, world.getMinHeight() + 1);
 
                     label[i] = best;
@@ -290,7 +326,7 @@ public final class TerrainGenerator extends BukkitRunnable {
             nearestExistingTop = new int[n];
             Arrays.fill(dist, Integer.MAX_VALUE);
             ArrayDeque<Integer> q = new ArrayDeque<>();
-            for (int i = 0; i < n; i++) if (existing[i]) { dist[i] = 0; nearestExistingTop[i] = oldTop[i]; q.add(i); }
+            for (int i = 0; i < n; i++) if (existing[i] && !replaceable[i]) { dist[i] = 0; nearestExistingTop[i] = oldTop[i]; q.add(i); }
             while (!q.isEmpty()) {
                 int i = q.poll();
                 if (dist[i] >= STITCH) continue;
@@ -546,6 +582,42 @@ public final class TerrainGenerator extends BukkitRunnable {
             return n;
         }
 
+        /**
+         * Healing pass: sand rims left between bodies of water by earlier growth become water.
+         * A rim block turns to water only if all four sides are held (water or solid) and at least
+         * two are water; it's carved no deeper than its shallowest water neighbour, so it stays held in.
+         */
+        void healSeams() {
+            for (int pass = 0; pass < 4; pass++) {
+                int changed = 0;
+                for (int x = minX; x < minX + w; x++) {
+                    for (int z = minZ; z < minZ + h; z++) {
+                        Material at = world.getBlockAt(x, seaY, z).getType();
+                        if (at != Material.SAND && at != Material.RED_SAND) continue;
+                        Material above = world.getBlockAt(x, seaY + 1, z).getType();
+                        if (!above.isAir() && above != Material.LILY_PAD) continue;
+                        int waterNb = 0, depth = Integer.MAX_VALUE;
+                        boolean open = false;
+                        for (int[] d : new int[][]{{1, 0}, {-1, 0}, {0, 1}, {0, -1}}) {
+                            Material m = world.getBlockAt(x + d[0], seaY, z + d[1]).getType();
+                            if (m.isAir()) { open = true; break; }
+                            if (m == Material.WATER) {
+                                waterNb++;
+                                int dd = 0;
+                                while (dd < 40 && world.getBlockAt(x + d[0], seaY - dd, z + d[1]).getType() == Material.WATER) dd++;
+                                depth = Math.min(depth, dd);
+                            }
+                        }
+                        if (open || waterNb < 2 || depth == Integer.MAX_VALUE) continue;
+                        for (int k = 0; k < depth; k++) set(x, seaY - k, z, Material.WATER);
+                        chunks.add(((long) (x >> 4) << 32) | ((z >> 4) & 0xffffffffL));
+                        changed++;
+                    }
+                }
+                if (changed == 0) break;
+            }
+        }
+
         boolean built() { return cursor >= order.length; }
 
         boolean treesDone() { return treeCursor >= trees.size(); }
@@ -604,6 +676,7 @@ public final class TerrainGenerator extends BukkitRunnable {
             j.growTrees(40);
             return;
         }
+        if (j.hasOld) j.healSeams();
         for (long key : j.chunks) j.world.refreshChunk((int) (key >> 32), (int) key);
         current = null;
         if (j.done != null) {

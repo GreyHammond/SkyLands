@@ -93,7 +93,33 @@ public final class RealmService {
         return true;
     }
 
-    public boolean grow(Player p, String biome) {
+    public boolean grow(Player p, String biome) { return grow(p, biome, null); }
+
+    /** Where a player can ask new land to go. */
+    public enum Placement {
+        AUTO("Automatic", 0, 0), HERE("Toward where I'm standing", 0, 0),
+        N("North", 0, -1), NE("North-East", 1, -1), E("East", 1, 0), SE("South-East", 1, 1),
+        S("South", 0, 1), SW("South-West", -1, 1), W("West", -1, 0), NW("North-West", -1, -1);
+        public final String label; public final int dx, dz;
+        Placement(String label, int dx, int dz) { this.label = label; this.dx = dx; this.dz = dz; }
+    }
+
+    /** True if the player is standing on or just beside their island, so "toward me" makes sense. */
+    public boolean canPlaceHere(Player p, Island i) {
+        return p.getWorld().equals(plugin.skyWorld()) && Math.abs(p.getX() - i.centerX) <= i.half() + 24
+                && Math.abs(p.getZ() - i.centerZ) <= i.half() + 24;
+    }
+
+    /** Target offset from the island centre for a placement choice (null = automatic). */
+    public double[] targetFor(Player p, Island i, Placement where) {
+        return switch (where) {
+            case AUTO -> null;
+            case HERE -> canPlaceHere(p, i) ? new double[]{p.getX() - i.centerX, p.getZ() - i.centerZ} : null;
+            default -> new double[]{where.dx * i.half(), where.dz * i.half()};
+        };
+    }
+
+    public boolean grow(Player p, String biome, Placement where) {
         Island i = owned(p);
         if (i == null) return false;
         if (i.pieces.size() >= i.tier.maxPieces) { Msg.error(p, "Your " + i.tier.pretty() + " island is full. Upgrade for more room."); return false; }
@@ -102,7 +128,10 @@ public final class RealmService {
         double cost = growPrice();
         if (!plugin.money().charge(p, cost)) { Msg.error(p, "Growing costs <white>" + money(cost)); return false; }
         String b = biome;
-        if (plugin.grower().grow(plugin.skyWorld(), i, biome, () -> Msg.send(p, "New <green>" + b + "</green> land has attached to your island.")) == null) {
+        double[] target = where == null ? null : targetFor(p, i, where);
+        String whereText = where == null || where == Placement.AUTO ? "" : where == Placement.HERE ? " near where you're standing" : " on the " + where.label.toLowerCase() + " side";
+        if (plugin.grower().growMany(plugin.skyWorld(), i, biome, 1, target,
+                () -> Msg.send(p, "New <green>" + plugin.biomes().pretty(b) + "</green> land has attached" + whereText + ".")).isEmpty()) {
             plugin.money().refund(p, cost);
             Msg.error(p, "There's no room left inside your border. Upgrade to grow further.");
             return false;
