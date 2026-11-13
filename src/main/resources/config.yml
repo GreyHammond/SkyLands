@@ -44,6 +44,8 @@ prices:
   grow-piece: 1000
   # Cost of unlocking a new biome. Unlocking adds no land: players then use Grow Land.
   biome-unlock-default: 10000
+  # Cost of converting the rock under an island's existing land to another underside style.
+  restyle-underside: 2500
   # Percent of the island's tier price given back when it's deleted (0 = nothing).
   delete-refund-percent: 0
   # Per-biome unlock prices (built-in ids, or custom captured folder names).

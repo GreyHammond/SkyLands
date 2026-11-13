@@ -263,6 +263,12 @@ public final class IslandArchiver implements Listener {
             long at = meta.exists() ? YamlConfiguration.loadConfiguration(meta).getLong("archived-at", 0) : 0;
             if (at == 0 || System.currentTimeMillis() > at + restoreDays * DAY) {
                 plugin.getLogger().info("Deleting expired island archive " + d.getName());
+                // The island is gone, but the player's level, unlocks and styles carry over to their next island.
+                try {
+                    UUID owner = UUID.fromString(d.getName());
+                    var sec = meta.exists() ? YamlConfiguration.loadConfiguration(meta).getConfigurationSection("island") : null;
+                    if (sec != null && plugin.islands().of(owner) == null) plugin.progress().save(owner, IslandManager.read(owner, sec));
+                } catch (IllegalArgumentException ignored) {}
                 deleteDir(d);
             }
         }

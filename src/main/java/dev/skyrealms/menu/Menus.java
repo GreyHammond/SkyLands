@@ -202,7 +202,7 @@ public final class Menus {
         if (mode == Mode.GROW && i != null) list.retainAll(i.biomes);
         if (mode == Mode.UNLOCK && i != null) list.removeAll(i.biomes);
         var lv = plugin.xp().levels();
-        int islandLevel = mode == Mode.BUY || i == null ? 1 : plugin.xp().level(i);
+        int islandLevel = mode == Mode.BUY || i == null ? svc.startLevel(p.getUniqueId()) : plugin.xp().level(i);
         if (mode != Mode.GROW) list.sort(Comparator.comparingInt(lv::biomeLevel));
         String title = switch (mode) {
             case BUY -> "<dark_aqua>Choose your biome";
@@ -219,7 +219,7 @@ public final class Menus {
             if (mode != Mode.GROW && need > islandLevel) {
                 m.button(slot++, item(Material.GRAY_DYE, "<gray>" + pretty(b) + " <dark_gray>(locked)", "<dark_gray>" + style,
                         "<red>Unlocks at island level " + need,
-                        mode == Mode.BUY ? "<dark_gray>New islands start at level 1." : "<dark_gray>Your island is level " + islandLevel + "."), null);
+                        mode == Mode.BUY ? "<dark_gray>Your new island starts at level " + islandLevel + "." : "<dark_gray>Your island is level " + islandLevel + "."), null);
                 continue;
             }
             switch (mode) {
@@ -536,7 +536,9 @@ public final class Menus {
             boolean current = t.id.equals(i.theme);
             var icon = item(t.icon, (current ? "<green>✔ " : "<light_purple>") + t.displayName, "<gray>" + parts,
                     "<dark_gray>Underside applies to new land only.", current ? "<green>In use" : "<yellow>Tap to apply");
-            m.button(slot++, current ? glow(icon) : icon, pl -> { plugin.cosmetics().applyTheme(pl, t); themes(pl); });
+            m.button(slot++, current ? glow(icon) : icon, pl -> {
+                if (plugin.cosmetics().applyTheme(pl, t)) undersideChoice(pl, dev.skyrealms.terrain.UndersideStyle.byId(t.underside), this::themes);
+            });
         }
         m.button(18, back(), this::cosmetics);
         m.fill().open(p);
@@ -614,12 +616,28 @@ public final class Menus {
                 continue;
             }
             var icon = item(st.icon, (current ? "<green>✔ " : "<aqua>") + st.displayName, "<gray>" + st.description,
-                    current ? "<green>In use for new land" : "<yellow>Tap to use for new land");
-            m.button(slot++, current ? glow(icon) : icon, pl -> { svc.setUnderside(pl, st); undersides(pl); });
+                    current ? "<green>In use for new land" : "<yellow>Tap to use it", "<dark_gray>You can also convert your existing island.");
+            m.button(slot++, current ? glow(icon) : icon, pl -> undersideChoice(pl, st, this::undersides));
         }
         m.button(4, item(Material.BOOK, "<white>How it works", "<gray>Land you grow from now on hangs",
                 "<gray>this style underneath. Land you", "<gray>already have is never changed."), null);
         m.button(18, back(), this::manage);
+        m.fill().open(p);
+    }
+
+    /** New land only, or convert the rock under the existing island too? */
+    public void undersideChoice(Player p, dev.skyrealms.terrain.UndersideStyle st, Consumer<Player> back) {
+        Island i = svc.owned(p);
+        if (i == null) return;
+        Menu m = new Menu(3, "<dark_aqua>Use " + st.displayName + " underside");
+        m.button(11, item(Material.WHEAT_SEEDS, "<green>New land only", "<gray>Land you grow from now on hangs", "<gray>" + st.displayName + " underneath.",
+                "<gray>Free."), pl -> { svc.setUnderside(pl, st); back.accept(pl); });
+        m.button(13, item(st.icon, "<aqua>" + st.displayName, "<gray>" + st.description), null);
+        m.button(15, glow(item(Material.BRUSH, "<aqua>Convert my whole island", "<gray>Also reshape the rock under the", "<gray>land you already have.",
+                "<gray>Your builds and soil aren't touched.", "<gray>Cost: <gold>" + svc.money(svc.restylePrice()))),
+                pl -> confirm(pl, "Convert your island's underside to " + st.displayName + "?", svc.restylePrice(),
+                        yes -> { yes.closeInventory(); svc.restyleUnderside(yes, st); }, back2 -> undersideChoice(back2, st, back)));
+        m.button(18, back(), back);
         m.fill().open(p);
     }
 

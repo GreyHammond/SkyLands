@@ -43,7 +43,7 @@ public final class TerrainGenerator extends BukkitRunnable {
         public Blob(TerrainBiome biome, double x, double z, double r) { this(biome, x, z, r, UndersideStyle.ROCK); }
     }
 
-    private static final byte NONE = 0, LAND = 1, SEA = 2, LIP = 3, LAKE = 4;
+    private static final byte NONE = 0, LAND = 1, SEA = 2, LIP = 3, LAKE = 4, LIFT = 5;
     private static final int STITCH = 8;
 
     private final Plugin plugin;
@@ -93,6 +93,8 @@ public final class TerrainGenerator extends BukkitRunnable {
         /** Existing columns that may be rebuilt so pieces join cleanly: sand rims and plain water. */
         boolean[] replaceable, oldWater, oldLip;
         int[] oldFloor;
+        /** Existing plain natural ground (no builds, no trees) that may be raised to meet new land. */
+        boolean[] liftable;
 
         // plan output
         byte[] kind;
@@ -136,14 +138,16 @@ public final class TerrainGenerator extends BukkitRunnable {
             oldWater = new boolean[w * h];
             oldLip = new boolean[w * h];
             oldFloor = new int[w * h];
+            liftable = new boolean[w * h];
             if (!hasOld) return;
             for (int x = minX; x < minX + w; x++) {
                 for (int z = minZ; z < minZ + h; z++) {
                     if (world.getBlockAt(x, seaY, z).getType().isAir()) continue;
                     int i = idx(x, z);
                     existing[i] = true;
-                    oldTop[i] = Math.min(seaY + 40, world.getHighestBlockYAt(x, z, HeightMap.MOTION_BLOCKING_NO_LEAVES));
+                    oldTop[i] = Math.min(seaY + 40, groundY(x, z));
                     classifyOld(x, z, i);
+                    if (!replaceable[i]) liftable[i] = isPlainGround(x, z, oldTop[i]);
                 }
             }
         }
@@ -152,6 +156,41 @@ public final class TerrainGenerator extends BukkitRunnable {
                 Material.TALL_SEAGRASS, Material.KELP, Material.KELP_PLANT);
         private static final Set<Material> NATURAL_FLOOR = EnumSet.of(Material.SAND, Material.RED_SAND, Material.GRAVEL,
                 Material.CLAY, Material.MUD, Material.SANDSTONE, Material.DIRT, Material.STONE, Material.BASALT);
+
+        private static final Set<Material> GROUND = EnumSet.of(Material.GRASS_BLOCK, Material.DIRT, Material.COARSE_DIRT,
+                Material.PODZOL, Material.SAND, Material.RED_SAND, Material.MYCELIUM, Material.MOSS_BLOCK, Material.MUD,
+                Material.GRAVEL, Material.CALCITE, Material.AMETHYST_BLOCK, Material.SMOOTH_BASALT, Material.BASALT,
+                Material.BLACKSTONE, Material.TUFF, Material.MAGMA_BLOCK, Material.MOSSY_COBBLESTONE, Material.ROOTED_DIRT,
+                Material.SANDSTONE, Material.STONE, Material.COBBLESTONE, Material.TERRACOTTA, Material.ORANGE_TERRACOTTA,
+                Material.YELLOW_TERRACOTTA, Material.WHITE_TERRACOTTA, Material.RED_TERRACOTTA, Material.LIGHT_GRAY_TERRACOTTA,
+                Material.BROWN_TERRACOTTA, Material.CLAY);
+        private static final Set<Material> SMALL_PLANTS = EnumSet.of(Material.SHORT_GRASS, Material.TALL_GRASS, Material.FERN,
+                Material.LARGE_FERN, Material.DANDELION, Material.POPPY, Material.OXEYE_DAISY, Material.CORNFLOWER,
+                Material.AZURE_BLUET, Material.ALLIUM, Material.LILY_OF_THE_VALLEY, Material.BLUE_ORCHID, Material.PINK_PETALS,
+                Material.SNOW, Material.MOSS_CARPET, Material.DEAD_BUSH, Material.RED_MUSHROOM, Material.BROWN_MUSHROOM,
+                Material.SWEET_BERRY_BUSH, Material.AZALEA, Material.FLOWERING_AZALEA, Material.SMALL_DRIPLEAF);
+
+        /** Real ground height: skips tree trunks and leaves, which the height map would count. */
+        int groundY(int x, int z) {
+            int y = world.getHighestBlockYAt(x, z, HeightMap.MOTION_BLOCKING_NO_LEAVES);
+            while (y > seaY) {
+                Material m = world.getBlockAt(x, y, z).getType();
+                String n = m.name();
+                if (n.endsWith("_LOG") || n.endsWith("_STEM") || n.endsWith("MUSHROOM_BLOCK") || n.endsWith("_LEAVES")) { y--; continue; }
+                break;
+            }
+            return y;
+        }
+
+        /** Plain natural ground we may add blocks on top of: natural top, nothing built above or just below. */
+        boolean isPlainGround(int x, int z, int top) {
+            if (top <= seaY) return false;
+            if (!GROUND.contains(world.getBlockAt(x, top, z).getType())) return false;
+            for (int k = 1; k <= 2; k++) if (!GROUND.contains(world.getBlockAt(x, top - k, z).getType())) return false;
+            Material a1 = world.getBlockAt(x, top + 1, z).getType(), a2 = world.getBlockAt(x, top + 2, z).getType();
+            if (!(a1.isAir() || SMALL_PLANTS.contains(a1))) return false;
+            return a2.isAir() || SMALL_PLANTS.contains(a2);
+        }
 
         /** Is this existing column a sand rim or plain sea water we may rebuild? (main thread) */
         void classifyOld(int x, int z, int i) {
@@ -195,7 +234,7 @@ public final class TerrainGenerator extends BukkitRunnable {
             for (int x = minX; x < minX + w; x++) {
                 for (int z = minZ; z < minZ + h; z++) {
                     int i = idx(x, z);
-                    if (existing[i] && !replaceable[i]) continue;
+                    if (existing[i] && !replaceable[i] && !liftable[i]) continue;
                     double edgeNoise = noise.fbm(x * 0.05, z * 0.05, 3) * 0.22 + noise.fbm(x * 0.17 + 500, z * 0.17, 2) * 0.07;
 
                     double mTarget = Double.MAX_VALUE;
@@ -204,7 +243,7 @@ public final class TerrainGenerator extends BukkitRunnable {
                         double d = Math.hypot(x - b.x, z - b.z) / b.r;
                         if (d < mTarget) { mTarget = d; colStyle = b.style == null ? UndersideStyle.ROCK : b.style; }
                     }
-                    double reachLimit = !existing[i] ? 1 : oldLip[i] ? 1.6 : 1.35;
+                    double reachLimit = !existing[i] ? 1 : oldLip[i] ? 1.6 : liftable[i] ? 1.5 : 1.35;
                     if (mTarget + edgeNoise >= reachLimit) continue;
 
                     double m = Double.MAX_VALUE, wSum = 0, hSum = 0, bestW = -1, cone = 0;
@@ -234,8 +273,8 @@ public final class TerrainGenerator extends BukkitRunnable {
                     double rel = hSum / wSum;
 
                     if (!best.isWater()) {
-                        rel += 7 * Math.sqrt(e);                 // rounded top
-                        rel *= smooth(0, 0.16, e);               // round off toward the rim
+                        rel += 7 * smooth(0, 0.45, e);           // rounded top that levels out (no sagging between pieces)
+                        rel *= smooth(0, 0.12, e);               // round off toward the rim
                         rel = Math.max(rel, 2);                  // land always stands above the sea
                         if (best == TerrainBiome.BADLANDS && rel > 3) rel = 3 + Math.floor((rel - 3) / 4) * 4;
                     } else {
@@ -247,6 +286,17 @@ public final class TerrainGenerator extends BukkitRunnable {
                     }
 
                     int t = seaY + (int) Math.round(rel);
+                    if (existing[i] && liftable[i]) {
+                        // Raise old ground toward the new surface, tapering off away from the new land. Never lower it.
+                        double f = smooth(1.5, 0.95, mTarget + edgeNoise);
+                        int lifted = oldTop[i] + (int) Math.floor((t - oldTop[i]) * f);
+                        if (lifted <= oldTop[i]) continue;
+                        label[i] = best; style[i] = colStyle; edge[i] = 1;
+                        top[i] = lifted; bottom[i] = oldTop[i]; kind[i] = LIFT;
+                        existing[i] = false;
+                        targetCols.add(i);
+                        continue;
+                    }
                     if (existing[i] && oldWater[i]) {
                         if (t > seaY) continue;                  // never turn existing water into land
                         t = Math.min(t, oldFloor[i]);            // only ever deepen water, never raise its floor
@@ -326,7 +376,7 @@ public final class TerrainGenerator extends BukkitRunnable {
             nearestExistingTop = new int[n];
             Arrays.fill(dist, Integer.MAX_VALUE);
             ArrayDeque<Integer> q = new ArrayDeque<>();
-            for (int i = 0; i < n; i++) if (existing[i] && !replaceable[i]) { dist[i] = 0; nearestExistingTop[i] = oldTop[i]; q.add(i); }
+            for (int i = 0; i < n; i++) if (existing[i] && !replaceable[i] && !liftable[i]) { dist[i] = 0; nearestExistingTop[i] = oldTop[i]; q.add(i); }
             while (!q.isEmpty()) {
                 int i = q.poll();
                 if (dist[i] >= STITCH) continue;
@@ -396,6 +446,7 @@ public final class TerrainGenerator extends BukkitRunnable {
         }
 
         int column(int x, int z, int i) {
+            if (kind[i] == LIFT) return lift(x, z, i);
             TerrainBiome lb = label[i];
             int t = top[i], b = bottom[i];
             byte k = kind[i];
@@ -461,6 +512,29 @@ public final class TerrainGenerator extends BukkitRunnable {
             int[][] nb = {{x + 1, z}, {x - 1, z}, {x, z + 1}, {x, z - 1}};
             for (int[] c : nb) if (in(c[0], c[1]) && kind[idx(c[0], c[1])] == SEA) return true;
             return false;
+        }
+
+        /** Raise plain old ground: old top becomes fill, new layers on top, fresh surface and plant. */
+        int lift(int x, int z, int i) {
+            TerrainBiome lb = label[i];
+            int from = bottom[i], t = top[i], placed = 0;
+            for (int y = from; y <= t; y++) {
+                int depth = t - y;
+                if (depth == 0) {
+                    String sd = lb.surfaceData(noise.random(x, y, z, 1));
+                    if (sd != null) setData(x, y, z, sd); else set(x, y, z, lb.isWater() ? Material.SAND : lb.surface(noise.random(x, y, z, 1)));
+                } else {
+                    set(x, y, z, lb.fill(Math.min(depth, lb.fillDepth()), y));
+                }
+                placed++;
+            }
+            for (int y = t + 1; y <= t + 2; y++) {           // clear old small plants that are now buried or floating
+                Material m = world.getBlockAt(x, y, z).getType();
+                if (SMALL_PLANTS.contains(m)) set(x, y, z, Material.AIR);
+            }
+            if (!lb.isWater()) groundPlant(x, z, i);
+            chunks.add(((long) (x >> 4) << 32) | ((z >> 4) & 0xffffffffL));
+            return placed;
         }
 
         /** Things hanging below the island's bottom block (style decorations, lush vines). */

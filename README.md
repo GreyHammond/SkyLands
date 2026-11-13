@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.10.0-2f9e5a">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.11.0-2f9e5a">
   <img alt="Paper 26.3" src="https://img.shields.io/badge/Paper-26.3-1e88e5">
   <img alt="Java 25" src="https://img.shields.io/badge/Java-25-e76f00">
   <img alt="Bedrock ready" src="https://img.shields.io/badge/Bedrock-Geyser%20%2B%20Floodgate-6a1b9a">
@@ -218,8 +218,12 @@ New land always touches the island and stays inside your border. Oceans grown ne
 
 ### Underside styles
 
-Choose what hangs under your island in **Manage Island → Underside Style**. The style applies to
-land you grow **from then on**; existing land is never changed.
+Choose what hangs under your island in **Manage Island → Underside Style**. Pick:
+
+- **New land only** (free): land you grow from now on hangs the new style.
+- **Convert my whole island** (2,500 by default): also reshapes the rock under the land you already
+  have. Only natural underside rock is changed; your builds, tunnels, soil and surface stay exactly
+  as they are. Applying a theme offers the same choice.
 
 | Style | Level | Looks like |
 |---|:---:|---|
@@ -405,7 +409,7 @@ SkyLands creates two files in `plugins/SkyRealms/`. Restart the server after edi
 | `islands` | Island spacing, sea level (`base-y`), build speed (blocks per tick) |
 | `terrain` | Size range of each piece of land |
 | `tiers` | Footprint, price, starting and maximum land for each size |
-| `prices` | Grow price, biome unlock prices (per biome), refund on delete |
+| `prices` | Grow price, biome unlock prices (per biome), underside restyle price, refund on delete |
 | `economy` | `currency: vault` or `item`, plus the item, its value and an optional token name |
 | `prune` | Auto-prune on/off, inactive days (30), restore window (14), check interval |
 | `transit` | Fall height, landing spread, landing protection, return cooldown |
@@ -450,6 +454,9 @@ rewards:
   and each piece hangs a tapered rocky spike underneath, with one large central spike.
 - **Sea level:** sea water is only placed where all four sides are held in; otherwise that column
   becomes a sand rim. Lakes form only inside land ringed by higher ground.
+- **No valleys:** pieces have rounded tops that level out, and when new land grows beside old land,
+  the old rim is raised to meet it (only plain natural ground: never a column with a build or a
+  tree, and ground is never lowered).
 - **Growth never breaks builds:** new land only fills empty space and blends into the existing edge.
   The only existing columns it may rebuild are sand rims at sea level and plain open water (water,
   seagrass and kelp on a natural floor), so neighbouring oceans join seamlessly. Water is only ever
@@ -470,6 +477,20 @@ No. New land only fills empty space. Upgrading only enlarges the border and the 
 
 Yes. After picking a biome in Grow Land, choose Automatic, a compass direction, or **Toward where
 I'm standing**. The land attaches as close as it fits, touching the island and inside the border.
+</details>
+
+<details>
+<summary><strong>If I delete my island, do I lose my level and unlocks?</strong></summary>
+
+No. Your island's XP (and so its level and everything it unlocked), your unlocked biomes, underside
+style and cosmetics are saved to you. Your next island starts with all of it, so you can delete a
+starter island and rebuild it the way you want. The same happens if an archived island expires.
+</details>
+
+<details>
+<summary><strong>Can I change the underside of land I already have?</strong></summary>
+
+Yes: in Underside Style, choose **Convert my whole island**. Only natural underside rock is changed.
 </details>
 
 <details>
@@ -514,6 +535,7 @@ The jar is written to `build/libs/skylands.jar`. The website is a single file at
 
 | Version | Highlights |
 |---|---|
+| **0.11.0** | No more valleys between expansions; level and unlocks survive deleting an island; convert an existing underside; Ruins chains fixed |
 | **0.10.0** | Choose where new land goes; oceans join seamlessly without sand bars |
 | **0.9.1** | Licensed under GPL-3.0 with attribution terms; in-game credits |
 | **0.9.0** | Native Bedrock forms through Floodgate |

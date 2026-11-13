@@ -53,8 +53,10 @@ public final class RealmService {
             return false;
         }
         if (!plugin.biomes().startable(biome)) { Msg.error(p, "You can't start an island with that biome."); return false; }
-        if (plugin.xp().levels().biomeLevel(biome) > 1) {
-            Msg.error(p, "That biome unlocks at island level " + plugin.xp().levels().biomeLevel(biome) + ". Start with a level 1 biome.");
+        int startLevel = startLevel(p.getUniqueId());
+        if (plugin.xp().levels().biomeLevel(biome) > startLevel) {
+            Msg.error(p, "That biome unlocks at island level " + plugin.xp().levels().biomeLevel(biome) + ". Your new island starts at level "
+                    + startLevel + ".");
             return false;
         }
         if (!plugin.money().usable()) { Msg.error(p, "The economy isn't set up yet."); return false; }
@@ -64,6 +66,11 @@ public final class RealmService {
         Msg.send(p, "Raising your <white>" + tier.pretty() + "</white> <green>" + plugin.biomes().pretty(biome)
                 + "</green> island from the clouds...");
         island.xpBackfilled = true;
+        // Bring back the level, unlocked biomes, underside style and cosmetics from a deleted island.
+        boolean restored = plugin.progress().apply(p.getUniqueId(), island);
+        if (restored) Msg.send(p, "Your progress came with you: <gold>" + plugin.xp().badge(island) + "</gold>, "
+                + island.biomes.size() + " biomes unlocked, " + dev.skyrealms.terrain.UndersideStyle.byId(island.underside).displayName
+                + " underside.");
         int placed = plugin.grower().growMany(plugin.skyWorld(), island, biome, tier.startPieces, () -> {
             if (!p.isOnline()) return;
             p.teleportAsync(island.home(plugin.skyWorld(), plugin.baseY()));
@@ -72,6 +79,11 @@ public final class RealmService {
         plugin.xp().add(island, (long) placed * plugin.xp().levels().buyPerPiece);
         plugin.islands().save();
         return true;
+    }
+
+    /** Level a player's next island starts at: the level of the island they deleted, or 1. */
+    public int startLevel(UUID player) {
+        return plugin.xp().levels().levelOf(plugin.progress().xp(player));
     }
 
     public boolean upgrade(Player p) {
@@ -173,6 +185,28 @@ public final class RealmService {
         i.underside = style.id;
         plugin.islands().save();
         Msg.send(p, "New land will now hang <aqua>" + style.displayName + "</aqua> underneath. Existing land stays as it is.");
+        return true;
+    }
+
+    public double restylePrice() { return plugin.getConfig().getDouble("prices.restyle-underside", 2500); }
+
+    /** Convert the rock under the island's existing land to {@code style}, and use it for new land too. */
+    public boolean restyleUnderside(Player p, dev.skyrealms.terrain.UndersideStyle style) {
+        Island i = owned(p);
+        if (i == null) return false;
+        int need = plugin.xp().levels().undersideLevel(style.id);
+        var theme = dev.skyrealms.cosmetic.Cosmetics.Theme.byId(i.theme);
+        boolean fromTheme = theme != null && theme.underside.equals(style.id);
+        if (plugin.xp().level(i) < need && !fromTheme) { Msg.error(p, style.displayName + " unlocks at island level " + need + "."); return false; }
+        if (plugin.restyler().busy(i)) { Msg.error(p, "Your underside is already being restyled. Give it a moment."); return false; }
+        double cost = restylePrice();
+        if (!plugin.money().charge(p, cost)) { Msg.error(p, "Restyling costs <white>" + money(cost)); return false; }
+        i.underside = style.id;
+        i.pieces.replaceAll(pc -> dev.skyrealms.island.IslandGrower.GENERATED.equals(pc.variant()) ? pc.withStyle(style.id) : pc);
+        plugin.islands().save();
+        Msg.send(p, "Reshaping the rock under your island into <aqua>" + style.displayName + "</aqua>...");
+        plugin.restyler().restyle(plugin.skyWorld(), i, style,
+                () -> { if (p.isOnline()) Msg.send(p, "Your island's underside is now <aqua>" + style.displayName + "</aqua>."); });
         return true;
     }
 
@@ -300,6 +334,7 @@ public final class RealmService {
             }
         }
         if (p.getWorld().equals(plugin.skyWorld()) && i.containsLand(p.getX(), p.getZ())) p.teleportAsync(safe);
+        plugin.progress().save(i.owner, i);   // level, unlocks and styles carry over to the next island
         for (UUID c : i.coOwners) {
             Player cp = Bukkit.getPlayer(c);
             if (cp != null && !cp.equals(p)) Msg.send(cp, name(i.owner) + " deleted the island you co-owned.");
@@ -310,7 +345,7 @@ public final class RealmService {
         double refund = deleteRefund(i);
         plugin.money().refund(p, refund);
         Msg.send(p, "Your island crumbles into the clouds." + (refund > 0 ? " You got <gold>" + money(refund) + "</gold> back." : "")
-                + " You can buy a new one any time.");
+                + " Your <gold>" + plugin.xp().badge(i) + "</gold> level, unlocked biomes and styles are saved for your next island.");
         return true;
     }
 

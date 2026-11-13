@@ -40,12 +40,14 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private Money money;
     private int baseY;
     private dev.skyrealms.terrain.TerrainGenerator terrain;
+    private dev.skyrealms.terrain.UndersideRestyler restyler;
     private dev.skyrealms.terrain.BiomeCatalog biomes;
     private RealmService service;
     private Menus menus;
     private dev.skyrealms.island.ClearQueue clearer;
     private dev.skyrealms.island.IslandArchiver archiver;
     private dev.skyrealms.level.XpService xp;
+    private dev.skyrealms.island.ProgressStore progress;
     private dev.skyrealms.cosmetic.CosmeticService cosmetics;
     private dev.skyrealms.cosmetic.NamePrompt namePrompt;
     private dev.skyrealms.bedrock.BedrockUi bedrock;
@@ -82,10 +84,12 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         PasteQueue paster = new PasteQueue(this, cfg.getInt("islands.blocks-per-tick", 20000));
         terrain = new dev.skyrealms.terrain.TerrainGenerator(this, baseY, cfg.getInt("islands.blocks-per-tick", 20000));
         biomes = new dev.skyrealms.terrain.BiomeCatalog(library);
+        restyler = new dev.skyrealms.terrain.UndersideRestyler(this, baseY, cfg.getInt("islands.restyle-columns-per-tick", 400));
         grower = new IslandGrower(library, paster, terrain, baseY, cfg.getInt("islands.piece-y-jitter", 3),
                 cfg.getInt("terrain.blob-radius-min", 11), cfg.getInt("terrain.blob-radius-max", 18));
         islands = new IslandManager(new File(getDataFolder(), "islands.yml"), spacing, getLogger());
         islands.load();
+        progress = new dev.skyrealms.island.ProgressStore(new File(getDataFolder(), "players.yml"), getLogger());
 
         if (!new File(getDataFolder(), "levels.yml").exists()) saveResource("levels.yml", false);
         xp = new dev.skyrealms.level.XpService(this, new dev.skyrealms.level.Levels(new File(getDataFolder(), "levels.yml")));
@@ -144,11 +148,13 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public int baseY() { return baseY; }
     public dev.skyrealms.terrain.BiomeCatalog biomes() { return biomes; }
     public dev.skyrealms.terrain.TerrainGenerator terrain() { return terrain; }
+    public dev.skyrealms.terrain.UndersideRestyler restyler() { return restyler; }
     public RealmService service() { return service; }
     public Menus menus() { return menus; }
     public dev.skyrealms.island.ClearQueue clearer() { return clearer; }
     public dev.skyrealms.island.IslandArchiver archiver() { return archiver; }
     public dev.skyrealms.level.XpService xp() { return xp; }
+    public dev.skyrealms.island.ProgressStore progress() { return progress; }
     public dev.skyrealms.cosmetic.CosmeticService cosmetics() { return cosmetics; }
     public dev.skyrealms.cosmetic.NamePrompt namePrompt() { return namePrompt; }
     public dev.skyrealms.bedrock.BedrockUi bedrock() { return bedrock; }

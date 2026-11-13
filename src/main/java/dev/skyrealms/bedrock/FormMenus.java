@@ -179,7 +179,7 @@ public final class FormMenus {
     public void biomes(Player p, Mode mode, Tier tier) {
         Island i = own(p);
         var lv = plugin.xp().levels();
-        int level = mode == Mode.BUY || i == null ? 1 : plugin.xp().level(i);
+        int level = mode == Mode.BUY || i == null ? svc.startLevel(p.getUniqueId()) : plugin.xp().level(i);
         List<String> list = new ArrayList<>(plugin.biomes().all());
         if (mode == Mode.BUY) list.removeIf(b -> !plugin.biomes().startable(b));
         if (mode == Mode.GROW && i != null) list.retainAll(i.biomes);
@@ -208,7 +208,7 @@ public final class FormMenus {
         b.add(btn(GR + "Back", null, mode == Mode.BUY ? this::buyTier : this::manage));
         String title = switch (mode) { case BUY -> "Choose your biome"; case GROW -> "Grow which biome?"; case UNLOCK -> "Unlock a biome"; };
         String content = switch (mode) {
-            case BUY -> GR + tier.pretty() + " island for " + O + svc.money(tier.price) + GR + ". New islands start at level 1.";
+            case BUY -> GR + tier.pretty() + " island for " + O + svc.money(tier.price) + GR + ". Your new island starts at level " + level + ".";
             case GROW -> GR + "Cost: " + O + svc.money(svc.growPrice()) + GR + " per piece. Pieces: " + W
                     + (i == null ? 0 : i.pieces.size()) + "/" + (i == null ? 0 : i.tier.maxPieces);
             case UNLOCK -> GR + "Unlocking adds a biome to your list. Then use Grow Land.";
@@ -489,7 +489,7 @@ public final class FormMenus {
             if (level < need) { locked.add(t.displayName + " (Lv " + need + ")"); continue; }
             String parts = UndersideStyle.byId(t.underside).displayName + " underside · " + t.particles.displayName + " · " + t.border.displayName + " border";
             b.add(btn((t.id.equals(i.theme) ? G + "✔ " : P) + t.displayName + "\n" + DG + parts, null,
-                    pl -> { plugin.cosmetics().applyTheme(pl, t); themes(pl); }));
+                    pl -> { if (plugin.cosmetics().applyTheme(pl, t)) undersideChoice(pl, UndersideStyle.byId(t.underside), this::themes); }));
         }
         b.add(btn(GR + "Back", null, this::cosmetics));
         String content = GR + "A theme sets the underside (new land only), particles and border in one tap.";
@@ -552,12 +552,23 @@ public final class FormMenus {
             int need = plugin.xp().levels().undersideLevel(st.id);
             if (level < need) { locked.add(st.displayName + " (Lv " + need + ")"); continue; }
             b.add(btn((st.id.equals(i.underside) ? G + "✔ " : A) + st.displayName + "\n" + DG + st.description, null,
-                    pl -> { svc.setUnderside(pl, st); undersides(pl); }));
+                    pl -> undersideChoice(pl, st, this::undersides)));
         }
         b.add(btn(GR + "Back", null, this::manage));
         String content = GR + "Land you grow from now on hangs this style underneath. Existing land is never changed.";
         if (!locked.isEmpty()) content += "\n\n" + DG + "Locked: " + String.join(", ", locked);
         simple(p, "Underside Style", content, b);
+    }
+
+    /** New land only, or convert the rock under the existing island too? */
+    public void undersideChoice(Player p, UndersideStyle st, Consumer<Player> back) {
+        if (svc.owned(p) == null) return;
+        simple(p, st.displayName + " underside", GR + st.description + "\n\n" + GR + "Use it for new land only, or also reshape the rock under the land you already have. Your builds and soil aren't touched.", List.of(
+                btn(G + "New land only\n" + DG + "Free", null, pl -> { svc.setUnderside(pl, st); back.accept(pl); }),
+                btn(A + "Convert my whole island\n" + O + svc.money(svc.restylePrice()), null,
+                        pl -> confirm(pl, "Convert your island's underside to " + st.displayName + "?", svc.restylePrice(),
+                                yes -> svc.restyleUnderside(yes, st), b2 -> undersideChoice(b2, st, back))),
+                btn(GR + "Back", null, back)));
     }
 
     // =========================================================================================

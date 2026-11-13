@@ -69,7 +69,7 @@ public enum UndersideStyle {
             case DRIPSTONE -> r < 0.12 ? dripstone(len) : null;
             case CRYSTAL -> r < 0.10 ? new String[]{"minecraft:amethyst_cluster[facing=down]"} : null;
             case NETHER -> r < 0.10 ? weeping(len) : r < 0.115 ? new String[]{"minecraft:shroomlight"} : null;
-            case RUINS -> r < 0.012 ? new String[]{"minecraft:chain", "minecraft:chain", "minecraft:lantern[hanging=true]"} : null;
+            case RUINS -> r < 0.012 ? new String[]{"minecraft:iron_chain", "minecraft:iron_chain", "minecraft:lantern[hanging=true]"} : null;
             case ICE -> r < 0.05 ? new String[]{"minecraft:packed_ice"} : null;
             default -> null;
         };
