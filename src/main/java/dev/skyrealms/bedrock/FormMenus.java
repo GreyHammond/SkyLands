@@ -139,6 +139,11 @@ public final class FormMenus {
             else b.add(btn(R + "Leave Island", "textures/items/door_wood", pl -> modal(pl, "Leave island?",
                     W + "Stop co-owning " + name(i.owner) + "'s island?", R + "Leave", G + "Stay", svc::leaveIsland, this::main)));
         }
+        if (plugin.shortcuts().available()) {
+            boolean on = plugin.shortcuts().isOn(p);
+            b.add(btn(A + "Hotbar Shortcuts: " + (on ? G + "On" : R + "Off") + "\n" + DG + (on ? "Tap to remove the book & feather" : "Menu book & return feather"),
+                    "textures/items/feather", pl -> { plugin.shortcuts().toggle(pl); main(pl); }));
+        }
         simple(p, "Skyland", content + "\n\n" + DG + dev.skyrealms.Credits.ATTRIBUTION, b);
     }
 

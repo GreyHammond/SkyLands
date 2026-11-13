@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.12.3-2f9e5a">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.13.0-2f9e5a">
   <img alt="Paper 26.3" src="https://img.shields.io/badge/Paper-26.3-1e88e5">
   <img alt="Java 25" src="https://img.shields.io/badge/Java-25-e76f00">
   <img alt="Bedrock ready" src="https://img.shields.io/badge/Bedrock-Geyser%20%2B%20Floodgate-6a1b9a">
@@ -165,7 +165,15 @@ in a pond or on a tree.
 └── Delete Island               owner only, two confirmations
     Leave Island                what co-owners see instead
     Restore My Island           appears if your island was archived
+    Hotbar Shortcuts            turn the menu book and return feather on or off
 ```
+
+**Hotbar shortcuts:** an enchanted **Skyland Menu** book (slot 9) and an enchanted **Return to
+Island** feather (slot 8) can sit in your hotbar, so you never need a command. Use the book to open
+the menu and the feather to fly home; tapping either one in your inventory works too. They're
+locked in place: they can't be dropped, thrown, moved, put in chests or item frames, or lost when
+you die (they're back after you respawn). Turn them on or off with **Hotbar Shortcuts** in the
+`/skyland` menu. By default Bedrock players start with them on and Java players with them off.
 
 **Buying:** Buy an Island → size → biome → **style** → confirm. New islands start at level 1, so
 only level 1 biomes can be picked. Shallow and Deep Ocean can only be added later.
@@ -358,6 +366,9 @@ identical.
 | Protection | Tap each option | One screen of toggles with a quick-set dropdown |
 | Rename island | Type in chat | A real text box |
 
+Bedrock players also get the **hotbar shortcuts** (menu book and return feather) by default, so
+they can play without typing a single command.
+
 Without Floodgate, everyone gets chest menus and the form code is never loaded.
 
 ## Admin guide
@@ -442,6 +453,7 @@ SkyLands creates two files in `plugins/SkyRealms/`. Restart the server after edi
 | `return` | Strength and duration of the Return to Island launch |
 | `bedrock` | Native Bedrock forms on/off, form button icons |
 | `cosmetics` | Island name length and banned words |
+| `hotbar` | Hotbar shortcuts on/off, who has them by default (`bedrock`, `all` or `none`), and their slots |
 | `capture-sizes` | Radius of each custom-biome capture size |
 
 **`levels.yml`**: XP amounts and daily caps, the level curve, biome, underside and cosmetic
@@ -588,6 +600,7 @@ The jar is written to `build/libs/skylands.jar`. The website is a single file at
 
 | Version | Highlights |
 |---|---|
+| **0.13.0** | Hotbar shortcuts: a locked menu book and return feather that can't be dropped or lost, on by default for Bedrock players |
 | **0.12.3** | Return flight plays a single gust sound |
 | **0.12.2** | Return to Island flies higher and arrives while you're still rising; `/ihome` uses the same gust; the wind sound stops as you land |
 | **0.12.1** | Startup banner in the server console with version, credits and website |

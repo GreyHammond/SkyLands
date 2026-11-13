@@ -88,6 +88,17 @@ return:
   # Ticks in the air before arriving home (20 ticks = 1 second).
   launch-ticks: 20
 
+# Hotbar shortcuts: an enchanted book (opens the Skyland menu) and an enchanted feather (Return to
+# Island) locked into the hotbar, so players never need a command. They can't be dropped, thrown,
+# moved, stored or lost on death. Each player turns them on or off in the /skyland menu.
+hotbar:
+  enabled: true
+  # Who has them until they choose for themselves: bedrock (Bedrock players only), all, or none.
+  default: bedrock
+  # Hotbar slots, 1-9.
+  menu-slot: 9
+  home-slot: 8
+
 # How players pay: "vault" (money from any Vault economy plugin) or "item" (a physical item).
 economy:
   currency: vault

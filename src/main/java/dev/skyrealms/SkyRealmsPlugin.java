@@ -129,6 +129,8 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         archiver = new dev.skyrealms.island.IslandArchiver(this, cfg.getConfigurationSection("prune"));
         pm.registerEvents(archiver, this);
         pm.registerEvents(new MenuListener(), this);
+        shortcuts = new dev.skyrealms.menu.HotbarShortcuts(this, cfg.getConfigurationSection("hotbar"));
+        pm.registerEvents(shortcuts, this);
         pm.registerEvents(new dev.skyrealms.level.XpListener(this), this);
         cosmetics = new dev.skyrealms.cosmetic.CosmeticService(this);
         namePrompt = new dev.skyrealms.cosmetic.NamePrompt(this);
@@ -171,6 +173,8 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public dev.skyrealms.terrain.UndersideRestyler restyler() { return restyler; }
     public RealmService service() { return service; }
     public Menus menus() { return menus; }
+    private dev.skyrealms.menu.HotbarShortcuts shortcuts;
+    public dev.skyrealms.menu.HotbarShortcuts shortcuts() { return shortcuts; }
     public dev.skyrealms.island.ClearQueue clearer() { return clearer; }
     public dev.skyrealms.island.IslandArchiver archiver() { return archiver; }
     public dev.skyrealms.level.XpService xp() { return xp; }

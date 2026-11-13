@@ -310,11 +310,11 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 <header class="hero">
   <div class="wrap">
     <div>
-      <span class="tag pixel">v0.12.3 · Paper 26.3 · Java + Bedrock</span>
+      <span class="tag pixel">v0.13.0 · Paper 26.3 · Java + Bedrock</span>
       <h1>Your own island <em>in the sky.</em></h1>
       <p class="lede">Buy a floating island, grow it biome by biome, and jump off the edge to fall back to the world below.</p>
       <div class="ctas">
-        <a class="btn btn-primary" href="https://github.com/GreyHammond/SkyLands/raw/main/docs/skylands.jar">Download skylands.jar <span style="font-weight:500;opacity:.8">v0.12.3</span></a>
+        <a class="btn btn-primary" href="https://github.com/GreyHammond/SkyLands/raw/main/docs/skylands.jar">Download skylands.jar <span style="font-weight:500;opacity:.8">v0.13.0</span></a>
         <a class="btn btn-ghost" href="https://github.com/GreyHammond/SkyLands">View on GitHub</a>
       </div>
       <p class="req">Paper 26.3 · Java 25 · optional: Vault, Geyser + Floodgate, LuckPerms</p>
@@ -482,14 +482,15 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <p class="sub">Three buttons at the top. Everything else lives one tap deeper. Anything that costs money asks you to confirm first. Bedrock players see the same screens as native Bedrock forms.</p>
     <div class="grid g2" style="align-items:start">
       <div>
-        <div class="chest" role="img" aria-label="Diagram of the top-level Skyland chest menu with three buttons">
+        <div class="chest" role="img" aria-label="Diagram of the top-level Skyland chest menu with three main buttons and a hotbar shortcuts toggle">
           <p class="chest-title">Skyland</p>
-          <div class="slots"><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot"><b style="background:#4cc27a"></b></div><div class="slot pane"></div><div class="slot"><b style="background:#e5b04f"></b></div><div class="slot pane"></div><div class="slot"><b style="background:#d9534f"></b></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div></div>
+          <div class="slots"><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot"><b style="background:#4cc27a"></b></div><div class="slot pane"></div><div class="slot"><b style="background:#e5b04f"></b></div><div class="slot pane"></div><div class="slot"><b style="background:#d9534f"></b></div><div class="slot pane"></div><div class="slot"><b style="background:#5bc0de"></b></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div><div class="slot pane"></div></div>
         </div>
         <div class="legend">
           <div><span class="sw" style="background:#4cc27a"></span><span><strong>Return to Island</strong>: fly home, or visit friends' and public islands. Shows <strong>Buy an Island</strong> if you don't have one yet, and <strong>Restore My Island</strong> if yours was archived.</span></div>
           <div><span class="sw" style="background:#e5b04f"></span><span><strong>Manage Island</strong>: level, grow, unlock biomes, upgrade, underside, cosmetics, protection, friends, co-owners.</span></div>
           <div><span class="sw" style="background:#d9534f"></span><span><strong>Delete Island</strong>: two confirmations, then it crumbles into the clouds. Co-owners see <strong>Leave Island</strong>.</span></div>
+          <div><span class="sw" style="background:#5bc0de"></span><span><strong>Hotbar Shortcuts</strong>: put a locked menu book and return feather in your hotbar, or take them away.</span></div>
         </div>
       </div>
       <div class="card tree">
@@ -776,7 +777,8 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <div class="callout" style="margin-top:24px">
       <strong>Geyser + Floodgate:</strong> Bedrock players automatically get native Bedrock forms: big buttons,
       yes/no pop-ups, a single screen of protection toggles, and a real text box for renaming. Java players keep chest menus.
-      Same features and rules for both. Without Floodgate, everyone gets chest menus.
+      Same features and rules for both. Bedrock players also get <strong>hotbar shortcuts</strong>: an enchanted menu book and a
+      return feather locked into the hotbar, so nobody needs to type a command. Without Floodgate, everyone gets chest menus.
     </div>
   </div>
 </section>
@@ -786,6 +788,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <div class="eyebrow pixel">What's new</div>
     <h2>Changelog</h2>
     <div class="changelog">
+      <div><b>0.13.0</b><span>Hotbar shortcuts: an enchanted menu book and return feather locked in the hotbar. They can't be dropped, thrown or lost on death, and each player can turn them off. On by default for Bedrock players.</span></div>
       <div><b>0.12.3</b><span>Return flight plays a single gust sound.</span></div>
       <div><b>0.12.2</b><span>Return to Island flies higher and arrives mid-flight; <code>/ihome</code> uses the same gust; the fall's wind sound stops as you land.</span></div>
       <div><b>0.12.1</b><span>Startup banner in the server console with version, credits and website.</span></div>

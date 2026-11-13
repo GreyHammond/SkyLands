@@ -72,6 +72,12 @@ public final class Menus {
                     pl -> confirm(pl, "Stop co-owning " + nameOf(i.owner) + "'s island?", 0,
                             yes -> { yes.closeInventory(); svc.leaveIsland(yes); }, this::main));
         }
+        if (plugin.shortcuts().available()) {
+            boolean on = plugin.shortcuts().isOn(p);
+            m.button(18, on ? glow(item(Material.FEATHER, "<aqua>Hotbar Shortcuts: <green>On", "<gray>Menu book in slot 9, return", "<gray>feather in slot 8. They can't", "<gray>be dropped or lost.", "<yellow>Click to turn off"))
+                            : item(Material.FEATHER, "<aqua>Hotbar Shortcuts: <red>Off", "<gray>Put a menu book and a return", "<gray>feather in your hotbar, so you", "<gray>never need a command.", "<yellow>Click to turn on"),
+                    pl -> { plugin.shortcuts().toggle(pl); main(pl); });
+        }
         m.button(26, item(Material.KNOWLEDGE_BOOK, "<aqua>About", "<white>" + dev.skyrealms.Credits.ATTRIBUTION,
                 "<gray>Version " + plugin.getPluginMeta().getVersion(), "<dark_gray>Licensed under GPL-3.0"), null);
         m.fill().open(p);
