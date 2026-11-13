@@ -20,7 +20,7 @@
 
 <p align="center">
   <a href="https://greyhammond.github.io/SkyLands/"><strong>Website</strong></a> ·
-  <a href="docs/skylands.jar"><strong>Download skylands.jar</strong></a> ·
+  <a href="https://github.com/GreyHammond/SkyLands/raw/main/docs/skylands.jar"><strong>Download skylands.jar</strong></a> ·
   <a href="#installation">Installation</a> ·
   <a href="#player-guide">Player guide</a> ·
   <a href="#admin-guide">Admin guide</a> ·
@@ -125,7 +125,7 @@ on Java** and **native Bedrock forms** for players joining through Geyser + Floo
 
 ## Installation
 
-1. Download [`skylands.jar`](docs/skylands.jar) (or from the Releases page).
+1. Download [`skylands.jar`](https://github.com/GreyHammond/SkyLands/raw/main/docs/skylands.jar) (the latest build, stored in [`docs/`](docs/)).
 2. Put it in your server's `plugins/` folder.
 3. Start the server. SkyLands creates an empty void world called `skyrealms_sky`, plus
    `plugins/SkyRealms/config.yml` and `levels.yml`.
