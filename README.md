@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.15.0-2f9e5a">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.16.0-2f9e5a">
   <img alt="Paper 26.3" src="https://img.shields.io/badge/Paper-26.3-1e88e5">
   <img alt="Java 25" src="https://img.shields.io/badge/Java-25-e76f00">
   <img alt="Bedrock ready" src="https://img.shields.io/badge/Bedrock-Geyser%20%2B%20Floodgate-6a1b9a">
@@ -53,6 +53,7 @@ on Java** and **native Bedrock forms** for players joining through Geyser + Floo
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Player guide](#player-guide)
+  - [Your first login](#your-first-login)
   - [The `/skyland` menu](#the-skyland-menu)
   - [Island sizes](#island-sizes)
   - [Biomes](#biomes)
@@ -82,6 +83,7 @@ on Java** and **native Bedrock forms** for players joining through Geyser + Floo
 
 | | |
 |---|---|
+| 📖 **Guided start** | New players get the story, a free first island, and a 12-step guided tutorial in a journal that fills in as they play. |
 | 🏝️ **Buy and grow** | Five island sizes, from Small (32×32) to Continental (512×512). New land attaches to the island's edge, so it stays one connected landmass. |
 | 🌸 **19 generated biomes** | Plains to Volcanic, each with its own ground, vanilla trees and plants, and the real biome tag. No setup needed. |
 | 🌊 **One sea level** | All ocean, shore and swamp water sits at the same height, held in on every side, so it never floods the void. |
@@ -150,6 +152,37 @@ on Java** and **native Bedrock forms** for players joining through Geyser + Floo
 
 ## Player guide
 
+### Your first login
+
+1. You join with the **menu book** and **return feather** in your hotbar (admins can turn this off).
+2. **Java:** the journal opens on the story, with a **[Claim your free island]** link. **Bedrock:** the claim form opens straight away (the story is in the Guide).
+3. Pick a biome: **your first Small island is free**. You're flown up to it with a welcome message.
+4. Your island is now your **spawn**. If you die without a working bed or respawn anchor (broken, out of charge, or lost in a recycle), you respawn at your island home. With no island, you respawn at the world spawn.
+5. Jump off the edge any time to go down. Falls aim for **dry land**: water and ocean spots are skipped, the plugin searches outward up to 1,000 blocks for land, and if there's truly none you're given a boat.
+
+**The journal (Guide):** open it from the **Guide** button in `/skyland` or with `/skyland journal`. It
+walks you through 12 steps in order; each one unlocks a page and pays a small reward:
+
+| Step | Objective | Reward |
+|---|---|---:|
+| 1 | Claim your free island | your island |
+| 2 | Jump off the edge into the world below | 100 |
+| 3 | Fly home with the return feather | 100 |
+| 4 | Stand on land that is at least 25% corrupted | 100 |
+| 5 | Collect 3 Void Shards | 150 |
+| 6 | Defeat a corrupted mob | 200 |
+| 7 | Sell something at the Void Exchange | 100 |
+| 8 | Collect a Corrupted Spider Eye | 150 |
+| 9 | Brew a Cleansing Tonic I | 250 |
+| 10 | Craft a Ward Template | 250 |
+| 11 | Smith a piece of Ward I armor | 300 |
+| 12 | Claim a daily contract | 200 |
+| ✓ | Finish the tutorial (unlocks The Resets and The Untouched Realms) | 500 |
+
+Each step shows a title, a page-turn sound and a chat line with your next objective. Locked pages
+show as "???". Veterans can **skip** (every page unlocks, no step rewards) and **restart** any time;
+no reward is ever paid twice. Java players read a written book; Bedrock players get forms.
+
 ### The `/skyland` menu
 
 Everything is in one menu (aliases `/sl`, `/realm`). Anything that costs money asks you to confirm.
@@ -161,6 +194,7 @@ in a pond or on a tree.
 
 ```
 /skyland
+├── Guide                       the journal: story, tutorial steps, unlocked pages
 ├── Return to Island            "Buy an Island" if you don't have one
 │   ├── Return to My Island     a gust of wind carries you home
 │   ├── Friends' Islands        islands where you're a friend
@@ -470,6 +504,7 @@ Without Floodgate, everyone gets chest menus and the form code is never loaded.
 ### Commands
 
 Players only need `/skyland` (and `/ihome` for a quick trip home). Shortcuts:
+`/skyland journal` (plus `journal skip` / `journal restart`), `/skyland claim` (free first island),
 `/skyland exchange` and `/skyland contracts`. (`/skyland tonic buy` and `/skyland ward upgrade` only
 sell when the shop is turned on in config; otherwise they show the recipes.) Admin commands (`/skylandadmin`, alias `/sla`) all have
 **Tab completion**: press Tab to cycle through sizes, tiers, biomes and player names.
@@ -494,6 +529,7 @@ sell when the shop is turned on in config; otherwise they show the recipes.) Adm
 | `ward apply <1-3>` · `ward give <player> <piece> <1-3>` | Ward the armor in your hand, or give a warded iron piece |
 | `void give <player> <shard\|remnant> [amount]` | Give Void Shards or Corrupted Remnants |
 | `contracts reset <player>` | Give a player a fresh set of contracts |
+| `tutorial reset\|skip\|complete <player>` | Restart, skip or finish a player's tutorial |
 | `reload` | Reload custom biome pieces (config changes need a restart) |
 | `help` | Show the command list in game |
 
@@ -579,11 +615,15 @@ SkyLands creates two files in `plugins/SkyRealms/`. Restart the server after edi
 | `prices` | Grow price, biome unlock prices (per biome), underside restyle price, refund on delete |
 | `economy` | `currency: vault` or `item`, plus the item, its value and an optional token name |
 | `prune` | Auto-prune on/off, inactive days (30), restore window (14), check interval |
-| `transit` | Where the fall hands off (`depart-y`, default −40), landing spread, landing protection, return cooldown |
+| `transit` | Where the fall hands off (`depart-y`, default −40), landing spread, the search for dry land (`land-search-radius`, step, max checks), landing protection, return cooldown |
 | `return` | Strength and duration of the Return to Island launch |
 | `bedrock` | Native Bedrock forms on/off, form button icons |
 | `cosmetics` | Island name length and banned words |
-| `hotbar` | Hotbar shortcuts on/off, who has them by default (`bedrock`, `all` or `none`), and their slots |
+| `hotbar` | Hotbar shortcuts: `give-on-join` (new players get the book and feather locked in, default on), slots. Players can always toggle their own. |
+| `first-island` | `free` (first Small island free, default on), `auto` (make it automatically on first join, default off), `auto-biome` |
+| `first-join` | First-join welcome on/off and its delay |
+| `spawn` | `island-fallback`: respawn at your island when no bed or anchor is set (default on) |
+| `tutorial` | Tutorial on/off, step order, rewards per step, finish reward, shard goal |
 | `capture-sizes` | Radius of each custom-biome capture size |
 | `decay` | Corruption on/off, speed, radius and falloff, stage thresholds, healing, spill, block-change budget |
 | `recycle` | Weekly recycle on/off, interval, warning times, messages, blocked commands |
@@ -758,6 +798,7 @@ The jar is written to `build/libs/skylands.jar`. The website is a single file at
 
 | Version | Highlights |
 |---|---|
+| **0.16.0** | **Season Two start**: a guided 12-step tutorial and journal (Java book, Bedrock forms) with rewards, skip and restart; first-join welcome; free first Small island (`/skyland claim`); your island is your respawn whenever no bed or anchor is set; falls land on dry ground (boat if there's none); hotbar book and feather given on join by default. |
 | **0.15.0** | Warded armor is smithed like an armor trim (Ward Template, Corrupted Template, Echo Shard for Ward III). Cleansing Tonics are brewed from corrupted ingredients that only corrupted mobs drop, with a splash version. New **Recipes** page in The Corruption (Java and Bedrock). Void Shards now look like amethyst shards. |
 | **0.14.0** | **The corruption**: the overworld decays around players through drying, wasteland and bedrock, with a configurable radius. **Weekly recycle** into a fresh managed overworld. **Cleansing Tonics** and **Warded armor**. **Earning**: Void Shards from corrupted land, corrupted mobs with Remnant drops, the Void Exchange, daily contracts and visitor tips, all with native Bedrock forms. Menus now stay open after unlocking a biome, setting home or restyling. |
 | **0.13.0** | Hotbar shortcuts: a locked menu book and return feather that can't be dropped or lost, on by default for Bedrock players |

@@ -311,11 +311,11 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 <header class="hero">
   <div class="wrap">
     <div>
-      <span class="tag pixel">v0.15.0 · Paper 26.3 · Java + Bedrock</span>
+      <span class="tag pixel">v0.16.0 · Paper 26.3 · Java + Bedrock</span>
       <h1>Your own island <em>in the sky.</em></h1>
       <p class="lede">Buy a floating island, grow it biome by biome, and jump off the edge to fall back to the world below. Just don't stay too long: down there, the corruption is spreading.</p>
       <div class="ctas">
-        <a class="btn btn-primary" href="https://github.com/GreyHammond/SkyLands/raw/main/docs/skylands.jar">Download skylands.jar <span style="font-weight:500;opacity:.8">v0.15.0</span></a>
+        <a class="btn btn-primary" href="https://github.com/GreyHammond/SkyLands/raw/main/docs/skylands.jar">Download skylands.jar <span style="font-weight:500;opacity:.8">v0.16.0</span></a>
         <a class="btn btn-ghost" href="https://github.com/GreyHammond/SkyLands">View on GitHub</a>
       </div>
       <p class="req">Paper 26.3 · Java 25 · optional: Vault, Geyser + Floodgate, LuckPerms</p>
@@ -392,7 +392,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <h2>From first island to continent</h2>
     <p class="sub">The whole loop lives in one menu. Nothing to type, no items to lose.</p>
     <div class="grid g2 steps">
-      <div class="card step"><h3>Buy an island</h3><p>Pick a size, a biome and (once you've unlocked some) an underside style or theme, then confirm. You arrive on dry, solid ground, never in a pond. <code>/ihome</code> takes you back any time.</p></div>
+      <div class="card step"><h3>Claim your free island</h3><p>New players get the story, the menu book and the return feather. Your first Small island is free, and it becomes your respawn point whenever you have no bed. Pick a size, a biome and (once you've unlocked some) an underside style or theme, then confirm. You arrive on dry, solid ground, never in a pond. <code>/ihome</code> takes you back any time.</p></div>
       <div class="card step"><h3>Grow it outward</h3><p>Unlock new biomes, then use <strong>Grow Land</strong> and choose where it goes: automatic, a compass direction, or <strong>toward where you're standing</strong>. Land only goes on the side you pick (no room? you aren't charged). Oceans grown side by side join into one sea.</p></div>
       <div class="card step"><h3>Fall to the world below</h3><p>Islands float below the clouds, and you can explore under yours freely: the fall only hands off at Y −40. Jump off the edge. You land up to 200 blocks from directly below your island, and the landing that ends the fall does no damage.</p></div>
       <div class="card step"><h3>Ride the wind home</h3><p><strong>Return to Island</strong> (or <code>/ihome</code>) launches you up on a gust of wind that keeps lifting you, then carries you home while you're still soaring.</p></div>
@@ -414,6 +414,14 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
       <div class="card"><h3>Around every player</h3><p>You corrupt an 80-block square around you at full speed, fading out to 144 blocks. The first changes show after about 13 minutes in one place; full corruption takes about 30. It never hurts players, and blocks right next to you are never touched.</p></div>
       <div class="card"><h3>Weekly recycle</h3><p>Every 7 days (or on command) players get countdown warnings, are flown home, and a fresh overworld takes the old one's place. Your main world and the sky world are never touched.</p></div>
       <div class="card"><h3>Resist it</h3><p><strong>Warded armor</strong> is smithed like a trim: a Ward Template from Void Shards and crying obsidian, a Corrupted Template from Remnants, and an Echo Shard for Ward III. Up to 80% less corruption. <strong>Cleansing Tonics</strong> are brewed from corrupted ingredients only corrupted mobs drop: up to 3 minutes of none, with a splash version for your group.</p></div>
+    </div>
+
+    <h3 style="margin-top:40px">A guided start</h3>
+    <p class="sub">A journal walks every new player through 12 steps, from claiming their island to smithing their first Ward. Each step unlocks a page and pays a small reward. Veterans can skip; anyone can restart.</p>
+    <div class="grid g3">
+      <div class="card"><h3>The story first</h3><p>Java players open a written book on the Season Two story; Bedrock players get native forms. The Guide button in <code>/skyland</code> brings it back any time.</p></div>
+      <div class="card"><h3>Your island is home</h3><p>Lose your bed or anchor, or have it wiped in a recycle, and you respawn on your island, never in the middle of nowhere.</p></div>
+      <div class="card"><h3>Land on land</h3><p>Falls skip water and ocean, search outward for dry ground, and hand you a boat if there's truly none.</p></div>
     </div>
 
     <h3 style="margin-top:40px">Earn from the corruption</h3>
@@ -525,6 +533,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
       </div>
       <div class="card tree">
         <ul>
+          <li><span class="t">Guide</span> <small>— story, tutorial steps, journal pages</small></li>
           <li><span class="t">Return to Island</span>
             <ul>
               <li>Return to My Island <small>— gust of wind home</small></li>
@@ -753,6 +762,8 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
           <tr><td class="cmd">/skyland</td><td class="desc">Opens the Skyland menu: buy, return, visit, manage, protect and delete. Aliases <code>/sl</code>, <code>/realm</code>.</td><td><span class="pill">skyrealms.use</span></td></tr>
           <tr><td class="cmd">/ihome</td><td class="desc">Fly to your island home on a gust of wind. Until you set one, you land on safe solid ground near the centre. Won't clash with Essentials' <code>/home</code>.</td><td><span class="pill">skyrealms.use</span></td></tr>
           <tr><td class="cmd">/ihome set|reset</td><td class="desc">Set your home where you're standing, or clear it.</td><td><span class="pill">skyrealms.use</span></td></tr>
+          <tr><td class="cmd">/skyland journal</td><td class="desc">Open the journal: story, current tutorial step, unlocked pages. <code>skip</code> and <code>restart</code> too.</td><td><span class="pill">skyrealms.use</span></td></tr>
+          <tr><td class="cmd">/skyland claim</td><td class="desc">Claim your free first island.</td><td><span class="pill">skyrealms.use</span></td></tr>
           <tr><td class="cmd">/skyland exchange</td><td class="desc">Open the Void Exchange to sell shards and remnants.</td><td><span class="pill">skyrealms.use</span></td></tr>
           <tr><td class="cmd">/skyland contracts</td><td class="desc">Open your daily contracts.</td><td><span class="pill">skyrealms.use</span></td></tr>
           <tr><td class="cmd">/skyland tonic buy &lt;1-3&gt;</td><td class="desc">Shows the brewing recipe, or buys a Cleansing Tonic if the server turns the shop on.</td><td><span class="pill">skyrealms.use</span></td></tr>
@@ -783,6 +794,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
           <tr><td class="cmd">/skylandadmin ward apply|give</td><td class="desc">Ward the armor in your hand, or give a warded iron piece.</td></tr>
           <tr><td class="cmd">/skylandadmin void give &lt;player&gt; &lt;shard|remnant&gt; [amount]</td><td class="desc">Give Void Shards or Corrupted Remnants.</td></tr>
           <tr><td class="cmd">/skylandadmin contracts reset &lt;player&gt;</td><td class="desc">Give a player a fresh set of contracts.</td></tr>
+          <tr><td class="cmd">/skylandadmin tutorial reset|skip|complete &lt;player&gt;</td><td class="desc">Restart, skip or finish a player's tutorial.</td></tr>
           <tr><td class="cmd">/skylandadmin reload</td><td class="desc">Reload custom biome pieces. Config changes need a restart.</td></tr>
           <tr><td class="cmd">/skylandadmin help</td><td class="desc">Show this list in game. Alias <code>/sla</code>.</td></tr>
         </tbody>
@@ -836,6 +848,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <div class="eyebrow pixel">What's new</div>
     <h2>Changelog</h2>
     <div class="changelog">
+      <div><b>0.16.0</b><span>Season Two start: a guided 12-step tutorial and journal with rewards, a free first island, your island as your respawn point, falls that land on dry ground, and the menu book and feather on join.</span></div>
       <div><b>0.15.0</b><span>Warded armor is smithed like an armor trim, with an Echo Shard for Ward III. Cleansing Tonics are brewed from corrupted ingredients that only corrupted mobs drop, including a splash version. New Recipes page in The Corruption menu, on Java and Bedrock.</span></div>
       <div><b>0.14.0</b><span><strong>The corruption</strong>: the overworld decays around players through drying, wasteland and bedrock. <strong>Weekly recycle</strong> into a fresh overworld. Cleansing Tonics and Warded armor. Void Shards, corrupted mobs, the Void Exchange, daily contracts and visitor tips, all with native Bedrock forms. Menus stay open after unlocking a biome, setting home or restyling.</span></div>
       <div><b>0.13.0</b><span>Hotbar shortcuts: an enchanted menu book and return feather locked in the hotbar. They can't be dropped, thrown or lost on death, and each player can turn them off. On by default for Bedrock players.</span></div>
