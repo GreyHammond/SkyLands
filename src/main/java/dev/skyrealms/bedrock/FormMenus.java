@@ -144,6 +144,7 @@ public final class FormMenus {
             b.add(btn(A + "Hotbar Shortcuts: " + (on ? G + "On" : R + "Off") + "\n" + DG + (on ? "Tap to remove the book & feather" : "Menu book & return feather"),
                     "textures/items/feather", pl -> { plugin.shortcuts().toggle(pl); main(pl); }));
         }
+        b.add(0, btn(A + "Guide\n" + DG + "Story, objective and journal", "textures/items/book_written", pl -> plugin.journal().openFor(pl)));
         b.add(btn(P + "The Corruption\n" + DG + "Sell what you bring back", "textures/items/echo_shard", this::corruption));
         simple(p, "Skyland", content + "\n\n" + DG + dev.skyrealms.Credits.ATTRIBUTION, b);
     }

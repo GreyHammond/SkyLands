@@ -61,6 +61,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private dev.skyrealms.economy.VoidExchange exchange;
     private dev.skyrealms.player.PlayerProfiles profiles;
     private dev.skyrealms.player.Milestones milestones;
+    private dev.skyrealms.journal.Journal journal;
     private dev.skyrealms.economy.CorruptionHarvest harvest;
     private dev.skyrealms.economy.CorruptedMobs corruptedMobs;
     private dev.skyrealms.economy.VisitorTips tips;
@@ -147,6 +148,9 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         milestones = new dev.skyrealms.player.Milestones(this);
         getServer().getPluginManager().registerEvents(milestones, this);
         Bukkit.getScheduler().runTaskTimer(this, profiles::save, 1200L, 1200L);
+        // The Guide: guided tutorial + journal, driven by milestones.
+        journal = new dev.skyrealms.journal.Journal(this, cfg.getConfigurationSection("tutorial"));
+        journal.start();
 
         // Void items and the exchange that buys them (shared by harvest, mob bounties and contracts).
         dev.skyrealms.economy.VoidItems.init(this);
@@ -273,6 +277,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public dev.skyrealms.economy.VoidExchange exchange() { return exchange; }
     public dev.skyrealms.player.PlayerProfiles profiles() { return profiles; }
     public dev.skyrealms.player.Milestones milestones() { return milestones; }
+    public dev.skyrealms.journal.Journal journal() { return journal; }
     public dev.skyrealms.economy.CorruptionHarvest harvest() { return harvest; }
     public dev.skyrealms.economy.CorruptedMobs corruptedMobs() { return corruptedMobs; }
     public dev.skyrealms.economy.VisitorTips tips() { return tips; }

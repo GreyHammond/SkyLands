@@ -380,3 +380,28 @@ contracts:
 # A player's very first Small island is free. Deleting it and buying again costs the normal price.
 first-island:
   free: true
+
+# The Guide: a guided tutorial of steps done in order. Each step unlocks a journal page and pays a
+# reward once (restarting never pays twice). Skipping opens every page but pays no step rewards.
+tutorial:
+  enabled: true
+  # Void Shards to collect for the shards step.
+  shard-goal: 3
+  # Step order by journal page id. Leave out a step to drop it.
+  order: [getting_started, world_below, returning_home, corruption, void_shards, corrupted_creatures,
+          earning, corrupted_ingredients, cleansing_tonics, warded_armor, ward_levels, daily_contracts]
+  rewards:
+    getting_started: 0         # the free island is the reward
+    world_below: 100
+    returning_home: 100
+    corruption: 100
+    void_shards: 150
+    corrupted_creatures: 200
+    earning: 100
+    corrupted_ingredients: 150
+    cleansing_tonics: 250
+    warded_armor: 250
+    ward_levels: 300
+    daily_contracts: 200
+  # Paid once on finishing the tutorial, which also unlocks The Resets and The Untouched Realms.
+  finish-reward: 500
