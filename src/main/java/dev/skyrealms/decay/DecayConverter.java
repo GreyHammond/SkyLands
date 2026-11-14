@@ -68,7 +68,15 @@ final class DecayConverter {
     /** Player positions {x, y, z} for the current tick; blocks near them are left alone. */
     private final List<int[]> guarded = new ArrayList<>();
 
+    /** Called whenever decay turns a block into bedrock (e.g. to leave a Void Shard). */
+    volatile java.util.function.Consumer<Block> onBedrock;
+
     DecayConverter(DecaySettings settings) { this.s = settings; }
+
+    private void bedrocked(Block b) {
+        var hook = onBedrock;
+        if (hook != null) hook.accept(b);
+    }
 
     /** Call once per tick before any {@link #attempt}. */
     void beginTick(World w) {
@@ -151,7 +159,7 @@ final class DecayConverter {
         if (Tag.LEAVES.isTagged(m) || isPlant(m) || FROZEN.contains(m)) { dry(w, b, r); return; }
         if (!b.getType().isSolid()) return;
         // The first bedrock appears, more often as the chunk nears 75.
-        if (r.nextDouble() < 0.04 * t) { b.setType(Material.BEDROCK, false); return; }
+        if (r.nextDouble() < 0.04 * t) { b.setType(Material.BEDROCK, false); bedrocked(b); return; }
         if (GRASSY.contains(m) || DIRTY.contains(m)) { set(b, GROUND_WASTE.roll(r)); return; }
         if (STONY.contains(m) || Tag.BASE_STONE_OVERWORLD.isTagged(m)) {
             if (m != Material.DEEPSLATE && m != Material.BLACKSTONE) set(b, STONE_WASTE.roll(r));
@@ -182,6 +190,7 @@ final class DecayConverter {
         if (m.isAir() || nearPlayer(x, y, z)) return; // a cave beneath the crust stays as it is
         if (!m.isSolid() && !target.isLiquid()) { target.setType(Material.AIR, false); return; } // plants and debris just die
         target.setType(Material.BEDROCK, false);
+        bedrocked(target);
     }
 
     private static void set(Block b, Material to) {

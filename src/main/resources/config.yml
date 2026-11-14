@@ -267,3 +267,21 @@ exchange:
   prices:
     shard: 25     # Void Shard
     remnant: 75   # Corrupted Remnant
+
+# Corruption harvest: breaking blocks in corrupted land can drop Void Shards.
+# Nothing drops below the first decay stage; chances rise with the chunk's corruption.
+harvest:
+  enabled: true
+  # Chance per broken block at the start of each stage (it scales up toward the next stage).
+  chance:
+    decayed: 0.01    # 25-50%
+    blighted: 0.04   # 50-75%
+    barren: 0.10     # 75-100%
+  # Multiplier for corrupted stone (blackstone, deepslate, basalt).
+  corrupted-stone-multiplier: 2.0
+  # Extra multiplier for a block touching bedrock.
+  bedrock-adjacent-multiplier: 1.5
+  # Most shards one player can get from breaking blocks per minute.
+  per-minute-cap: 20
+  # Chance a block decay turns to bedrock leaves a shard on top ("crystallised corruption").
+  bedrock-crystal-chance: 0.02
