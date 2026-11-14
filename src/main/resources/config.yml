@@ -176,15 +176,20 @@ decay:
   neighbor-cap: 50
   # Decay a chunk loses per second when nobody is near it.
   heal-per-second: 0.01
-  # Chunks above leak-threshold slowly push decay into loaded neighbours, up to leak-cap.
-  leak-threshold: 60
-  leak-per-second: 0.004
-  leak-cap: 30
-  # Decay values where each stage begins.
+  # Chunks at or above leak-threshold spill decay into loaded neighbours, raising them up to
+  # leak-cap. The cap sits below leak-threshold so the spill can't chain across the whole world.
+  leak-threshold: 75
+  leak-per-second: 0.02
+  leak-cap: 60
+  # Decay values where each stage begins. Below the first, nothing changes.
   stages:
-    decayed: 25   # grass -> coarse dirt, foliage dies, growth stops
-    blighted: 50  # stone -> blackstone, logs vanish
-    barren: 75    # surface becomes bedrock (permanent until the world is recycled)
+    decayed: 25   # drying: leaves, plants and pools die off; grass and dirt turn coarse, sandy, stony. Creeps in gradually.
+    blighted: 50  # wasteland: stone -> blackstone/deepslate, logs -> stone, water boils off or turns to lava, first bedrock
+    barren: 75    # bedrock spreads fast, top-down (permanent until the world is recycled); spills into nearby chunks
+  # Stage 2+ changes also reach up to this many blocks under the surface.
+  subsurface-depth: 6
+  # Block changes run this many times faster once a chunk is barren.
+  haste: 3.0
   # Block-change attempts per second in a chunk at 100 decay (scales with decay).
   attempts-per-second-max: 20
   # Hard cap on attempts per tick across the whole world, so conversion can never lag the server.

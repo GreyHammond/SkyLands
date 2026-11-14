@@ -29,7 +29,9 @@ public final class DecaySettings {
     public final double stage1, stage2, stage3;
     /** Block-change attempts per second in a chunk at 100 decay (scales linearly with decay). */
     public final double attemptsPerSecondMax;
-    public final int maxAttemptsPerTick, bedrockDepth, safeRadius, afkSeconds;
+    public final int maxAttemptsPerTick, bedrockDepth, safeRadius, afkSeconds, subsurfaceDepth;
+    /** Block changes speed up by this factor once a chunk reaches stage 3. */
+    public final double haste;
     public final double minMove;
 
     private DecaySettings(ConfigurationSection c, String defaultWorld) {
@@ -44,9 +46,9 @@ public final class DecaySettings {
         neighborFraction = clamp(c.getDouble("neighbor-fraction", 0.25), 0, 1);
         neighborCap = clamp(c.getDouble("neighbor-cap", 50), 0, 100);
         healPerSecond = Math.max(0, c.getDouble("heal-per-second", 0.01));
-        leakThreshold = clamp(c.getDouble("leak-threshold", 60), 0, 100);
-        leakPerSecond = Math.max(0, c.getDouble("leak-per-second", 0.004));
-        leakCap = clamp(c.getDouble("leak-cap", 30), 0, 100);
+        leakThreshold = clamp(c.getDouble("leak-threshold", 75), 0, 100);
+        leakPerSecond = Math.max(0, c.getDouble("leak-per-second", 0.02));
+        leakCap = clamp(c.getDouble("leak-cap", 60), 0, 100);
         stage1 = clamp(c.getDouble("stages.decayed", 25), 1, 100);
         stage2 = clamp(c.getDouble("stages.blighted", 50), stage1, 100);
         stage3 = clamp(c.getDouble("stages.barren", 75), stage2, 100);
@@ -55,6 +57,8 @@ public final class DecaySettings {
         bedrockDepth = Math.max(1, c.getInt("bedrock-depth", 24));
         safeRadius = Math.max(1, c.getInt("safe-radius", 3));
         afkSeconds = Math.max(5, c.getInt("afk-seconds", 60));
+        subsurfaceDepth = Math.max(1, c.getInt("subsurface-depth", 6));
+        haste = Math.max(1, c.getDouble("haste", 3.0));
         minMove = Math.max(0.1, c.getDouble("min-move", 0.5));
     }
 

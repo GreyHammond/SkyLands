@@ -250,7 +250,7 @@ public final class DecayService implements Listener {
             feedback(p, w, cells.get(here));
         }
 
-        // Quiet chunks recover; strongly decayed chunks leak a little into loaded neighbours.
+        // Quiet chunks recover; barren chunks spill corruption into loaded neighbours (capped, so it can't chain forever).
         List<ChunkPos> keys = new ArrayList<>(cells.keySet());
         for (ChunkPos p : keys) {
             Cell c = cells.get(p);
@@ -298,7 +298,8 @@ public final class DecayService implements Listener {
         for (ChunkPos p : convertible) {
             Cell c = cells.get(p);
             if (c == null || !w.isChunkLoaded(p.x, p.z)) continue;
-            c.owed = Math.min(4, c.owed + s.attemptsPerSecondMax * (c.value / 100.0) / 20.0);
+            double rate = s.attemptsPerSecondMax * (c.value / 100.0) * (c.value >= s.stage3 ? s.haste : 1);
+            c.owed = Math.min(8, c.owed + rate / 20.0);
             while (c.owed >= 1 && budget > 0) {
                 c.owed -= 1;
                 budget--;

@@ -33,10 +33,12 @@ world replaces the corrupted one. Skylands (the sky world) are never affected.
 
 | Value | Effect |
 |---|---|
-| 0-25 | Ash particles and an action-bar readout only |
-| 25-50 | Grass becomes coarse dirt, foliage dies, crops and spreading stop |
-| 50-75 | Dirt becomes coarse dirt, stone becomes blackstone, logs vanish |
-| 75-100 | Surface solids convert to bedrock, top-down, to a configured depth |
+| 0-25 | Nothing happens except ash particles and the action-bar readout |
+| 25-50 | Drying, gradual: the chance of a change climbs from ~0 at 25 to certain at 50. Leaves and plants die (some grass becomes dead bushes), pools dry up leaving sand/clay beds, ice melts, grass and dirt become coarse dirt, sand, gravel or stone. Growth and spreading stop. |
+| 50-75 | Wasteland: stone becomes blackstone, deepslate and basalt; logs harden to stone; water boils off or becomes lava; ground becomes sand, red sand, clay, terracotta, stone. First bedrock patches appear, more often near 75. Changes also reach a few blocks under the surface. |
+| 75-100 | Barren: changes run faster (haste x3), bedrock spreads top-down to a configured depth, and the chunk spills decay into neighbours (up to 60, so it can't chain). |
+
+Bedrock stays until the world is recycled. Blocks within 3 of a player are never touched.
 
 Conversion runs from a per-chunk rate and a global per-tick attempt budget so it never lags.
 Blocks near players are never converted.
