@@ -235,7 +235,7 @@ public final class FormMenus {
     public void buyTier(Player p) {
         List<Btn> b = new ArrayList<>();
         for (Tier t : Tier.values()) {
-            b.add(btn(G + t.pretty() + " " + DG + t.footprint + "x" + t.footprint + "\n" + O + svc.money(t.price)
+            b.add(btn(G + t.pretty() + " " + DG + t.footprint + "x" + t.footprint + "\n" + O + svc.priceLabel(p.getUniqueId(), t)
                     + DG + " · grows to " + t.maxPieces + " pieces", null, pl -> biomes(pl, Mode.BUY, t)));
         }
         b.add(btn(A + "Visit Islands first", "textures/items/compass_item", this::visit));
@@ -276,7 +276,7 @@ public final class FormMenus {
         b.add(btn(GR + "Back", null, mode == Mode.BUY ? this::buyTier : this::manage));
         String title = switch (mode) { case BUY -> "Choose your biome"; case GROW -> "Grow which biome?"; case UNLOCK -> "Unlock a biome"; };
         String content = switch (mode) {
-            case BUY -> GR + tier.pretty() + " island for " + O + svc.money(tier.price) + GR + ". Your new island starts at level " + level + ".";
+            case BUY -> GR + tier.pretty() + " island for " + O + svc.priceLabel(p.getUniqueId(), tier) + GR + ". Your new island starts at level " + level + ".";
             case GROW -> GR + "Cost: " + O + svc.money(svc.growPrice()) + GR + " per piece. Pieces: " + W
                     + (i == null ? 0 : i.pieces.size()) + "/" + (i == null ? 0 : i.tier.maxPieces);
             case UNLOCK -> GR + "Unlocking adds a biome to your list. Then use Grow Land.";
@@ -292,7 +292,7 @@ public final class FormMenus {
         var themes = svc.startThemes(p.getUniqueId());
         String n = biomeName(biome);
         java.util.function.Function<String, Consumer<Player>> buyWith = style -> pl ->
-                confirm(pl, "Buy a " + tier.pretty() + " " + n + " island?", tier.price,
+                confirm(pl, "Buy a " + tier.pretty() + " " + n + " island?", svc.priceFor(pl.getUniqueId(), tier),
                         yes -> svc.buy(yes, tier, biome, style), back -> newIslandStyle(back, tier, biome));
         if (styles.size() <= 1 && themes.isEmpty()) { buyWith.apply(null).accept(p); return; }
         List<Btn> b = new ArrayList<>();

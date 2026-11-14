@@ -114,7 +114,10 @@ public final class RealmService {
             if (!p.isOnline()) return;
             p.teleportAsync(island.home(plugin.skyWorld())).thenRun(() ->
                     plugin.milestones().trigger(p, dev.skyrealms.player.Milestone.CLAIMED_ISLAND));
-            Msg.send(p, "Welcome home! Jump off the edge to drop into the overworld.");
+            p.showTitle(net.kyori.adventure.title.Title.title(Msg.c("<green>Welcome home"),
+                    Msg.c("<gray>Your island in the skylands")));
+            Msg.send(p, "This is your home. Jump off the edge any time to return to the world below. "
+                    + "But be careful: your living presence draws the corruption.");
         }).size();
         plugin.xp().add(island, (long) placed * plugin.xp().levels().buyPerPiece);
         plugin.islands().save();
@@ -124,6 +127,12 @@ public final class RealmService {
     /** Whether this player's next Small island is free (their first one, when first-island.free is on). */
     public boolean firstIslandFree(UUID player) {
         return plugin.getConfig().getBoolean("first-island.free", true) && !plugin.profiles().get(player).freeIslandUsed;
+    }
+
+    /** The price as shown in menus: "Free (your first island)" for the free first Small island. */
+    public String priceLabel(UUID player, Tier tier) {
+        double price = priceFor(player, tier);
+        return price <= 0 && tier.price > 0 ? "Free (your first island)" : money(price);
     }
 
     /** What this player pays for an island of this size: 0 for their free first Small island. */
