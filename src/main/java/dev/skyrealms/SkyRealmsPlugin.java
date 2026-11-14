@@ -52,6 +52,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private dev.skyrealms.cosmetic.NamePrompt namePrompt;
     private dev.skyrealms.bedrock.BedrockUi bedrock;
     private dev.skyrealms.decay.DecayService decay;
+    private dev.skyrealms.decay.CleansingTonic tonic;
 
     @Override
     public void onEnable() {
@@ -149,7 +150,15 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         // Overworld decay (off unless decay.enabled is true). Starts after all worlds have loaded.
         decay = new dev.skyrealms.decay.DecayService(this,
                 dev.skyrealms.decay.DecaySettings.load(cfg.getConfigurationSection("decay"), overName));
-        Bukkit.getScheduler().runTask(this, () -> decay.start(skyName));
+        Bukkit.getScheduler().runTask(this, () -> {
+            decay.start(skyName);
+            // Cleansing Tonic only exists while decay runs.
+            if (decay.isRunning()) {
+                tonic = new dev.skyrealms.decay.CleansingTonic(this, cfg.getConfigurationSection("tonic"));
+                tonic.start();
+                decay.addResist(tonic);
+            }
+        });
 
         SkylandCommands commands = new SkylandCommands(this);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> commands.register(event.registrar()));
@@ -190,4 +199,5 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public dev.skyrealms.cosmetic.NamePrompt namePrompt() { return namePrompt; }
     public dev.skyrealms.bedrock.BedrockUi bedrock() { return bedrock; }
     public dev.skyrealms.decay.DecayService decay() { return decay; }
+    public dev.skyrealms.decay.CleansingTonic tonic() { return tonic; }
 }

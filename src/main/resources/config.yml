@@ -196,3 +196,20 @@ decay:
   # A player who hasn't moved for this long stops adding decay.
   afk-seconds: 60
   min-move: 0.5
+
+# Cleansing Tonic: while it lasts, the drinker causes no decay. Only available while decay runs.
+# Players buy with /skyland tonic buy <1-3>; admins give with /skylandadmin tonic give.
+tonic:
+  levels:
+    1:
+      seconds: 60          # capped at 180
+      price: 500
+      required-level: 1    # island level needed to buy (1 = anyone)
+    2:
+      seconds: 120
+      price: 1500
+      required-level: 10
+    3:
+      seconds: 180
+      price: 4000
+      required-level: 25

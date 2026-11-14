@@ -56,14 +56,15 @@ public final class SkylandCommands {
     // ---- /skyland ------------------------------------------------------------------
 
     private LiteralCommandNode<CommandSourceStack> skyland() {
-        return Commands.literal("skyland")
+        LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("skyland")
                 .requires(src -> src.getSender().hasPermission("skyrealms.use"))
                 .executes(ctx -> {
                     if (ctx.getSource().getExecutor() instanceof Player p) plugin.menus().main(p);
                     else Msg.error(ctx.getSource().getSender(), "Players only.");
                     return Command.SINGLE_SUCCESS;
-                })
-                .build();
+                });
+        TonicCommands.attachPlayer(root, plugin);
+        return root.build();
     }
 
     // ---- /ihome (island home; named so it never clashes with Essentials' /home) ----------
@@ -171,6 +172,8 @@ public final class SkylandCommands {
                         .executes(ctx -> decaySet(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "value")))))
                 .then(Commands.literal("clear").executes(ctx -> decayClear(ctx.getSource()))));
 
+        TonicCommands.attachAdmin(root, plugin);
+
         root.then(Commands.literal("reload").executes(ctx -> {
             plugin.library().reload();
             Msg.send(ctx.getSource().getSender(), "Pieces reloaded. (Restart the server to apply config.yml changes.)");
@@ -266,6 +269,7 @@ public final class SkylandCommands {
                 "archives <dark_gray>- list archived islands",
                 "xp <owner> [add|set <amount>] <dark_gray>- view or change island XP",
                 "decay [set <0-100>|clear] <dark_gray>- overworld corruption in your chunk / all chunks",
+                "tonic give <player> <1-3> [amount] <dark_gray>- give Cleansing Tonics",
                 "reload <dark_gray>- reload piece files"))
             to.sendMessage(Msg.c(" <aqua>/skylandadmin <gray>" + l));
         to.sendMessage(Msg.c(" <dark_gray>Sizes can also be an exact radius from " + MIN_RADIUS + " to " + MAX_RADIUS + "."));
