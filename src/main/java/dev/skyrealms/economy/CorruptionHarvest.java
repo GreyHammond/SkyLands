@@ -151,6 +151,15 @@ public final class CorruptionHarvest implements Listener {
 
     // ---- placed-block tracking ---------------------------------------------------------
 
+    /** True if a player placed this block (it hasn't been broken yet). */
+    public boolean isPlaced(Block b) {
+        int[] arr = b.getChunk().getPersistentDataContainer().get(placedKey, PersistentDataType.INTEGER_ARRAY);
+        if (arr == null) return false;
+        int packed = pack(b);
+        for (int v : arr) if (v == packed) return true;
+        return false;
+    }
+
     private boolean removePlaced(Block b) {
         PersistentDataContainer pdc = b.getChunk().getPersistentDataContainer();
         int[] arr = pdc.get(placedKey, PersistentDataType.INTEGER_ARRAY);

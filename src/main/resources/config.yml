@@ -334,3 +334,26 @@ tips:
   # Each visitor/island pair tips once per day. These cap the number of tips per day.
   max-tips-per-visitor: 5
   max-tips-per-owner: 20
+# Daily contracts: a few jobs per player per day, paid in money and sometimes Void Shards.
+# Open them from the Corruption menu or /skyland contracts. Works for Java and Bedrock players.
+contracts:
+  enabled: true
+  # Contracts each player gets per day (1-7).
+  per-day: 3
+  # Local server hour (0-23) when everyone's contracts are replaced.
+  reset-hour: 4
+  # Reward multiplier when the overworld recycle is less than 24 hours away.
+  recycle-bonus: 1.5
+  # The pool contracts are drawn from (no repeats in one day). Types:
+  #   deliver (needs item), kill, kill_corrupted, mine, explore, shards
+  # amount, reward and shards are [min, max]. Higher weight = picked more often.
+  pool:
+    copper:    { type: deliver, item: COPPER_INGOT, amount: [32, 96], reward: [150, 400], shards: [0, 0], weight: 10 }
+    iron:      { type: deliver, item: IRON_INGOT,   amount: [16, 48], reward: [200, 500], shards: [0, 2], weight: 10 }
+    logs:      { type: deliver, item: OAK_LOG,      amount: [32, 64], reward: [100, 250], shards: [0, 0], weight: 8 }
+    coal:      { type: deliver, item: COAL,         amount: [32, 64], reward: [100, 250], shards: [0, 0], weight: 8 }
+    hunt:      { type: kill,           amount: [15, 30],   reward: [200, 450], shards: [0, 2], weight: 10 }
+    corrupted: { type: kill_corrupted, amount: [5, 12],    reward: [400, 800], shards: [2, 5], weight: 6 }
+    mine:      { type: mine,           amount: [200, 500], reward: [150, 400], shards: [0, 1], weight: 8 }
+    explore:   { type: explore,        amount: [8, 20],    reward: [150, 350], shards: [0, 1], weight: 8 }
+    shards:    { type: shards,         amount: [10, 30],   reward: [300, 700], shards: [0, 0], weight: 6 }
