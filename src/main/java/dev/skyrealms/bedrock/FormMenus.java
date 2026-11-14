@@ -206,7 +206,7 @@ public final class FormMenus {
                 }
                 case UNLOCK -> b.add(btn(P + n + "\n" + O + svc.money(svc.unlockPrice(biome)), null,
                         pl -> confirm(pl, "Unlock " + n + "? You can then grow it with Grow Land.", svc.unlockPrice(biome),
-                                yes -> { if (svc.unlockBiome(yes, biome)) biomes(yes, Mode.GROW, null); }, back -> biomes(back, Mode.UNLOCK, null))));
+                                yes -> { if (svc.unlockBiome(yes, biome)) biomes(yes, Mode.UNLOCK, null); }, back -> biomes(back, Mode.UNLOCK, null))));
             }
         }
         b.add(btn(GR + "Back", null, mode == Mode.BUY ? this::buyTier : this::manage));
@@ -287,7 +287,7 @@ public final class FormMenus {
         b.add(btn(A + "Underside Style\n" + DG + UndersideStyle.byId(i.underside).displayName, null, this::undersides));
         b.add(btn(Y + "Protection", null, this::protection));
         b.add(btn(Y + "Friends\n" + DG + i.friends.size() + " friend(s)", "textures/items/emerald", this::friends));
-        b.add(btn(G + "Set Home Here", "textures/items/bed_red", svc::setHome));
+        b.add(btn(G + "Set Home Here", "textures/items/bed_red", pl -> { svc.setHome(pl); manage(pl); }));
         if (owner) {
             b.add(btn(O + "Co-owners\n" + DG + i.coOwners.size() + " co-owner(s)", "textures/items/gold_ingot", this::coOwners));
             b.add(btn(O + "Transfer Island", "textures/items/name_tag", this::transfer));
@@ -589,7 +589,7 @@ public final class FormMenus {
                 btn(G + "New land only\n" + DG + "Free", null, pl -> { svc.setUnderside(pl, st); back.accept(pl); }),
                 btn(A + "Convert my whole island\n" + O + svc.money(svc.restylePrice()), null,
                         pl -> confirm(pl, "Convert your island's underside to " + st.displayName + "?", svc.restylePrice(),
-                                yes -> svc.restyleUnderside(yes, st), b2 -> undersideChoice(b2, st, back))),
+                                yes -> { svc.restyleUnderside(yes, st); undersides(yes); }, b2 -> undersideChoice(b2, st, back))),
                 btn(GR + "Back", null, back)));
     }
 

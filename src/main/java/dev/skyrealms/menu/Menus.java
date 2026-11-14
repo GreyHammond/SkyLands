@@ -122,7 +122,7 @@ public final class Menus {
         m.button(15, item(Material.PLAYER_HEAD, "<yellow>Friends", "<gray>Friends: <white>" + i.friends.size()), this::friends);
         m.button(16, item(Material.LIGHT_WEIGHTED_PRESSURE_PLATE, "<green>Set Home Here",
                 "<gray>Where Return to Island drops you.", "<gray>Stand on your island first."),
-                pl -> { pl.closeInventory(); svc.setHome(pl); });
+                pl -> { svc.setHome(pl); pl.playSound(pl.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_CHIME, 0.6f, 1.4f); manage(pl); });
         boolean owner = i.owner.equals(p.getUniqueId());
         m.button(20, owner ? item(Material.GOLDEN_HELMET, "<gold>Co-owners", "<gray>Players who can manage the",
                         "<gray>island with you. Co-owners: <white>" + i.coOwners.size())
@@ -240,7 +240,7 @@ public final class Menus {
                 case UNLOCK -> m.button(slot++, item(biomeIcon(b), "<light_purple>" + pretty(b), "<gray>" + style,
                         "<gray>Unlocks it for Grow Land", "<gray>Cost: <gold>" + svc.money(svc.unlockPrice(b))),
                         pl -> confirm(pl, "Unlock " + pretty(b) + "?", svc.unlockPrice(b),
-                                yes -> { if (svc.unlockBiome(yes, b)) biomes(yes, Mode.GROW, null); else yes.closeInventory(); },
+                                yes -> { if (svc.unlockBiome(yes, b)) biomes(yes, Mode.UNLOCK, null); else yes.closeInventory(); },
                                 back -> biomes(back, Mode.UNLOCK, null)));
             }
         }
@@ -669,7 +669,7 @@ public final class Menus {
         m.button(15, glow(item(Material.BRUSH, "<aqua>Convert my whole island", "<gray>Also reshape the rock under the", "<gray>land you already have.",
                 "<gray>Your builds and soil aren't touched.", "<gray>Cost: <gold>" + svc.money(svc.restylePrice()))),
                 pl -> confirm(pl, "Convert your island's underside to " + st.displayName + "?", svc.restylePrice(),
-                        yes -> { yes.closeInventory(); svc.restyleUnderside(yes, st); }, back2 -> undersideChoice(back2, st, back)));
+                        yes -> { svc.restyleUnderside(yes, st); undersides(yes); }, back2 -> undersideChoice(back2, st, back)));
         m.button(18, back(), back);
         m.fill().open(p);
     }
