@@ -376,3 +376,7 @@ contracts:
     mine:      { type: mine,           amount: [200, 500], reward: [150, 400], shards: [0, 1], weight: 8 }
     explore:   { type: explore,        amount: [8, 20],    reward: [150, 350], shards: [0, 1], weight: 8 }
     shards:    { type: shards,         amount: [10, 30],   reward: [300, 700], shards: [0, 0], weight: 6 }
+
+# A player's very first Small island is free. Deleting it and buying again costs the normal price.
+first-island:
+  free: true

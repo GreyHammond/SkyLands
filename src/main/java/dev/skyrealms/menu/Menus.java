@@ -273,6 +273,12 @@ public final class Menus {
 
     public enum Mode { BUY, GROW, UNLOCK }
 
+    /** Shared entry point for claiming a first island (tutorial, first join, menus): Small, pick a biome. */
+    public void claimFirstIsland(Player p) {
+        if (plugin.bedrock().handles(p)) { plugin.bedrock().openClaimFirstIsland(p); return; }
+        biomes(p, Mode.BUY, Tier.SMALL);
+    }
+
     public void biomes(Player p, Mode mode, Tier tier) {
         Island i = plugin.islands().of(p.getUniqueId());
         List<String> list = new ArrayList<>(plugin.biomes().all());

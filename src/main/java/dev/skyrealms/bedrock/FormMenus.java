@@ -229,6 +229,9 @@ public final class FormMenus {
     //  Buying
     // =========================================================================================
 
+    /** Shared entry point for claiming a first island: Small, pick a biome. */
+    public void claimFirstIsland(Player p) { biomes(p, Mode.BUY, Tier.SMALL); }
+
     public void buyTier(Player p) {
         List<Btn> b = new ArrayList<>();
         for (Tier t : Tier.values()) {

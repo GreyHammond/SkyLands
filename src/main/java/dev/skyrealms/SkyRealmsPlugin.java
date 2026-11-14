@@ -59,6 +59,8 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private dev.skyrealms.decay.WardedGear ward;
     private dev.skyrealms.decay.WardSmithing wardSmithing;
     private dev.skyrealms.economy.VoidExchange exchange;
+    private dev.skyrealms.player.PlayerProfiles profiles;
+    private dev.skyrealms.player.Milestones milestones;
     private dev.skyrealms.economy.CorruptionHarvest harvest;
     private dev.skyrealms.economy.CorruptedMobs corruptedMobs;
     private dev.skyrealms.economy.VisitorTips tips;
@@ -139,6 +141,12 @@ public final class SkyRealmsPlugin extends JavaPlugin {
             money = new Money(cfg.getConfigurationSection("economy"));
             getLogger().info(money.describe());
         });
+
+        // Per-player state (first join, free island, tutorial, journal) and the milestones that drive the tutorial.
+        profiles = new dev.skyrealms.player.PlayerProfiles(new File(getDataFolder(), "profiles.yml"), getLogger());
+        milestones = new dev.skyrealms.player.Milestones(this);
+        getServer().getPluginManager().registerEvents(milestones, this);
+        Bukkit.getScheduler().runTaskTimer(this, profiles::save, 1200L, 1200L);
 
         // Void items and the exchange that buys them (shared by harvest, mob bounties and contracts).
         dev.skyrealms.economy.VoidItems.init(this);
@@ -221,6 +229,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         if (islands != null) islands.save();
         if (contracts != null) contracts.save();
         if (decay != null && decay.isRunning()) decay.flush();
+        if (profiles != null) profiles.save();
     }
 
     /** Lets Multiverse (or bukkit.yml) create the sky world with: generator SkyRealms */
@@ -262,6 +271,8 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public dev.skyrealms.decay.WardedGear ward() { return ward; }
     public dev.skyrealms.decay.WardSmithing wardSmithing() { return wardSmithing; }
     public dev.skyrealms.economy.VoidExchange exchange() { return exchange; }
+    public dev.skyrealms.player.PlayerProfiles profiles() { return profiles; }
+    public dev.skyrealms.player.Milestones milestones() { return milestones; }
     public dev.skyrealms.economy.CorruptionHarvest harvest() { return harvest; }
     public dev.skyrealms.economy.CorruptedMobs corruptedMobs() { return corruptedMobs; }
     public dev.skyrealms.economy.VisitorTips tips() { return tips; }

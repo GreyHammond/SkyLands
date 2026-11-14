@@ -170,6 +170,7 @@ public final class ContractService implements Listener {
         if (!c.complete()) return "<gray>Not done yet: <white>" + c.bar();
         double pay = c.reward * bonus();
         c.claimed = true;
+        plugin.milestones().trigger(p, dev.skyrealms.player.Milestone.CLAIMED_CONTRACT);
         dirty = true;
         plugin.money().refund(p, pay);
         if (c.shards > 0) VoidCommands.give(p, VoidItems.Kind.SHARD, c.shards);

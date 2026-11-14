@@ -147,6 +147,7 @@ public final class CorruptedMobs implements Listener {
         tracked.remove(mob.getUniqueId());
         Player killer = mob.getKiller();
         if (killer == null || killer.getGameMode() == GameMode.CREATIVE || killer.getGameMode() == GameMode.SPECTATOR) return;
+        plugin.milestones().trigger(killer, dev.skyrealms.player.Milestone.KILLED_CORRUPTED_MOB);
         ThreadLocalRandom r = ThreadLocalRandom.current();
         int remnants = remnantsMin[stage] + r.nextInt(remnantsMax[stage] - remnantsMin[stage] + 1);
         if (remnants > 0) e.getDrops().add(VoidItems.create(VoidItems.Kind.REMNANT, remnants));

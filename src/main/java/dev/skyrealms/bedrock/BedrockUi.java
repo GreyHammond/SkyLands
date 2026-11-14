@@ -49,6 +49,7 @@ public final class BedrockUi {
     public void openCorruption(Player p) { ((FormMenus) forms).corruption(p); }
     public void openExchange(Player p) { ((FormMenus) forms).exchange(p); }
     public void openRecipes(Player p) { ((FormMenus) forms).recipes(p); }
+    public void openClaimFirstIsland(Player p) { ((FormMenus) forms).claimFirstIsland(p); }
 
     /** The FormMenus instance (or null), for tests and integrations. */
     public Object forms() { return forms; }

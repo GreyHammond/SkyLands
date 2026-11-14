@@ -282,6 +282,8 @@ public final class DecayService implements Listener {
     private void feedback(Player p, World w, Cell c) {
         if (c == null || c.value < 1) return;
         int stage = DecayConverter.stageOf(s, c.value);
+        if (stage >= 1 && plugin instanceof dev.skyrealms.SkyRealmsPlugin sr && sr.milestones() != null)
+            sr.milestones().trigger(p, dev.skyrealms.player.Milestone.ENTERED_CORRUPTION);
         if (s.actionBar) {
             String color = switch (stage) { case 0 -> "green"; case 1 -> "yellow"; case 2 -> "gold"; default -> "red"; };
             p.sendActionBar(Msg.c("<gray>Corruption <" + color + ">" + (int) c.value + "%</" + color + ">"));

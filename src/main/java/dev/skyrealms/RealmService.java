@@ -79,8 +79,15 @@ public final class RealmService {
                     + startLevel + ".");
             return false;
         }
-        if (!plugin.money().usable()) { Msg.error(p, "The economy isn't set up yet."); return false; }
-        if (!plugin.money().charge(p, tier.price)) { Msg.error(p, "You need <white>" + money(tier.price) + "</white> for a " + tier.pretty() + " island."); return false; }
+        double price = priceFor(p.getUniqueId(), tier);
+        boolean freeClaim = price <= 0 && tier.price > 0;
+        if (price > 0 && !plugin.money().usable()) { Msg.error(p, "The economy isn't set up yet."); return false; }
+        if (!plugin.money().charge(p, price)) { Msg.error(p, "You need <white>" + money(price) + "</white> for a " + tier.pretty() + " island."); return false; }
+        if (freeClaim) {
+            var prof = plugin.profiles().get(p.getUniqueId());
+            prof.freeIslandUsed = true;
+            plugin.profiles().dirty();
+        }
 
         Island island = plugin.islands().create(p.getUniqueId(), tier);
         Msg.send(p, "Raising your <white>" + tier.pretty() + "</white> <green>" + plugin.biomes().pretty(biome)
@@ -105,12 +112,23 @@ public final class RealmService {
                 + " underside.");
         int placed = plugin.grower().growMany(plugin.skyWorld(), island, biome, tier.startPieces, () -> {
             if (!p.isOnline()) return;
-            p.teleportAsync(island.home(plugin.skyWorld()));
+            p.teleportAsync(island.home(plugin.skyWorld())).thenRun(() ->
+                    plugin.milestones().trigger(p, dev.skyrealms.player.Milestone.CLAIMED_ISLAND));
             Msg.send(p, "Welcome home! Jump off the edge to drop into the overworld.");
         }).size();
         plugin.xp().add(island, (long) placed * plugin.xp().levels().buyPerPiece);
         plugin.islands().save();
         return true;
+    }
+
+    /** Whether this player's next Small island is free (their first one, when first-island.free is on). */
+    public boolean firstIslandFree(UUID player) {
+        return plugin.getConfig().getBoolean("first-island.free", true) && !plugin.profiles().get(player).freeIslandUsed;
+    }
+
+    /** What this player pays for an island of this size: 0 for their free first Small island. */
+    public double priceFor(UUID player, Tier tier) {
+        return tier == Tier.values()[0] && firstIslandFree(player) ? 0 : tier.price;
     }
 
     /** Level a player's next island starts at: the level of the island they deleted, or 1. */
@@ -299,6 +317,7 @@ public final class RealmService {
             p.teleportAsync(i.home(plugin.skyWorld())).thenRun(() -> {
                 p.setFallDistance(0);
                 p.setVelocity(new org.bukkit.util.Vector());
+                plugin.milestones().trigger(p, dev.skyrealms.player.Milestone.RETURNED_HOME);
             });
         }, 1L, 1L);
     }

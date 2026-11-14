@@ -93,6 +93,8 @@ public final class FallTransit implements Listener {
                 departing.remove(p.getUniqueId());
                 if (!ok) return;
                 protectedFalls.put(p.getUniqueId(), System.currentTimeMillis() + protectionMillis);
+                if (plugin instanceof dev.skyrealms.SkyRealmsPlugin sr && sr.milestones() != null)
+                    sr.milestones().trigger(p, dev.skyrealms.player.Milestone.LANDED_OVERWORLD);
                 groundedChecks.remove(p.getUniqueId());
                 p.setFallDistance(0);
                 // Next tick, keep their sideways momentum and make sure they're heading down.

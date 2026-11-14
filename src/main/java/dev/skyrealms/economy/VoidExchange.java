@@ -69,6 +69,7 @@ public final class VoidExchange implements Listener {
         if (total <= 0) return 0;
         p.getInventory().setStorageContents(contents);
         plugin.money().refund(p, total);
+        plugin.milestones().trigger(p, dev.skyrealms.player.Milestone.SOLD_AT_EXCHANGE);
         return total;
     }
 
