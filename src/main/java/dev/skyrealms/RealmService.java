@@ -378,7 +378,7 @@ public final class RealmService {
     public boolean deleteIsland(Player p) {
         Island i = ownerOnly(p);
         if (i == null) return false;
-        World ground = Bukkit.getWorld(plugin.getConfig().getString("worlds.overworld", "world"));
+        World ground = Bukkit.getWorld(plugin.overworldName());
         Location safe = ground != null ? ground.getSpawnLocation() : Bukkit.getWorlds().get(0).getSpawnLocation();
         for (Player other : plugin.skyWorld().getPlayers()) {
             if (i.containsLand(other.getX(), other.getZ())) {

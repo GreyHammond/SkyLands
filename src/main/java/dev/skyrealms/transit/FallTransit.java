@@ -39,7 +39,9 @@ public final class FallTransit implements Listener {
             Material.POINTED_DRIPSTONE, Material.WITHER_ROSE);
 
     private final Plugin plugin;
-    private final String skyWorld, overworld;
+    private final String skyWorld;
+    /** Read on every fall, so the overworld recycle can switch the target world at runtime. */
+    private final java.util.function.Supplier<String> overworld;
     private final double departY, arriveY, maxOffset, closenessBias, minArriveSpeed;
     private final int rerolls;
     private final long protectionMillis;
@@ -51,7 +53,7 @@ public final class FallTransit implements Listener {
     /** Consecutive on-ground checks, so we don't drop protection a tick before the damage event. */
     private final Map<UUID, Integer> groundedChecks = new HashMap<>();
 
-    public FallTransit(Plugin plugin, String skyWorld, String overworld, ConfigurationSection cfg) {
+    public FallTransit(Plugin plugin, String skyWorld, java.util.function.Supplier<String> overworld, ConfigurationSection cfg) {
         this.plugin = plugin;
         this.skyWorld = skyWorld;
         this.overworld = overworld;
@@ -75,10 +77,11 @@ public final class FallTransit implements Listener {
         if (p.getGameMode() == GameMode.SPECTATOR || p.isFlying()) return;
         if (!departing.add(p.getUniqueId())) return;
 
-        World ground = Bukkit.getWorld(overworld);
+        String groundName = overworld.get();
+        World ground = Bukkit.getWorld(groundName);
         if (ground == null) {
             departing.remove(p.getUniqueId());
-            Msg.error(p, "The overworld <white>" + overworld + "</white> isn't loaded. Tell an admin.");
+            Msg.error(p, "The overworld <white>" + groundName + "</white> isn't loaded. Tell an admin.");
             return;
         }
         findLanding(ground, to.getX(), to.getZ(), rerolls).thenAccept(landing -> {
