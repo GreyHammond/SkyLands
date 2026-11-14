@@ -232,7 +232,7 @@ public final class WorldRecycler implements Listener {
     /** Deletes a managed world folder off the main thread, retrying while Windows holds file locks. */
     private void deleteLater(String name, int attempt) {
         if (!safeToDelete(name)) return;
-        File folder = new File(Bukkit.getWorldContainer(), name);
+        File folder = folderOf(name);
         Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
             boolean ok = deleteTree(folder.toPath());
             Bukkit.getScheduler().runTask(plugin, () -> {
@@ -253,7 +253,7 @@ public final class WorldRecycler implements Listener {
         for (String name : new ArrayList<>(state.managed)) {
             if (name.equals(state.current)) continue;
             if (Bukkit.getWorld(name) != null) unloadThenDelete(name, 0);
-            else if (new File(Bukkit.getWorldContainer(), name).exists()) deleteLater(name, 0);
+            else if (folderOf(name) != null) deleteLater(name, 0);
             else { state.managed.remove(name); state.save(); }
         }
     }
@@ -265,15 +265,43 @@ public final class WorldRecycler implements Listener {
         if (name.equals(Bukkit.getWorlds().get(0).getName())) return false;
         if (name.equals(plugin.skyWorld().getName())) return false;
         if (Bukkit.getWorld(name) != null) return false;
+        File f = folderOf(name);
+        if (f == null) return false;
         try {
-            Path container = Bukkit.getWorldContainer().getCanonicalFile().toPath();
-            Path folder = new File(Bukkit.getWorldContainer(), name).getCanonicalFile().toPath();
-            if (!container.equals(folder.getParent())) return false;
+            Path folder = f.getCanonicalFile().toPath();
+            if (!folder.getFileName().toString().equals(name)) return false;
+            boolean allowedParent = false;
+            for (File root : worldRoots()) {
+                if (root.getCanonicalFile().toPath().equals(folder.getParent())) { allowedParent = true; break; }
+            }
+            if (!allowedParent) return false;
             // A real world folder, not something that happens to share the name.
-            return Files.isDirectory(folder) && Files.exists(folder.resolve("level.dat"));
+            return Files.isDirectory(folder)
+                    && (Files.exists(folder.resolve("level.dat")) || Files.isDirectory(folder.resolve("region")));
         } catch (IOException e) {
             return false;
         }
+    }
+
+    /**
+     * Where world folders can live. Older servers keep each world directly in the server folder;
+     * Paper 26 keeps extra worlds as dimensions inside the main world: world/dimensions/minecraft/<name>.
+     */
+    private static List<File> worldRoots() {
+        File container = Bukkit.getWorldContainer();
+        String main = Bukkit.getWorlds().get(0).getName();
+        return List.of(new File(container, main + File.separator + "dimensions" + File.separator + "minecraft"), container);
+    }
+
+    /** The folder holding a world's files, or null if none exists. */
+    private static File folderOf(String name) {
+        World w = Bukkit.getWorld(name);
+        if (w != null && w.getWorldFolder().isDirectory()) return w.getWorldFolder();
+        for (File root : worldRoots()) {
+            File f = new File(root, name);
+            if (f.isDirectory()) return f;
+        }
+        return null;
     }
 
     private static boolean deleteTree(Path root) {
