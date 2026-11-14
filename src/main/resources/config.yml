@@ -171,8 +171,13 @@ decay:
   gain-per-second: 0.03
   # At 100 decay the gain is multiplied by (1 + ramp). Makes decay accelerate.
   ramp: 2.0
-  # Share of that gain spilling into the 8 surrounding chunks, and the most it can reach there.
-  neighbor-fraction: 0.25
+  # Area around each player, in chunks (1 chunk = 16 blocks).
+  # radius: chunks corrupted at full strength around the player's chunk. 2 = a 5x5-chunk (80-block) square.
+  radius: 2
+  # falloff: extra rings beyond that which corrupt more weakly, fading out. 2 = up to 9x9 chunks (144 blocks).
+  falloff: 2
+  # Strength of the first falloff ring (0.5 = half speed), and the most the falloff rings can reach.
+  neighbor-fraction: 0.5
   neighbor-cap: 50
   # Decay a chunk loses per second when nobody is near it.
   heal-per-second: 0.01

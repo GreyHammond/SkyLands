@@ -33,6 +33,10 @@ public final class DecaySettings {
     /** Block changes speed up by this factor once a chunk reaches stage 3. */
     public final double haste;
     public final double minMove;
+    /** Chunks around the player corrupted at full strength (0 = only their own chunk). */
+    public final int radius;
+    /** Extra rings of chunks beyond the radius that get a fading share. */
+    public final int falloff;
 
     private DecaySettings(ConfigurationSection c, String defaultWorld) {
         enabled = c.getBoolean("enabled", false);
@@ -43,7 +47,7 @@ public final class DecaySettings {
         actionBar = c.getBoolean("action-bar", true);
         gainPerSecond = Math.max(0, c.getDouble("gain-per-second", 0.03));
         ramp = Math.max(0, c.getDouble("ramp", 2.0));
-        neighborFraction = clamp(c.getDouble("neighbor-fraction", 0.25), 0, 1);
+        neighborFraction = clamp(c.getDouble("neighbor-fraction", 0.5), 0, 1);
         neighborCap = clamp(c.getDouble("neighbor-cap", 50), 0, 100);
         healPerSecond = Math.max(0, c.getDouble("heal-per-second", 0.01));
         leakThreshold = clamp(c.getDouble("leak-threshold", 75), 0, 100);
@@ -59,6 +63,8 @@ public final class DecaySettings {
         afkSeconds = Math.max(5, c.getInt("afk-seconds", 60));
         subsurfaceDepth = Math.max(1, c.getInt("subsurface-depth", 6));
         haste = Math.max(1, c.getDouble("haste", 3.0));
+        radius = Math.max(0, Math.min(6, c.getInt("radius", 2)));
+        falloff = Math.max(1, Math.min(6, c.getInt("falloff", 2)));
         minMove = Math.max(0.1, c.getDouble("min-move", 0.5));
     }
 

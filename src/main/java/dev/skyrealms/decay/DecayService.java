@@ -231,19 +231,24 @@ public final class DecayService implements Listener {
                 lastActive.put(id, now);
             }
             ChunkPos here = new ChunkPos(l.getBlockX() >> 4, l.getBlockZ() >> 4);
-            for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) held.add(new ChunkPos(here.x + dx, here.z + dz));
+            int reach = s.radius + s.falloff;
+            for (int dx = -reach; dx <= reach; dx++) for (int dz = -reach; dz <= reach; dz++) held.add(new ChunkPos(here.x + dx, here.z + dz));
 
             boolean afk = now - lastActive.getOrDefault(id, now) > s.afkSeconds * 1000L;
             double factor = afk ? 0 : resistFactor(p);
             if (factor > 0) {
-                Cell center = cell(w, here);
-                if (center != null) {
-                    double gain = s.gainPerSecond * factor * (1 + s.ramp * center.value / 100.0);
-                    center.value = Math.min(100, center.value + gain);
-                    for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
-                        if (dx == 0 && dz == 0) continue;
-                        Cell n = cell(w, new ChunkPos(here.x + dx, here.z + dz));
-                        if (n != null && n.value < s.neighborCap) n.value = Math.min(s.neighborCap, n.value + gain * s.neighborFraction);
+                // Full strength out to `radius` chunks, then rings that fade out over `falloff` chunks.
+                for (int dx = -reach; dx <= reach; dx++) for (int dz = -reach; dz <= reach; dz++) {
+                    Cell n = cell(w, new ChunkPos(here.x + dx, here.z + dz));
+                    if (n == null) continue;
+                    int d = Math.max(Math.abs(dx), Math.abs(dz));
+                    double gain = s.gainPerSecond * factor * (1 + s.ramp * n.value / 100.0);
+                    if (d <= s.radius) {
+                        n.value = Math.min(100, n.value + gain);
+                    } else if (n.value < s.neighborCap) {
+                        int ring = d - s.radius; // 1..falloff
+                        double strength = s.neighborFraction * (s.falloff - ring + 1) / (double) s.falloff;
+                        n.value = Math.min(s.neighborCap, n.value + gain * strength);
                     }
                 }
             }
