@@ -185,6 +185,8 @@ public final class SkyRealmsPlugin extends JavaPlugin {
                 tonic = new dev.skyrealms.decay.CleansingTonic(this, cfg.getConfigurationSection("tonic"));
                 tonic.start();
                 decay.addResist(tonic);
+                // Brewing: Tainted Potion and Cleansing Tonic I-III (plus splash) at a brewing stand.
+                new dev.skyrealms.decay.TonicBrewing(this, tonic).register();
                 decay.addResist(ward);
                 // Warded armor recipes: templates at the crafting table, levels at the smithing table.
                 wardSmithing = new dev.skyrealms.decay.WardSmithing(this, ward);
