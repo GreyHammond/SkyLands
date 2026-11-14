@@ -279,7 +279,10 @@ public final class WorldRecycler implements Listener {
     private static boolean deleteTree(Path root) {
         if (!Files.exists(root)) return true;
         try (Stream<Path> walk = Files.walk(root)) {
-            List<Path> paths = walk.sorted(Comparator.reverseOrder()).toList();
+            List<Path> paths = new ArrayList<>(walk.sorted(Comparator.reverseOrder()).toList());
+            // Keep level.dat until last, so a half-finished delete still passes safeToDelete on retry.
+            Path marker = root.resolve("level.dat");
+            if (paths.remove(marker)) paths.add(paths.size() - 1, marker); // just before the root folder itself
             boolean ok = true;
             for (Path p : paths) {
                 try { Files.deleteIfExists(p); } catch (IOException e) { ok = false; }
