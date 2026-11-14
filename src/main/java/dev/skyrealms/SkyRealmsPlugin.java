@@ -58,6 +58,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private dev.skyrealms.decay.CleansingTonic tonic;
     private dev.skyrealms.decay.WardedGear ward;
     private dev.skyrealms.economy.VoidExchange exchange;
+    private dev.skyrealms.economy.VisitorTips tips;
 
     @Override
     public void onEnable() {
@@ -138,6 +139,9 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         dev.skyrealms.economy.VoidItems.init(this);
         exchange = new dev.skyrealms.economy.VoidExchange(this, cfg.getConfigurationSection("exchange"));
         getServer().getPluginManager().registerEvents(exchange, this);
+        // Visitor tips: visiting an island pays the owner and the visitor (daily caps).
+        tips = new dev.skyrealms.economy.VisitorTips(this, cfg.getConfigurationSection("tips"));
+        getServer().getPluginManager().registerEvents(tips, this);
 
         service = new RealmService(this);
         menus = new Menus(this, service);
@@ -230,4 +234,5 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public dev.skyrealms.decay.CleansingTonic tonic() { return tonic; }
     public dev.skyrealms.decay.WardedGear ward() { return ward; }
     public dev.skyrealms.economy.VoidExchange exchange() { return exchange; }
+    public dev.skyrealms.economy.VisitorTips tips() { return tips; }
 }
