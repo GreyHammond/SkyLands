@@ -256,7 +256,8 @@ public final class DecayService implements Listener {
             Cell c = cells.get(p);
             if (c == null) continue;
             if (!held.contains(p)) c.value -= s.healPerSecond;
-            if (c.value < MIN) { cells.remove(p); if (w.isChunkLoaded(p.x, p.z)) store(w.getChunkAt(p.x, p.z), null); continue; }
+            // Tiny values only get dropped once nobody is adding to them, or a fresh chunk could never get started.
+            if (c.value <= 0 || (c.value < MIN && !held.contains(p))) { cells.remove(p); if (w.isChunkLoaded(p.x, p.z)) store(w.getChunkAt(p.x, p.z), null); continue; }
             if (c.value >= s.leakThreshold && s.leakPerSecond > 0) {
                 int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
                 for (int[] d : dirs) {
