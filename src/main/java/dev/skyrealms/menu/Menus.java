@@ -115,6 +115,7 @@ public final class Menus {
         Menu m = new Menu(3, "<dark_purple>Void Exchange");
         int col = 11;
         for (var k : dev.skyrealms.economy.VoidItems.Kind.values()) {
+            if (!k.sellable) continue;
             int n = ex.count(p, k);
             var icon = dev.skyrealms.economy.VoidItems.create(k, 1);
             var meta = icon.getItemMeta();

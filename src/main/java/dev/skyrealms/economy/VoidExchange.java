@@ -42,7 +42,7 @@ public final class VoidExchange implements Listener {
         int n = 0;
         for (ItemStack it : p.getInventory().getStorageContents()) {
             VoidItems.Kind k = VoidItems.kindOf(it);
-            if (k != null && (kind == null || k == kind)) n += it.getAmount();
+            if (k != null && k.sellable && (kind == null || k == kind)) n += it.getAmount();
         }
         return n;
     }
@@ -51,7 +51,7 @@ public final class VoidExchange implements Listener {
         double v = 0;
         for (ItemStack it : p.getInventory().getStorageContents()) {
             VoidItems.Kind k = VoidItems.kindOf(it);
-            if (k != null && (kind == null || k == kind)) v += price(k) * it.getAmount();
+            if (k != null && k.sellable && (kind == null || k == kind)) v += price(k) * it.getAmount();
         }
         return v;
     }
@@ -62,7 +62,7 @@ public final class VoidExchange implements Listener {
         double total = 0;
         for (int i = 0; i < contents.length; i++) {
             VoidItems.Kind k = VoidItems.kindOf(contents[i]);
-            if (k == null || (kind != null && k != kind)) continue;
+            if (k == null || !k.sellable || (kind != null && k != kind)) continue;
             total += price(k) * contents[i].getAmount();
             contents[i] = null;
         }
@@ -74,6 +74,8 @@ public final class VoidExchange implements Listener {
 
     @EventHandler
     public void onCraft(PrepareItemCraftEvent e) {
+        // Our own recipes (the result is a void item, e.g. a Ward Template) may use void items.
+        if (e.getRecipe() != null && VoidItems.kindOf(e.getRecipe().getResult()) != null) return;
         for (ItemStack it : e.getInventory().getMatrix()) {
             if (VoidItems.kindOf(it) != null) { e.getInventory().setResult(null); return; }
         }

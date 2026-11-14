@@ -175,6 +175,7 @@ public final class FormMenus {
         List<Btn> b = new ArrayList<>();
         StringBuilder content = new StringBuilder(W + "Sell what you bring back from the corruption.\n");
         for (var k : dev.skyrealms.economy.VoidItems.Kind.values()) {
+            if (!k.sellable) continue;
             int n = ex.count(p, k);
             String label = k == dev.skyrealms.economy.VoidItems.Kind.SHARD ? "Void Shards" : "Corrupted Remnants";
             content.append("\n").append(GR).append(label).append(": ").append(W).append(n)
