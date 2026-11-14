@@ -51,7 +51,7 @@ public final class DecayService implements Listener {
     private final Map<UUID, double[]> lastPos = new HashMap<>();
     private final Map<UUID, Long> lastActive = new HashMap<>();
     private final List<ChunkPos> convertible = new ArrayList<>();
-    private volatile DecayResist resist = DecayResist.NONE;
+    private final List<DecayResist> resists = new java.util.concurrent.CopyOnWriteArrayList<>();
     private boolean running;
 
     public DecayService(Plugin plugin, DecaySettings settings) {
@@ -64,7 +64,14 @@ public final class DecayService implements Listener {
     public DecaySettings settings() { return s; }
     public boolean isRunning() { return running; }
     public String worldName() { return s.world; }
-    public void setResist(DecayResist r) { this.resist = r == null ? DecayResist.NONE : r; }
+    /** Adds a source of resistance (tonic, gear...). All sources multiply together; each returns 0..1. */
+    public void addResist(DecayResist r) { if (r != null) resists.add(r); }
+
+    private double resistFactor(Player p) {
+        double f = 1;
+        for (DecayResist r : resists) f *= Math.max(0, Math.min(1, r.factor(p)));
+        return f;
+    }
 
     /** Registers listeners and starts the tick loops. Returns false (with a log line) if it refuses to run. */
     public boolean start(String skyWorldName) {
@@ -207,7 +214,7 @@ public final class DecayService implements Listener {
             for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) held.add(new ChunkPos(here.x + dx, here.z + dz));
 
             boolean afk = now - lastActive.getOrDefault(id, now) > s.afkSeconds * 1000L;
-            double factor = afk ? 0 : Math.max(0, Math.min(1, resist.factor(p)));
+            double factor = afk ? 0 : resistFactor(p);
             if (factor > 0) {
                 Cell center = cell(w, here);
                 if (center != null) {
