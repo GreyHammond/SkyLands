@@ -13,6 +13,7 @@ package dev.skyrealms.transit;
 import dev.skyrealms.util.Msg;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.Waterlogged;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -26,6 +27,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -45,6 +47,19 @@ public final class FallTransit implements Listener {
     private final double departY, arriveY, maxOffset, closenessBias, minArriveSpeed;
     private final int rerolls;
     private final long protectionMillis;
+    /** Outward search for dry land when every nearby roll lands in water. */
+    private final int landSearchRadius, landSearchStep, landSearchMaxChecks;
+
+    /** Water, kelp and the like on top of a column: an ocean or a lake, not ground. */
+    private static final Set<Material> WATERY = EnumSet.of(
+            Material.WATER, Material.BUBBLE_COLUMN, Material.KELP, Material.KELP_PLANT,
+            Material.SEAGRASS, Material.TALL_SEAGRASS);
+
+    /** A chosen landing spot, and whether it's on dry ground. */
+    private record Landing(Location loc, boolean dry) {}
+
+    /** Players whose fall found no land: they get a boat when they hit the water. */
+    private final Set<UUID> boatFalls = new HashSet<>();
 
     /** Players between "fell off" and "teleported". */
     private final Set<UUID> departing = new HashSet<>();
@@ -64,6 +79,9 @@ public final class FallTransit implements Listener {
         this.rerolls = Math.max(0, cfg.getInt("reroll-unsafe-landings", 8));
         this.minArriveSpeed = Math.abs(cfg.getDouble("min-arrive-speed", 1.0));
         this.protectionMillis = cfg.getLong("protection-seconds", 90) * 1000L;
+        this.landSearchRadius = Math.max(0, cfg.getInt("land-search-radius", 1000));
+        this.landSearchStep = Math.max(16, cfg.getInt("land-search-step", 64));
+        this.landSearchMaxChecks = Math.max(0, cfg.getInt("land-search-max-checks", 120));
 
         Bukkit.getScheduler().runTaskTimer(plugin, this::tickProtection, 10L, 10L);
     }
@@ -84,8 +102,9 @@ public final class FallTransit implements Listener {
             Msg.error(p, "The overworld <white>" + groundName + "</white> isn't loaded. Tell an admin.");
             return;
         }
-        findLanding(ground, to.getX(), to.getZ(), rerolls).thenAccept(landing -> {
+        findLanding(ground, to.getX(), to.getZ()).thenAccept(found -> {
             if (!p.isOnline()) { departing.remove(p.getUniqueId()); return; }
+            Location landing = found.loc();
             Vector momentum = p.getVelocity();
             landing.setYaw(p.getYaw());
             landing.setPitch(p.getPitch());
@@ -93,6 +112,7 @@ public final class FallTransit implements Listener {
                 departing.remove(p.getUniqueId());
                 if (!ok) return;
                 protectedFalls.put(p.getUniqueId(), System.currentTimeMillis() + protectionMillis);
+                if (found.dry()) boatFalls.remove(p.getUniqueId()); else boatFalls.add(p.getUniqueId());
                 if (plugin instanceof dev.skyrealms.SkyRealmsPlugin sr && sr.milestones() != null)
                     sr.milestones().trigger(p, dev.skyrealms.player.Milestone.LANDED_OVERWORLD);
                 groundedChecks.remove(p.getUniqueId());
@@ -108,25 +128,99 @@ public final class FallTransit implements Listener {
         });
     }
 
-    /** Picks a random spot near (x, z), loads its chunk off-thread, and re-rolls unsafe surfaces. */
-    private java.util.concurrent.CompletableFuture<Location> findLanding(World w, double x, double z, int triesLeft) {
+    /**
+     * Picks where a fall lands: random spots near (x, z) first; if every one is water or otherwise
+     * unsafe, rings of widening radius for the nearest dry land; failing that, straight below (x, z).
+     * Every chunk is loaded off the main thread.
+     */
+    private CompletableFuture<Landing> findLanding(World w, double x, double z) {
+        return randomRoll(w, x, z, rerolls).thenCompose(hit -> {
+            if (hit != null) return CompletableFuture.completedFuture(new Landing(hit, true));
+            return ringSearch(w, x, z, rings(w, x, z), 0, landSearchMaxChecks).thenCompose(ring -> {
+                if (ring != null) return CompletableFuture.completedFuture(new Landing(ring, true));
+                // Nothing dry in range: land straight below, and leave them a boat.
+                int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
+                return w.getChunkAtAsync(bx >> 4, bz >> 4).thenApply(c -> new Landing(arrival(w, x, z, w.getHighestBlockAt(bx, bz)), false));
+            });
+        });
+    }
+
+    /** Random spots within max-landing-offset; completes with null once all tries are unsafe. */
+    private CompletableFuture<Location> randomRoll(World w, double x, double z, int triesLeft) {
         ThreadLocalRandom r = ThreadLocalRandom.current();
         double angle = r.nextDouble(Math.PI * 2);
         double dist = maxOffset * Math.pow(r.nextDouble(), closenessBias);
         double lx = x + Math.cos(angle) * dist;
         double lz = z + Math.sin(angle) * dist;
-        WorldBorder border = w.getWorldBorder();
-        Location candidate = new Location(w, lx, 0, lz);
-        if (!border.isInside(candidate)) { lx = x; lz = z; }
+        if (!w.getWorldBorder().isInside(new Location(w, lx, 0, lz))) { lx = x; lz = z; }
         final double fx = lx, fz = lz;
         return w.getChunkAtAsync((int) Math.floor(fx) >> 4, (int) Math.floor(fz) >> 4).thenCompose(chunk -> {
             Block top = w.getHighestBlockAt((int) Math.floor(fx), (int) Math.floor(fz));
-            boolean unsafe = UNSAFE.contains(top.getType()) || top.getType().isAir();
-            if (unsafe && triesLeft > 0) return findLanding(w, x, z, triesLeft - 1);
-            double y = Math.min(arriveY, w.getMaxHeight() - 2);
-            y = Math.max(y, top.getY() + 40); // always arrive with some sky to fall through
-            return java.util.concurrent.CompletableFuture.completedFuture(new Location(w, fx, y, fz));
+            if (safe(top)) return CompletableFuture.completedFuture(arrival(w, fx, fz, top));
+            if (triesLeft > 0) return randomRoll(w, x, z, triesLeft - 1);
+            return CompletableFuture.completedFuture((Location) null);
         });
+    }
+
+    /** Sample points on rings around (x, z), out to land-search-radius, grouped ring by ring. */
+    private List<List<double[]>> rings(World w, double x, double z) {
+        List<List<double[]>> out = new ArrayList<>();
+        WorldBorder border = w.getWorldBorder();
+        for (int radius = landSearchStep; radius <= landSearchRadius; radius += landSearchStep) {
+            int n = Math.max(8, Math.min(16, (int) Math.round(2 * Math.PI * radius / landSearchStep)));
+            double start = ThreadLocalRandom.current().nextDouble(Math.PI * 2);
+            List<double[]> ring = new ArrayList<>(n);
+            for (int i = 0; i < n; i++) {
+                double a = start + i * 2 * Math.PI / n;
+                double px = x + Math.cos(a) * radius, pz = z + Math.sin(a) * radius;
+                if (border.isInside(new Location(w, px, 0, pz))) ring.add(new double[]{px, pz});
+            }
+            if (!ring.isEmpty()) out.add(ring);
+        }
+        return out;
+    }
+
+    /**
+     * Checks one ring at a time (its points loaded together), nearest ring first, and completes with
+     * the first dry spot, or null when the rings or the check budget run out.
+     */
+    private CompletableFuture<Location> ringSearch(World w, double x, double z, List<List<double[]>> rings, int index, int budget) {
+        if (index >= rings.size() || budget <= 0) return CompletableFuture.completedFuture(null);
+        List<double[]> ring = rings.get(index);
+        if (ring.size() > budget) ring = ring.subList(0, budget);
+        List<double[]> pts = ring;
+        List<CompletableFuture<Location>> checks = new ArrayList<>(pts.size());
+        for (double[] pt : pts) {
+            int bx = (int) Math.floor(pt[0]), bz = (int) Math.floor(pt[1]);
+            checks.add(w.getChunkAtAsync(bx >> 4, bz >> 4).thenApply(c -> {
+                Block top = w.getHighestBlockAt(bx, bz);
+                return safe(top) ? arrival(w, pt[0], pt[1], top) : null;
+            }));
+        }
+        int spent = pts.size();
+        return CompletableFuture.allOf(checks.toArray(new CompletableFuture[0])).thenCompose(v -> {
+            for (CompletableFuture<Location> c : checks) {
+                Location hit = c.join();
+                if (hit != null) return CompletableFuture.completedFuture(hit);
+            }
+            return ringSearch(w, x, z, rings, index + 1, budget - spent);
+        });
+    }
+
+    /** Dry, solid ground that isn't lava, cactus or the like. */
+    private static boolean safe(Block top) {
+        Material m = top.getType();
+        if (m.isAir() || UNSAFE.contains(m) || WATERY.contains(m) || Tag.ICE.isTagged(m)) return false;
+        if (top.getBlockData() instanceof Waterlogged wl && wl.isWaterlogged()) return false;
+        String biome = top.getBiome().getKey().getKey();
+        return !biome.contains("ocean") && !biome.contains("river");
+    }
+
+    /** High above the chosen spot, always with some sky to fall through. */
+    private Location arrival(World w, double x, double z, Block top) {
+        double y = Math.min(arriveY, w.getMaxHeight() - 2);
+        y = Math.max(y, top.getY() + 40);
+        return new Location(w, x, y, z);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -149,6 +243,18 @@ public final class FallTransit implements Listener {
     /** Protection ends on its own when they land softly (water, elytra) or it times out. */
     private void tickProtection() {
         long now = System.currentTimeMillis();
+        // A fall that found no land: hand over a boat the moment they hit the water.
+        for (Iterator<UUID> bi = boatFalls.iterator(); bi.hasNext(); ) {
+            UUID id = bi.next();
+            Player bp = Bukkit.getPlayer(id);
+            if (bp == null || !protectedFalls.containsKey(id)) { bi.remove(); continue; }
+            if (!bp.isInWater()) continue;
+            bi.remove();
+            for (var left : bp.getInventory().addItem(new org.bukkit.inventory.ItemStack(Material.OAK_BOAT)).values()) {
+                bp.getWorld().dropItemNaturally(bp.getLocation(), left);
+            }
+            Msg.send(bp, "No land in sight. The winds left you a boat.");
+        }
         Iterator<Map.Entry<UUID, Long>> it = protectedFalls.entrySet().iterator();
         while (it.hasNext()) {
             var entry = it.next();
@@ -170,6 +276,7 @@ public final class FallTransit implements Listener {
     public void onQuit(PlayerQuitEvent e) {
         UUID id = e.getPlayer().getUniqueId();
         departing.remove(id);
+        // Keep boatFalls too: someone who rejoins mid-fall still gets the boat if they land in water.
         // Keep protectedFalls: if they log out mid-fall they'll still land safely on rejoin (until expiry).
         groundedChecks.remove(id);
     }

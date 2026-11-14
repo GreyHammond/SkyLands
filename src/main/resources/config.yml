@@ -146,8 +146,15 @@ transit:
   max-landing-offset: 200
   # >1 favours landings closer to directly-below; 1 = evenly spread.
   landing-closeness-bias: 1.6
-  # Re-roll landing spots that are lava, fire, cactus, etc.
+  # Re-roll landing spots that are lava, fire, cactus, water, ice, ocean or river.
   reroll-unsafe-landings: 8
+  # If every re-roll is unsafe, search outward in rings for the nearest dry land:
+  # out to this many blocks, one ring every land-search-step blocks.
+  land-search-radius: 1000
+  land-search-step: 64
+  # Most landing spots checked during that search (each loads a chunk off the main thread).
+  # Nothing dry found: the player lands straight below and is given a boat.
+  land-search-max-checks: 120
   # Minimum downward speed applied on arrival so you don't "hover".
   min-arrive-speed: 1.0
   # Seconds the one-time landing protection lasts before it expires.
