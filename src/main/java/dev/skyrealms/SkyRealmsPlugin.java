@@ -59,6 +59,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private dev.skyrealms.decay.WardedGear ward;
     private dev.skyrealms.economy.VoidExchange exchange;
     private dev.skyrealms.economy.CorruptionHarvest harvest;
+    private dev.skyrealms.economy.CorruptedMobs corruptedMobs;
 
     @Override
     public void onEnable() {
@@ -181,6 +182,9 @@ public final class SkyRealmsPlugin extends JavaPlugin {
                 // Corruption harvest: Void Shards from corrupted land.
                 harvest = new dev.skyrealms.economy.CorruptionHarvest(this, cfg.getConfigurationSection("harvest"));
                 harvest.start();
+                // Corrupted mob bounties: tougher mobs on corrupted land that drop void items.
+                corruptedMobs = new dev.skyrealms.economy.CorruptedMobs(this, cfg.getConfigurationSection("corrupted-mobs"));
+                corruptedMobs.start();
             }
         });
 
@@ -235,4 +239,5 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public dev.skyrealms.decay.WardedGear ward() { return ward; }
     public dev.skyrealms.economy.VoidExchange exchange() { return exchange; }
     public dev.skyrealms.economy.CorruptionHarvest harvest() { return harvest; }
+    public dev.skyrealms.economy.CorruptedMobs corruptedMobs() { return corruptedMobs; }
 }
