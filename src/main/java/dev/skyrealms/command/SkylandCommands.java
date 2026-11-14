@@ -63,8 +63,15 @@ public final class SkylandCommands {
                     else Msg.error(ctx.getSource().getSender(), "Players only.");
                     return Command.SINGLE_SUCCESS;
                 });
+        root.then(Commands.literal("claim").executes(ctx -> {
+            if (!(ctx.getSource().getExecutor() instanceof Player p)) { Msg.error(ctx.getSource().getSender(), "Players only."); return 0; }
+            if (plugin.islands().of(p.getUniqueId()) != null) Msg.error(p, "You already have an island.");
+            else plugin.menus().claimFirstIsland(p);
+            return Command.SINGLE_SUCCESS;
+        }));
         TonicCommands.attachPlayer(root, plugin);
         dev.skyrealms.economy.VoidCommands.attachPlayer(root, plugin);
+        dev.skyrealms.journal.JournalCommands.attachPlayer(root, plugin);
         dev.skyrealms.contracts.ContractCommands.attachPlayer(root, plugin);
         dev.skyrealms.decay.WardCommands.attachPlayer(root, plugin);
         return root.build();
@@ -178,6 +185,7 @@ public final class SkylandCommands {
         dev.skyrealms.decay.recycle.RecycleCommands.attach(root, plugin);
         TonicCommands.attachAdmin(root, plugin);
         dev.skyrealms.economy.VoidCommands.attachAdmin(root, plugin);
+        dev.skyrealms.journal.JournalCommands.attachAdmin(root, plugin);
         dev.skyrealms.contracts.ContractCommands.attachAdmin(root, plugin);
         dev.skyrealms.decay.WardCommands.attachAdmin(root, plugin);
 
@@ -279,6 +287,7 @@ public final class SkylandCommands {
                 "recycle [status|now [seconds]|cancel] <dark_gray>- weekly overworld recycle",
                 "tonic give <player> <1-3> [amount] <dark_gray>- give Cleansing Tonics",
                 "void give <player> <shard|remnant> [amount] <dark_gray>- give void items",
+                dev.skyrealms.journal.JournalCommands.adminHelp(),
                 dev.skyrealms.contracts.ContractCommands.adminHelp(),
                 "reload <dark_gray>- reload piece files"))
             to.sendMessage(Msg.c(" <aqua>/skylandadmin <gray>" + l));

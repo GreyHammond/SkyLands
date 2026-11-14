@@ -20,9 +20,11 @@ import org.bukkit.entity.Player;
  * so the plugin runs fine without it.
  */
 public final class BedrockUi {
+    private final SkyRealmsPlugin plugin;
     private final Object forms; // FormMenus, typed loosely so the class isn't loaded without Floodgate
 
     public BedrockUi(SkyRealmsPlugin plugin) {
+        this.plugin = plugin;
         boolean enabled = plugin.getConfig().getBoolean("bedrock.forms", true);
         boolean floodgate = Bukkit.getPluginManager().isPluginEnabled("floodgate");
         Object f = null;
@@ -50,6 +52,13 @@ public final class BedrockUi {
     public void openExchange(Player p) { ((FormMenus) forms).exchange(p); }
     public void openRecipes(Player p) { ((FormMenus) forms).recipes(p); }
     public void openClaimFirstIsland(Player p) { ((FormMenus) forms).claimFirstIsland(p); }
+
+    private Object journalForms; // JournalForms, created on first use (needs Floodgate)
+
+    public void openJournal(Player p, boolean storyFirst) {
+        if (journalForms == null) journalForms = new JournalForms(plugin);
+        ((JournalForms) journalForms).open(p, storyFirst);
+    }
 
     /** The FormMenus instance (or null), for tests and integrations. */
     public Object forms() { return forms; }

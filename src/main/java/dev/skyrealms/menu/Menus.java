@@ -79,6 +79,9 @@ public final class Menus {
                             : item(Material.FEATHER, "<aqua>Hotbar Shortcuts: <red>Off", "<gray>Put a menu book and a return", "<gray>feather in your hotbar, so you", "<gray>never need a command.", "<yellow>Click to turn on"),
                     pl -> { plugin.shortcuts().toggle(pl); main(pl); });
         }
+        m.button(4, glow(item(Material.WRITTEN_BOOK, "<aqua>Guide", "<gray>The story, your next objective",
+                "<gray>and every journal page you've found.", "<yellow>" + plugin.journal().unlockedCount(p) + "/"
+                + plugin.journal().countedPages().size() + " pages")), this::journal);
         m.button(22, glow(item(Material.ECHO_SHARD, "<light_purple>The Corruption", "<gray>Sell what you bring back from",
                 "<gray>the corrupted overworld.")), this::corruption);
         m.button(26, item(Material.KNOWLEDGE_BOOK, "<aqua>About", "<white>" + dev.skyrealms.Credits.ATTRIBUTION,
@@ -154,6 +157,9 @@ public final class Menus {
         }
         exchange(p);
     }
+
+    /** The Guide: written book on Java, forms on Bedrock. */
+    public void journal(Player p) { p.closeInventory(); plugin.journal().openFor(p); }
 
     /** Return / visit. */
     public void travel(Player p) {

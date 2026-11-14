@@ -62,6 +62,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private dev.skyrealms.player.PlayerProfiles profiles;
     private dev.skyrealms.player.Milestones milestones;
     private dev.skyrealms.player.FirstJoin firstJoin;
+    private dev.skyrealms.journal.Journal journal;
     private dev.skyrealms.economy.CorruptionHarvest harvest;
     private dev.skyrealms.economy.CorruptedMobs corruptedMobs;
     private dev.skyrealms.economy.VisitorTips tips;
@@ -148,6 +149,9 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         milestones = new dev.skyrealms.player.Milestones(this);
         getServer().getPluginManager().registerEvents(milestones, this);
         Bukkit.getScheduler().runTaskTimer(this, profiles::save, 1200L, 1200L);
+        // The Guide: guided tutorial + journal, driven by milestones.
+        journal = new dev.skyrealms.journal.Journal(this, cfg.getConfigurationSection("tutorial"));
+        journal.start();
 
         // Void items and the exchange that buys them (shared by harvest, mob bounties and contracts).
         dev.skyrealms.economy.VoidItems.init(this);
@@ -222,6 +226,15 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         // First join (welcome / automatic free island) and island respawns.
         firstJoin = new dev.skyrealms.player.FirstJoin(this);
         getServer().getPluginManager().registerEvents(firstJoin, this);
+        // First join opens the journal at the story, then offers a one-click claim of the free island.
+        // Java: the story book, plus a clickable claim link. Bedrock (no clickable chat, one form at a time):
+        // straight to the claim form; the story is in the Guide.
+        firstJoin.onFirstJoin = p -> {
+            if (journal == null || bedrock.handles(p)) { menus.claimFirstIsland(p); return; }
+            journal.start(p);
+            p.sendMessage(dev.skyrealms.util.Msg.c("<gray>Your first island is waiting. "
+                    + "<click:run_command:'/skyland claim'><hover:show_text:'<green>Pick a biome for your free island'><green><bold>[Claim your free island]</bold></green></hover></click>"));
+        };
 
         SkylandCommands commands = new SkylandCommands(this);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> commands.register(event.registrar()));
@@ -279,6 +292,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public dev.skyrealms.player.PlayerProfiles profiles() { return profiles; }
     public dev.skyrealms.player.Milestones milestones() { return milestones; }
     public dev.skyrealms.player.FirstJoin firstJoin() { return firstJoin; }
+    public dev.skyrealms.journal.Journal journal() { return journal; }
     public dev.skyrealms.economy.CorruptionHarvest harvest() { return harvest; }
     public dev.skyrealms.economy.CorruptedMobs corruptedMobs() { return corruptedMobs; }
     public dev.skyrealms.economy.VisitorTips tips() { return tips; }
