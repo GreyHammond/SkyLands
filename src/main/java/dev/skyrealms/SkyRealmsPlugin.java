@@ -52,6 +52,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private dev.skyrealms.cosmetic.NamePrompt namePrompt;
     private dev.skyrealms.bedrock.BedrockUi bedrock;
     private dev.skyrealms.decay.DecayService decay;
+    private dev.skyrealms.decay.WardedGear ward;
 
     @Override
     public void onEnable() {
@@ -149,7 +150,9 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         // Overworld decay (off unless decay.enabled is true). Starts after all worlds have loaded.
         decay = new dev.skyrealms.decay.DecayService(this,
                 dev.skyrealms.decay.DecaySettings.load(cfg.getConfigurationSection("decay"), overName));
-        Bukkit.getScheduler().runTask(this, () -> decay.start(skyName));
+        // Warded gear: armor that cuts the decay its wearer causes. Registered once decay is running.
+        ward = new dev.skyrealms.decay.WardedGear(this, cfg.getConfigurationSection("ward"));
+        Bukkit.getScheduler().runTask(this, () -> { if (decay.start(skyName)) decay.addResist(ward); });
 
         SkylandCommands commands = new SkylandCommands(this);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> commands.register(event.registrar()));
@@ -190,4 +193,5 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public dev.skyrealms.cosmetic.NamePrompt namePrompt() { return namePrompt; }
     public dev.skyrealms.bedrock.BedrockUi bedrock() { return bedrock; }
     public dev.skyrealms.decay.DecayService decay() { return decay; }
+    public dev.skyrealms.decay.WardedGear ward() { return ward; }
 }

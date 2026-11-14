@@ -56,14 +56,15 @@ public final class SkylandCommands {
     // ---- /skyland ------------------------------------------------------------------
 
     private LiteralCommandNode<CommandSourceStack> skyland() {
-        return Commands.literal("skyland")
+        var root = Commands.literal("skyland")
                 .requires(src -> src.getSender().hasPermission("skyrealms.use"))
                 .executes(ctx -> {
                     if (ctx.getSource().getExecutor() instanceof Player p) plugin.menus().main(p);
                     else Msg.error(ctx.getSource().getSender(), "Players only.");
                     return Command.SINGLE_SUCCESS;
-                })
-                .build();
+                });
+        dev.skyrealms.decay.WardCommands.attachPlayer(root, plugin);
+        return root.build();
     }
 
     // ---- /ihome (island home; named so it never clashes with Essentials' /home) ----------
@@ -171,6 +172,8 @@ public final class SkylandCommands {
                         .executes(ctx -> decaySet(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "value")))))
                 .then(Commands.literal("clear").executes(ctx -> decayClear(ctx.getSource()))));
 
+        dev.skyrealms.decay.WardCommands.attachAdmin(root, plugin);
+
         root.then(Commands.literal("reload").executes(ctx -> {
             plugin.library().reload();
             Msg.send(ctx.getSource().getSender(), "Pieces reloaded. (Restart the server to apply config.yml changes.)");
@@ -267,6 +270,8 @@ public final class SkylandCommands {
                 "xp <owner> [add|set <amount>] <dark_gray>- view or change island XP",
                 "decay [set <0-100>|clear] <dark_gray>- overworld corruption in your chunk / all chunks",
                 "reload <dark_gray>- reload piece files"))
+            to.sendMessage(Msg.c(" <aqua>/skylandadmin <gray>" + l));
+        for (String l : dev.skyrealms.decay.WardCommands.adminHelp())
             to.sendMessage(Msg.c(" <aqua>/skylandadmin <gray>" + l));
         to.sendMessage(Msg.c(" <dark_gray>Sizes can also be an exact radius from " + MIN_RADIUS + " to " + MAX_RADIUS + "."));
         return Command.SINGLE_SUCCESS;
