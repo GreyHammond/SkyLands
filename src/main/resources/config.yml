@@ -289,7 +289,23 @@ ward:
   # required-island-level above).
   shop: false
 
-# The Void Exchange buys what players bring back from the corruption.
+# Essence: corruption purified at the Purifier (/skyland > The Corruption). Islands grow on it.
+essence:
+  # Pay for islands (buying, upgrading, growing land, unlocking biomes, restyling) in Essence
+  # instead of money. Island prices in this file stay written in money and are converted.
+  islands: true
+  # How much money each Essence is worth for that conversion (rounded up).
+  # 125: Small 40, Medium 160 (upgrade 120), Large 600, a piece of land 8, most biomes 40-320.
+  money-per-essence: 125
+  # Rewards (tutorial, contracts, visitor tips, mob bounties) are written in money and paid as
+  # Essence at this rate: 25 means a 100 reward pays 4 Essence.
+  money-per-reward-essence: 25
+  # Essence gained by purifying one of each at the Purifier.
+  purify:
+    shard: 1
+    remnant: 4
+
+# Old sell prices for void items. Unused while essence.islands is on (the Purifier only purifies).
 exchange:
   prices:
     shard: 25     # Void Shard
@@ -422,6 +438,8 @@ tutorial:
   # Step order by journal page id. Leave out a step to drop it.
   order: [getting_started, world_below, returning_home, corruption, void_shards, corrupted_creatures,
           earning, corrupted_ingredients, cleansing_tonics, warded_armor, ward_levels, daily_contracts]
+  # Rewards are written in money; with essence.islands on they're paid as Essence at
+  # essence.money-per-reward-essence (25): 100 = 4 Essence, 500 = 20. The whole tutorial pays 96.
   rewards:
     getting_started: 0         # the free island is the reward
     world_below: 100

@@ -159,8 +159,8 @@ public final class CorruptedMobs implements Listener {
         }
         if (bounty > 0) {
             double pay = bounty * stage;
-            plugin.money().refund(killer, pay);
-            killer.sendActionBar(Msg.c("<dark_purple>Bounty <gold>+" + plugin.money().format(pay)));
+            plugin.essence().payReward(killer, pay);
+            killer.sendActionBar(Msg.c("<dark_purple>Bounty <aqua>+" + plugin.essence().rewardLabel(pay)));
         }
         mob.getWorld().spawnParticle(Particle.REVERSE_PORTAL, mob.getLocation().add(0, 1, 0), 30, 0.4, 0.6, 0.4, 0.05);
     }

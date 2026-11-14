@@ -43,6 +43,23 @@ public final class RealmService {
 
     public String money(double amount) { return plugin.money().format(amount); }
 
+    // ---- island prices: Essence (default) or money -------------------------------------
+
+    private boolean essenceIslands() { return plugin.essence() != null && plugin.essence().islands; }
+
+    /** An island price for display: "120 Essence", or money when Essence is off. */
+    public String cost(double moneyPrice) {
+        return essenceIslands() ? dev.skyrealms.economy.Essence.format(plugin.essence().fromMoney(moneyPrice)) : money(moneyPrice);
+    }
+
+    private boolean pay(Player p, double moneyPrice) {
+        return essenceIslands() ? plugin.essence().charge(p, moneyPrice) : plugin.money().charge(p, moneyPrice);
+    }
+
+    private void repay(Player p, double moneyPrice) {
+        if (essenceIslands()) plugin.essence().refund(p, moneyPrice); else plugin.money().refund(p, moneyPrice);
+    }
+
     // ---- buying & growing -------------------------------------------------------
 
     public boolean buy(Player p, Tier tier, String biome) { return buy(p, tier, biome, null); }
@@ -81,8 +98,8 @@ public final class RealmService {
         }
         double price = priceFor(p.getUniqueId(), tier);
         boolean freeClaim = price <= 0 && tier.price > 0;
-        if (price > 0 && !plugin.money().usable()) { Msg.error(p, "The economy isn't set up yet."); return false; }
-        if (!plugin.money().charge(p, price)) { Msg.error(p, "You need <white>" + money(price) + "</white> for a " + tier.pretty() + " island."); return false; }
+        if (price > 0 && !essenceIslands() && !plugin.money().usable()) { Msg.error(p, "The economy isn't set up yet."); return false; }
+        if (!pay(p, price)) { Msg.error(p, "You need <white>" + cost(price) + "</white> for a " + tier.pretty() + " island."); return false; }
         if (freeClaim) {
             var prof = plugin.profiles().get(p.getUniqueId());
             prof.freeIslandUsed = true;
@@ -132,7 +149,7 @@ public final class RealmService {
     /** The price as shown in menus: "Free (your first island)" for the free first Small island. */
     public String priceLabel(UUID player, Tier tier) {
         double price = priceFor(player, tier);
-        return price <= 0 && tier.price > 0 ? "Free (your first island)" : money(price);
+        return price <= 0 && tier.price > 0 ? "Free (your first island)" : cost(price);
     }
 
     /** What this player pays for an island of this size: 0 for their free first Small island. */
@@ -151,7 +168,7 @@ public final class RealmService {
         Tier next = i.tier.next();
         if (next == null) { Msg.error(p, "You're already Continental. There's nowhere bigger."); return false; }
         double cost = upgradeCost(i);
-        if (!plugin.money().charge(p, cost)) { Msg.error(p, "Upgrading to " + next.pretty() + " costs <white>" + money(cost)); return false; }
+        if (!pay(p, cost)) { Msg.error(p, "Upgrading to " + next.pretty() + " costs <white>" + cost(cost)); return false; }
         // Room only: the border and piece cap grow, and players add land with Grow Land.
         i.tier = next;
         plugin.xp().add(i, plugin.xp().levels().upgradeXp(next));
@@ -197,13 +214,13 @@ public final class RealmService {
         if (biome == null) biome = new ArrayList<>(i.biomes).get(rng.nextInt(i.biomes.size()));
         if (!i.biomes.contains(biome)) { Msg.error(p, "You don't own <white>" + biome + "</white> yet. Unlock it first."); return false; }
         double cost = growPrice();
-        if (!plugin.money().charge(p, cost)) { Msg.error(p, "Growing costs <white>" + money(cost)); return false; }
+        if (!pay(p, cost)) { Msg.error(p, "Growing costs <white>" + cost(cost)); return false; }
         String b = biome;
         double[] target = where == null ? null : targetFor(p, i, where);
         String whereText = where == null || where == Placement.AUTO ? "" : where == Placement.HERE ? " near where you're standing" : " on the " + where.label.toLowerCase() + " side";
         if (plugin.grower().growMany(plugin.skyWorld(), i, biome, 1, target,
                 () -> Msg.send(p, "New <green>" + plugin.biomes().pretty(b) + "</green> land has attached" + whereText + ".")).isEmpty()) {
-            plugin.money().refund(p, cost);
+            repay(p, cost);
             if (target != null) {
                 String side = where == Placement.HERE ? "near where you're standing" : "on the " + where.label.toLowerCase() + " side";
                 Msg.error(p, "There's no room " + side + " inside your border. Try another side, choose Automatic, or upgrade."
@@ -232,7 +249,7 @@ public final class RealmService {
         }
         double cost = unlockPrice(biome);
         String name = plugin.biomes().pretty(biome);
-        if (!plugin.money().charge(p, cost)) { Msg.error(p, "Unlocking <white>" + name + "</white> costs <white>" + money(cost)); return false; }
+        if (!pay(p, cost)) { Msg.error(p, "Unlocking <white>" + name + "</white> costs <white>" + cost(cost)); return false; }
         i.biomes.add(biome);
         plugin.xp().add(i, plugin.xp().levels().unlockBiome);
         plugin.islands().save();
@@ -265,7 +282,7 @@ public final class RealmService {
         if (plugin.xp().level(i) < need && !fromTheme) { Msg.error(p, style.displayName + " unlocks at island level " + need + "."); return false; }
         if (plugin.restyler().busy(i)) { Msg.error(p, "Your underside is already being restyled. Give it a moment."); return false; }
         double cost = restylePrice();
-        if (!plugin.money().charge(p, cost)) { Msg.error(p, "Restyling costs <white>" + money(cost)); return false; }
+        if (!pay(p, cost)) { Msg.error(p, "Restyling costs <white>" + cost(cost)); return false; }
         i.underside = style.id;
         i.pieces.replaceAll(pc -> dev.skyrealms.island.IslandGrower.GENERATED.equals(pc.variant()) ? pc.withStyle(style.id) : pc);
         plugin.islands().save();
@@ -426,8 +443,8 @@ public final class RealmService {
         plugin.islands().save();
         plugin.clearer().clear(plugin.skyWorld(), i.centerX, i.centerZ, i.half() + 48);
         double refund = deleteRefund(i);
-        plugin.money().refund(p, refund);
-        Msg.send(p, "Your island crumbles into the clouds." + (refund > 0 ? " You got <gold>" + money(refund) + "</gold> back." : "")
+        repay(p, refund);
+        Msg.send(p, "Your island crumbles into the clouds." + (refund > 0 ? " You got <gold>" + cost(refund) + "</gold> back." : "")
                 + " Your <gold>" + plugin.xp().badge(i) + "</gold> level, unlocked biomes and styles are saved for your next island.");
         return true;
     }

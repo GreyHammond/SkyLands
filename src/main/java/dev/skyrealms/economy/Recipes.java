@@ -31,7 +31,7 @@ public final class Recipes {
             "Any tonic + Corrupted Gunpowder = Splash tonic (protects players nearby)");
 
     public static final List<String> SOURCES = List.of(
-            "Void Shards: mining corrupted land, corrupted mobs",
+            "Void Shards: mining corrupted land, corrupted mobs (purify them into Essence)",
             "Corrupted Remnants: corrupted mobs",
             "Corrupted Spider Eye / Bone / Gunpowder: corrupted spiders / skeletons / creepers",
             "Echo Shards: chests in Ancient Cities (Deep Dark)");

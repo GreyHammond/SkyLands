@@ -32,6 +32,8 @@ public final class PlayerProfiles {
         /** Tutorial: index of the current step (0 = first step). Past the last step = finished. */
         public int tutorialStep;
         public boolean tutorialSkipped;
+        /** Purified Essence: what islands are paid in. */
+        public long essence;
         /** Journal page ids the player has unlocked. */
         public final Set<String> pages = new LinkedHashSet<>();
         /** Tutorial steps already paid out, so a restart never pays twice. */
@@ -73,6 +75,7 @@ public final class PlayerProfiles {
             p.freeIslandUsed = s.getBoolean("free-island-used");
             p.tutorialStep = s.getInt("tutorial-step");
             p.tutorialSkipped = s.getBoolean("tutorial-skipped");
+            p.essence = s.getLong("essence");
             p.pages.addAll(s.getStringList("pages"));
             p.rewarded.addAll(s.getIntegerList("rewarded"));
             ConfigurationSection c = s.getConfigurationSection("counters");
@@ -92,6 +95,7 @@ public final class PlayerProfiles {
             s.set("free-island-used", p.freeIslandUsed);
             s.set("tutorial-step", p.tutorialStep);
             s.set("tutorial-skipped", p.tutorialSkipped);
+            if (p.essence != 0) s.set("essence", p.essence);
             s.set("pages", new ArrayList<>(p.pages));
             s.set("rewarded", new ArrayList<>(p.rewarded));
             if (!p.counters.isEmpty()) s.createSection("counters", p.counters);

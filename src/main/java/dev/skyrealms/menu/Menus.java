@@ -100,8 +100,9 @@ public final class Menus {
                 ? "<gray>Corruption here: <red>" + (int) d.valueAt(p.getLocation()) + "%" : "<gray>You're safe in the skylands.";
         m.button(4, item(Material.CRYING_OBSIDIAN, "<dark_purple>The Corruption", "<gray>The overworld decays wherever", "<gray>players linger.", here), null);
         var ex = plugin.exchange();
-        m.button(11, glow(item(Material.ECHO_SHARD, "<light_purple>Void Exchange", "<gray>Sell Void Shards and",
-                "<gray>Corrupted Remnants.", "<gray>You carry: <gold>" + svc.money(ex.value(p, null)))), this::exchange);
+        m.button(11, glow(item(Material.BEACON, "<aqua>The Purifier", "<gray>Purify Void Shards and Corrupted",
+                "<gray>Remnants into Essence, which", "<gray>grows your island.",
+                "<gray>Essence: <aqua>" + dev.skyrealms.economy.Essence.format(plugin.essence().balance(p.getUniqueId())))), this::exchange);
         m.button(13, item(Material.KNOWLEDGE_BOOK, "<aqua>Recipes", "<gray>How to smith Warded armor", "<gray>and brew Cleansing Tonics."), this::recipes);
         // Contracts and other corruption features add their buttons here.
         for (var extra : corruptionButtons) extra.accept(p, m);
@@ -125,37 +126,35 @@ public final class Menus {
     /** Lets features add buttons to the Corruption hub without touching this class: (player, menu). */
     public final List<java.util.function.BiConsumer<Player, Menu>> corruptionButtons = new ArrayList<>();
 
-    /** Sell void items. Stays open after selling. */
+    /** The Purifier: turn shards and remnants into Essence. Stays open after purifying. */
     public void exchange(Player p) {
         if (plugin.bedrock().handles(p)) { plugin.bedrock().openExchange(p); return; }
-        var ex = plugin.exchange();
-        Menu m = new Menu(3, "<dark_purple>Void Exchange");
-        int col = 11;
-        for (var k : dev.skyrealms.economy.VoidItems.Kind.values()) {
-            if (!k.sellable) continue;
-            int n = ex.count(p, k);
-            var icon = dev.skyrealms.economy.VoidItems.create(k, 1);
-            var meta = icon.getItemMeta();
-            meta.lore(List.of(Msg.c("<!italic><gray>Each: <gold>" + svc.money(ex.price(k))),
-                    Msg.c("<!italic><gray>You carry: <white>" + n), Msg.c(n > 0 ? "<!italic><yellow>Click to sell all" : "<!italic><dark_gray>None to sell")));
-            icon.setItemMeta(meta);
-            m.button(col, icon, n > 0 ? pl -> sellVoid(pl, k) : null);
-            col += 2;
+        var es = plugin.essence();
+        Menu m = new Menu(3, "<dark_purple>The Purifier");
+        int shards = 0, remnants = 0;
+        for (var it : p.getInventory().getStorageContents()) {
+            var k = dev.skyrealms.economy.VoidItems.kindOf(it);
+            if (k == dev.skyrealms.economy.VoidItems.Kind.SHARD) shards += it.getAmount();
+            else if (k == dev.skyrealms.economy.VoidItems.Kind.REMNANT) remnants += it.getAmount();
         }
-        double all = ex.value(p, null);
-        m.button(15, all > 0 ? glow(item(Material.EMERALD, "<green>Sell Everything", "<gray>Total: <gold>" + svc.money(all), "<yellow>Click to sell"))
-                : item(Material.GRAY_DYE, "<gray>Sell Everything", "<dark_gray>You have nothing to sell."), all > 0 ? pl -> sellVoid(pl, null) : null);
+        long pv = es.purifyValue(p);
+        m.button(4, item(Material.AMETHYST_CLUSTER, "<aqua>Your Essence: " + dev.skyrealms.economy.Essence.format(es.balance(p.getUniqueId())),
+                "<gray>Essence grows your island: new land,", "<gray>new biomes, bigger islands."), null);
+        m.button(11, dev.skyrealms.economy.VoidItems.create(dev.skyrealms.economy.VoidItems.Kind.SHARD, Math.max(1, Math.min(64, shards))), null);
+        m.button(15, dev.skyrealms.economy.VoidItems.create(dev.skyrealms.economy.VoidItems.Kind.REMNANT, Math.max(1, Math.min(64, remnants))), null);
+        m.button(13, pv > 0 ? glow(item(Material.BEACON, "<aqua>Purify", "<gray>Void Shards: <white>" + shards + "</white> x " + es.perShard(),
+                        "<gray>Corrupted Remnants: <white>" + remnants + "</white> x " + es.perRemnant(),
+                        "<gray>You gain: <aqua>" + dev.skyrealms.economy.Essence.format(pv), "<yellow>Click to purify"))
+                : item(Material.BEACON, "<aqua>Purify", "<gray>Bring back Void Shards and", "<gray>Corrupted Remnants from the", "<gray>corrupted world below."),
+                pv > 0 ? pl -> {
+                    long got = plugin.essence().purify(pl);
+                    pl.playSound(pl.getLocation(), org.bukkit.Sound.BLOCK_BEACON_POWER_SELECT, 0.7f, 1.4f);
+                    Msg.send(pl, "Purified into <aqua>" + dev.skyrealms.economy.Essence.format(got) + "</aqua>. You have <aqua>"
+                            + dev.skyrealms.economy.Essence.format(plugin.essence().balance(pl.getUniqueId())) + "</aqua>.");
+                    exchange(pl);
+                } : null);
         m.button(18, back(), this::corruption);
         m.fill().open(p);
-    }
-
-    private void sellVoid(Player p, dev.skyrealms.economy.VoidItems.Kind kind) {
-        double paid = plugin.exchange().sell(p, kind);
-        if (paid > 0) {
-            p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.7f, 1.2f);
-            Msg.send(p, "Sold for <gold>" + svc.money(paid) + "</gold>.");
-        }
-        exchange(p);
     }
 
     /** The Guide: written book on Java, forms on Bedrock. */
@@ -187,7 +186,7 @@ public final class Menus {
         Menu m = new Menu(4, "<dark_aqua>Manage Island");
         m.button(4, levelCard(i), this::levels);
         m.button(10, item(Material.WHEAT_SEEDS, "<green>Grow Land",
-                "<gray>Attach more of a biome you own.", "<gray>Cost: <gold>" + svc.money(svc.growPrice()) + " <gray>each",
+                "<gray>Attach more of a biome you own.", "<gray>Cost: <gold>" + svc.cost(svc.growPrice()) + " <gray>each",
                 "<gray>Pieces: <white>" + i.pieces.size() + "/" + i.tier.maxPieces), pl -> biomes(pl, Mode.GROW, null));
         m.button(11, item(Material.CHERRY_SAPLING, "<light_purple>Unlock a Biome",
                 "<gray>Unlock a new biome so you", "<gray>can grow it with Grow Land."), pl -> biomes(pl, Mode.UNLOCK, null));
@@ -223,7 +222,7 @@ public final class Menus {
         Menu m = new Menu(3, "<dark_red>Delete your island?");
         m.button(11, item(Material.RED_CONCRETE, "<red>Yes, delete it",
                 "<gray>Every block, chest and animal on", "<gray>your island will be gone forever.",
-                refund > 0 ? "<gray>Refund: <gold>" + svc.money(refund) : "<gray>No refund."), this::deleteFinal);
+                refund > 0 ? "<gray>Refund: <gold>" + svc.cost(refund) : "<gray>No refund."), this::deleteFinal);
         m.button(13, info(i), null);
         m.button(15, item(Material.LIME_CONCRETE, "<green>No, keep my island"), this::main);
         m.fill().open(p);
@@ -255,7 +254,7 @@ public final class Menus {
         return item(Material.EXPERIENCE_BOTTLE, "<gold>Upgrade to " + next.pretty(),
                 "<gray>" + i.tier.footprint + "x" + i.tier.footprint + " → <white>" + next.footprint + "x" + next.footprint,
                 "<gray>Room for <white>" + next.maxPieces + "</white> pieces of land",
-                "<gray>Cost: <gold>" + svc.money(svc.upgradeCost(i)));
+                "<gray>Cost: <gold>" + svc.cost(svc.upgradeCost(i)));
     }
 
     // ---- buying -------------------------------------------------------------------------
@@ -319,10 +318,10 @@ public final class Menus {
                 case GROW -> m.button(slot++, item(biomeIcon(b), "<green>" + pretty(b),
                         i != null && i.pieces.stream().noneMatch(pc -> pc.biome().equals(b))
                                 ? "<yellow>New! First piece attaches at your island's edge" : "<gray>Attach one more piece",
-                        "<gray>Cost: <gold>" + svc.money(svc.growPrice()), "<yellow>Tap to choose where it goes"),
+                        "<gray>Cost: <gold>" + svc.cost(svc.growPrice()), "<yellow>Tap to choose where it goes"),
                         pl -> placement(pl, b));
                 case UNLOCK -> m.button(slot++, item(biomeIcon(b), "<light_purple>" + pretty(b), "<gray>" + style,
-                        "<gray>Unlocks it for Grow Land", "<gray>Cost: <gold>" + svc.money(svc.unlockPrice(b))),
+                        "<gray>Unlocks it for Grow Land", "<gray>Cost: <gold>" + svc.cost(svc.unlockPrice(b))),
                         pl -> confirm(pl, "Unlock " + pretty(b) + "?", svc.unlockPrice(b),
                                 yes -> { if (svc.unlockBiome(yes, b)) biomes(yes, Mode.UNLOCK, null); else yes.closeInventory(); },
                                 back -> biomes(back, Mode.UNLOCK, null)));
@@ -402,8 +401,8 @@ public final class Menus {
     /** A yes/no screen. Big targets so it's easy to tap on Bedrock. */
     public void confirm(Player p, String question, double price, Consumer<Player> yes, Consumer<Player> no) {
         Menu m = new Menu(3, "<dark_aqua>Are you sure?");
-        m.button(11, item(Material.LIME_CONCRETE, "<green>Yes", "<gray>" + question, "<gray>Cost: <gold>" + svc.money(price)), yes);
-        m.button(13, item(Material.GOLD_INGOT, "<gold>" + svc.money(price), "<gray>" + question), null);
+        m.button(11, item(Material.LIME_CONCRETE, "<green>Yes", "<gray>" + question, "<gray>Cost: <gold>" + svc.cost(price)), yes);
+        m.button(13, item(Material.GOLD_INGOT, "<gold>" + svc.cost(price), "<gray>" + question), null);
         m.button(15, item(Material.RED_CONCRETE, "<red>No, go back"), no);
         m.fill().open(p);
     }
@@ -751,7 +750,7 @@ public final class Menus {
                 "<gray>Free."), pl -> { svc.setUnderside(pl, st); back.accept(pl); });
         m.button(13, item(st.icon, "<aqua>" + st.displayName, "<gray>" + st.description), null);
         m.button(15, glow(item(Material.BRUSH, "<aqua>Convert my whole island", "<gray>Also reshape the rock under the", "<gray>land you already have.",
-                "<gray>Your builds and soil aren't touched.", "<gray>Cost: <gold>" + svc.money(svc.restylePrice()))),
+                "<gray>Your builds and soil aren't touched.", "<gray>Cost: <gold>" + svc.cost(svc.restylePrice()))),
                 pl -> confirm(pl, "Convert your island's underside to " + st.displayName + "?", svc.restylePrice(),
                         yes -> { svc.restyleUnderside(yes, st); undersides(yes); }, back2 -> undersideChoice(back2, st, back)));
         m.button(18, back(), back);

@@ -83,7 +83,7 @@ public final class ContractMenu {
         };
         List<String> lore = new ArrayList<>();
         lore.add((c.complete() ? "<green>" : "<yellow>") + c.bar());
-        lore.add("<gray>Reward: <gold>" + plugin.service().money(c.reward * bonus)
+        lore.add("<gray>Reward: <gold>" + plugin.essence().rewardLabel(c.reward * bonus)
                 + (c.shards > 0 ? " <dark_purple>+" + c.shards + " Void Shards" : ""));
         if (c.claimed()) lore.add("<dark_gray>Claimed");
         else if (c.complete()) lore.add("<green>Click to claim");

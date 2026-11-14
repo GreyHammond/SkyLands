@@ -44,7 +44,7 @@ public final class Journal implements Listener {
             new Step("corruption", Milestone.ENTERED_CORRUPTION, "Find corrupted land: stay in one area of the world below until the corruption reaches 25%.", 100),
             new Step("void_shards", Milestone.COLLECTED_SHARD, "Collect Void Shards by mining corrupted land.", 150),
             new Step("corrupted_creatures", Milestone.KILLED_CORRUPTED_MOB, "Defeat a corrupted mob (purple name) on corrupted land.", 200),
-            new Step("earning", Milestone.SOLD_AT_EXCHANGE, "Sell something at the Void Exchange: /skyland, then The Corruption.", 100),
+            new Step("earning", Milestone.SOLD_AT_EXCHANGE, "Purify shards at the Purifier: /skyland, then The Corruption.", 100),
             new Step("corrupted_ingredients", Milestone.COLLECTED_CORRUPTED_SPIDER_EYE, "Collect a Corrupted Spider Eye from a corrupted spider.", 150),
             new Step("cleansing_tonics", Milestone.BREWED_TONIC, "Brew a Cleansing Tonic I: Tainted Potion + Corrupted Spider Eye.", 250),
             new Step("warded_armor", Milestone.CRAFTED_WARD_TEMPLATE, "Craft a Ward Template: 8 Void Shards around Crying Obsidian.", 250),
@@ -147,13 +147,13 @@ public final class Journal implements Listener {
         pr.pages.add(s.page());
         double pay = rewards.getOrDefault(s.page(), 0.0);
         boolean paid = false;
-        if (pay > 0 && pr.rewarded.add(idx)) { plugin.money().refund(p, pay); paid = true; }
+        if (pay > 0 && pr.rewarded.add(idx)) { plugin.essence().payReward(p, pay); paid = true; }
         pr.tutorialStep = idx + 1;
         if (pr.tutorialStep >= steps.size()) {
             pr.pages.add(JournalPages.RESETS);
             pr.pages.add(JournalPages.REALMS);
             boolean finishPaid = finishReward > 0 && pr.rewarded.add(FINISH_MARK);
-            if (finishPaid) plugin.money().refund(p, finishReward);
+            if (finishPaid) plugin.essence().payReward(p, finishReward);
             plugin.profiles().dirty();
             if (announce) announce(p, "Tutorial complete", JournalPages.get(JournalPages.RESETS).title() + " and " + JournalPages.get(JournalPages.REALMS).title(),
                     paid || finishPaid ? (paid ? pay : 0) + (finishPaid ? finishReward : 0) : 0);
@@ -167,7 +167,7 @@ public final class Journal implements Listener {
         p.showTitle(Title.title(Msg.c("<light_purple>" + head), Msg.c("<white>" + pageTitle),
                 Title.Times.times(Duration.ofMillis(300), Duration.ofSeconds(3), Duration.ofMillis(700))));
         p.playSound(p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1f, 1f);
-        String reward = paid > 0 ? " <gold>+" + plugin.money().format(paid) + "</gold>" : "";
+        String reward = paid > 0 ? " <aqua>+" + plugin.essence().rewardLabel(paid) + "</aqua>" : "";
         p.sendMessage(Msg.c("<light_purple>Journal: <white>" + pageTitle + "</white>" + reward));
         p.sendMessage(Msg.c("<gray>Next: <white>" + esc(currentObjective(p)) + "</white> <aqua><click:run_command:'/skyland journal'><hover:show_text:'Open your journal'>[Open journal]</hover></click>"));
     }

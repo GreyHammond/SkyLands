@@ -59,6 +59,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private dev.skyrealms.decay.WardedGear ward;
     private dev.skyrealms.decay.WardSmithing wardSmithing;
     private dev.skyrealms.economy.VoidExchange exchange;
+    private dev.skyrealms.economy.Essence essence;
     private dev.skyrealms.player.PlayerProfiles profiles;
     private dev.skyrealms.player.Milestones milestones;
     private dev.skyrealms.player.FirstJoin firstJoin;
@@ -156,6 +157,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         // Void items and the exchange that buys them (shared by harvest, mob bounties and contracts).
         dev.skyrealms.economy.VoidItems.init(this);
         exchange = new dev.skyrealms.economy.VoidExchange(this, cfg.getConfigurationSection("exchange"));
+        essence = new dev.skyrealms.economy.Essence(this, cfg.getConfigurationSection("essence"));
         getServer().getPluginManager().registerEvents(exchange, this);
         // Visitor tips: visiting an island pays the owner and the visitor (daily caps).
         tips = new dev.skyrealms.economy.VisitorTips(this, cfg.getConfigurationSection("tips"));
@@ -294,6 +296,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public dev.skyrealms.decay.WardedGear ward() { return ward; }
     public dev.skyrealms.decay.WardSmithing wardSmithing() { return wardSmithing; }
     public dev.skyrealms.economy.VoidExchange exchange() { return exchange; }
+    public dev.skyrealms.economy.Essence essence() { return essence; }
     public dev.skyrealms.player.PlayerProfiles profiles() { return profiles; }
     public dev.skyrealms.player.Milestones milestones() { return milestones; }
     public dev.skyrealms.player.FirstJoin firstJoin() { return firstJoin; }

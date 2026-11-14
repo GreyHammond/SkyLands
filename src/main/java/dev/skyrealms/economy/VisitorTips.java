@@ -113,16 +113,16 @@ public final class VisitorTips implements Listener {
 
         var ownerPlayer = Bukkit.getOfflinePlayer(island.owner);
         if (toOwner > 0) {
-            plugin.money().refund(ownerPlayer, toOwner);
+            plugin.essence().payReward(ownerPlayer, toOwner);
             Player online = ownerPlayer.getPlayer();
             if (online != null) {
-                Msg.send(online, "<white>" + visitor.getName() + "</white> visited your island: <gold>+" + plugin.money().format(toOwner));
+                Msg.send(online, "<white>" + visitor.getName() + "</white> visited your island: <aqua>+" + plugin.essence().rewardLabel(toOwner));
                 online.playSound(online.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.4f);
             }
         }
         if (toVisitor > 0) {
-            plugin.money().refund(visitor, toVisitor);
-            Msg.send(visitor, "Thanks for visiting: <gold>+" + plugin.money().format(toVisitor));
+            plugin.essence().payReward(visitor, toVisitor);
+            Msg.send(visitor, "Thanks for visiting: <aqua>+" + plugin.essence().rewardLabel(toVisitor));
             visitor.playSound(visitor.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.4f);
         }
     }

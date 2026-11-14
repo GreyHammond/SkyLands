@@ -96,7 +96,7 @@ public final class FormMenus {
     }
 
     private void confirm(Player p, String question, double price, Consumer<Player> yes, Consumer<Player> back) {
-        String cost = price > 0 ? "\n\n" + GR + "Cost: " + O + svc.money(price) : "";
+        String cost = price > 0 ? "\n\n" + GR + "Cost: " + O + svc.cost(price) : "";
         modal(p, "Are you sure?", W + question + cost, G + "Yes", R + "No, go back", yes, back);
     }
 
@@ -165,7 +165,7 @@ public final class FormMenus {
                 ? GR + "Corruption here: " + R + (int) d.valueAt(p.getLocation()) + "%" : GR + "You're safe in the skylands.";
         var ex = plugin.exchange();
         List<Btn> b = new ArrayList<>();
-        b.add(btn(P + "Void Exchange\n" + DG + "You carry " + svc.money(ex.value(p, null)), "textures/items/echo_shard", this::exchange));
+        b.add(btn(A + "The Purifier\n" + DG + dev.skyrealms.economy.Essence.format(plugin.essence().balance(p.getUniqueId())), "textures/blocks/beacon", this::exchange));
         b.add(btn(A + "Recipes\n" + DG + "Warded armor and tonics", "textures/items/book_enchanted", this::recipes));
         for (var extra : corruptionButtons) { Btn x = extra.apply(p); if (x != null) b.add(x); }
         b.add(btn(GR + "Back", null, this::main));
@@ -182,31 +182,29 @@ public final class FormMenus {
         simple(p, "Recipes", s.toString(), List.of(btn(GR + "Back", null, this::corruption)));
     }
 
+    /** The Purifier: turn shards and remnants into Essence. */
     public void exchange(Player p) {
-        var ex = plugin.exchange();
+        var es = plugin.essence();
+        int shards = 0, remnants = 0;
+        for (var it : p.getInventory().getStorageContents()) {
+            var k = dev.skyrealms.economy.VoidItems.kindOf(it);
+            if (k == dev.skyrealms.economy.VoidItems.Kind.SHARD) shards += it.getAmount();
+            else if (k == dev.skyrealms.economy.VoidItems.Kind.REMNANT) remnants += it.getAmount();
+        }
+        long pv = es.purifyValue(p);
+        String content = A + "Your Essence: " + W + dev.skyrealms.economy.Essence.format(es.balance(p.getUniqueId()))
+                + "\n" + GR + "Essence grows your island: new land, new biomes, bigger islands.\n\n"
+                + GR + "Void Shards: " + W + shards + GR + " x " + es.perShard() + "\n"
+                + GR + "Corrupted Remnants: " + W + remnants + GR + " x " + es.perRemnant();
         List<Btn> b = new ArrayList<>();
-        StringBuilder content = new StringBuilder(W + "Sell what you bring back from the corruption.\n");
-        for (var k : dev.skyrealms.economy.VoidItems.Kind.values()) {
-            if (!k.sellable) continue;
-            int n = ex.count(p, k);
-            String label = k == dev.skyrealms.economy.VoidItems.Kind.SHARD ? "Void Shards" : "Corrupted Remnants";
-            content.append("\n").append(GR).append(label).append(": ").append(W).append(n)
-                    .append(GR).append(" (").append(O).append(svc.money(ex.price(k))).append(GR).append(" each)");
-            if (n > 0) b.add(btn(G + "Sell " + label + "\n" + DG + svc.money(ex.value(p, k)), null, pl -> sellVoid(pl, k)));
-        }
-        double all = ex.value(p, null);
-        if (all > 0) b.add(btn(G + "Sell Everything\n" + DG + svc.money(all), "textures/items/emerald", pl -> sellVoid(pl, null)));
+        if (pv > 0) b.add(btn(A + "Purify\n" + DG + "+" + dev.skyrealms.economy.Essence.format(pv), "textures/blocks/beacon", pl -> {
+            long got = plugin.essence().purify(pl);
+            pl.playSound(pl.getLocation(), org.bukkit.Sound.BLOCK_BEACON_POWER_SELECT, 0.7f, 1.4f);
+            dev.skyrealms.util.Msg.send(pl, "Purified into <aqua>" + dev.skyrealms.economy.Essence.format(got) + "</aqua>.");
+            exchange(pl);
+        }));
         b.add(btn(GR + "Back", null, this::corruption));
-        simple(p, "Void Exchange", content.toString(), b);
-    }
-
-    private void sellVoid(Player p, dev.skyrealms.economy.VoidItems.Kind kind) {
-        double paid = plugin.exchange().sell(p, kind);
-        if (paid > 0) {
-            p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.7f, 1.2f);
-            dev.skyrealms.util.Msg.send(p, "Sold for <gold>" + svc.money(paid) + "</gold>.");
-        }
-        exchange(p);
+        simple(p, "The Purifier", content, b);
     }
 
     public void travel(Player p) {
@@ -269,7 +267,7 @@ public final class FormMenus {
                     b.add(btn(G + n + "\n" + DG + (fresh ? "New! Starts at your island's edge" : "Add one more piece"), null,
                             pl -> placement(pl, biome)));
                 }
-                case UNLOCK -> b.add(btn(P + n + "\n" + O + svc.money(svc.unlockPrice(biome)), null,
+                case UNLOCK -> b.add(btn(P + n + "\n" + O + svc.cost(svc.unlockPrice(biome)), null,
                         pl -> confirm(pl, "Unlock " + n + "? You can then grow it with Grow Land.", svc.unlockPrice(biome),
                                 yes -> { if (svc.unlockBiome(yes, biome)) biomes(yes, Mode.UNLOCK, null); }, back -> biomes(back, Mode.UNLOCK, null))));
             }
@@ -278,7 +276,7 @@ public final class FormMenus {
         String title = switch (mode) { case BUY -> "Choose your biome"; case GROW -> "Grow which biome?"; case UNLOCK -> "Unlock a biome"; };
         String content = switch (mode) {
             case BUY -> GR + tier.pretty() + " island for " + O + svc.priceLabel(p.getUniqueId(), tier) + GR + ". Your new island starts at level " + level + ".";
-            case GROW -> GR + "Cost: " + O + svc.money(svc.growPrice()) + GR + " per piece. Pieces: " + W
+            case GROW -> GR + "Cost: " + O + svc.cost(svc.growPrice()) + GR + " per piece. Pieces: " + W
                     + (i == null ? 0 : i.pieces.size()) + "/" + (i == null ? 0 : i.tier.maxPieces);
             case UNLOCK -> GR + "Unlocking adds a biome to your list. Then use Grow Land.";
         };
@@ -341,10 +339,10 @@ public final class FormMenus {
         StringBuilder content = new StringBuilder(W + plugin.cosmetics().displayName(i) + "\n" + O + plugin.xp().badge(i)
                 + "\n" + GR + bar + "\n" + GR + i.tier.pretty() + " · " + i.pieces.size() + "/" + i.tier.maxPieces + " pieces");
         List<Btn> b = new ArrayList<>();
-        b.add(btn(G + "Grow Land\n" + DG + svc.money(svc.growPrice()) + " per piece", "textures/items/seeds_wheat", pl -> biomes(pl, Mode.GROW, null)));
+        b.add(btn(G + "Grow Land\n" + DG + svc.cost(svc.growPrice()) + " per piece", "textures/items/seeds_wheat", pl -> biomes(pl, Mode.GROW, null)));
         b.add(btn(P + "Unlock a Biome", "textures/blocks/sapling_oak", pl -> biomes(pl, Mode.UNLOCK, null)));
         Tier next = i.tier.next();
-        if (next != null) b.add(btn(O + "Upgrade to " + next.pretty() + "\n" + DG + svc.money(svc.upgradeCost(i)) + " · room for " + next.maxPieces,
+        if (next != null) b.add(btn(O + "Upgrade to " + next.pretty() + "\n" + DG + svc.cost(svc.upgradeCost(i)) + " · room for " + next.maxPieces,
                 "textures/items/experience_bottle", pl -> confirm(pl, "Upgrade to " + next.pretty() + "? This adds room, not land.",
                         svc.upgradeCost(i), yes -> { svc.upgrade(yes); manage(yes); }, this::manage)));
         b.add(btn(Y + "Levels & Unlocks", "textures/items/experience_bottle", this::levels));
@@ -652,7 +650,7 @@ public final class FormMenus {
         if (svc.owned(p) == null) return;
         simple(p, st.displayName + " underside", GR + st.description + "\n\n" + GR + "Use it for new land only, or also reshape the rock under the land you already have. Your builds and soil aren't touched.", List.of(
                 btn(G + "New land only\n" + DG + "Free", null, pl -> { svc.setUnderside(pl, st); back.accept(pl); }),
-                btn(A + "Convert my whole island\n" + O + svc.money(svc.restylePrice()), null,
+                btn(A + "Convert my whole island\n" + O + svc.cost(svc.restylePrice()), null,
                         pl -> confirm(pl, "Convert your island's underside to " + st.displayName + "?", svc.restylePrice(),
                                 yes -> { svc.restyleUnderside(yes, st); undersides(yes); }, b2 -> undersideChoice(b2, st, back))),
                 btn(GR + "Back", null, back)));
@@ -667,7 +665,7 @@ public final class FormMenus {
         if (i == null) return;
         double refund = svc.deleteRefund(i);
         modal(p, "Delete your island?", W + "Every block, chest and animal on your island will be gone forever."
-                        + (refund > 0 ? "\n" + GR + "Refund: " + O + svc.money(refund) : "\n" + GR + "No refund."),
+                        + (refund > 0 ? "\n" + GR + "Refund: " + O + svc.cost(refund) : "\n" + GR + "No refund."),
                 R + "Yes, delete it", G + "No, keep it",
                 yes -> modal(yes, "This can't be undone!", R + "Really delete " + plugin.cosmetics().displayName(i) + " forever?",
                         R + "DELETE FOREVER", G + "Cancel", svc::deleteIsland, this::main), this::main);

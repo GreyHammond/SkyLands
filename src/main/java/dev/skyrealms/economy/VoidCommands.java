@@ -41,6 +41,18 @@ public final class VoidCommands {
                 .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64 * 36))
                         .executes(ctx -> give(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "player"),
                                 StringArgumentType.getString(ctx, "kind"), IntegerArgumentType.getInteger(ctx, "amount"))));
+        admin.then(Commands.literal("essence").then(Commands.literal("give").then(Commands.argument("player", StringArgumentType.word())
+                .suggests((ctx, b) -> { Bukkit.getOnlinePlayers().forEach(p -> b.suggest(p.getName())); return b.buildFuture(); })
+                .then(Commands.argument("amount", IntegerArgumentType.integer(-1_000_000, 1_000_000)).executes(ctx -> {
+                    CommandSender to = ctx.getSource().getSender();
+                    String name = StringArgumentType.getString(ctx, "player");
+                    var target = Bukkit.getOfflinePlayerIfCached(name);
+                    if (target == null) { Msg.error(to, name + " has never joined."); return 0; }
+                    int n = IntegerArgumentType.getInteger(ctx, "amount");
+                    plugin.essence().add(target.getUniqueId(), n);
+                    Msg.send(to, name + " now has <aqua>" + Essence.format(plugin.essence().balance(target.getUniqueId())) + "</aqua>.");
+                    return Command.SINGLE_SUCCESS;
+                })))));
         admin.then(Commands.literal("void").then(Commands.literal("give").then(Commands.argument("player", StringArgumentType.word())
                 .suggests((ctx, b) -> { Bukkit.getOnlinePlayers().forEach(p -> b.suggest(p.getName())); return b.buildFuture(); })
                 .then(kind))));

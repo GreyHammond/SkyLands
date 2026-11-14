@@ -64,7 +64,7 @@ public final class ContractForms {
             Contract c = list.get(i);
             final int index = i;
             String state = c.claimed() ? DG + "Claimed" : c.complete() ? G + "Tap to claim" : (c.type.handIn() ? Y + "Tap to hand in" : GR + c.bar());
-            String reward = O + plugin.service().money(c.reward * bonus) + (c.shards > 0 ? P + " +" + c.shards + " shards" : "");
+            String reward = O + plugin.essence().rewardLabel(c.reward * bonus) + (c.shards > 0 ? P + " +" + c.shards + " shards" : "");
             labels.add((c.claimed() ? DG : W) + c.title() + "\n" + state + DG + " · " + reward);
             actions.add(c.claimed() ? pl -> open(pl) : pl -> {
                 String msg = svc.use(pl, index);

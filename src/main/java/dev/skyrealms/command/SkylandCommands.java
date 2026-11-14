@@ -287,6 +287,7 @@ public final class SkylandCommands {
                 "recycle [status|now [seconds]|cancel] <dark_gray>- weekly overworld recycle",
                 "tonic give <player> <1-3> [amount] <dark_gray>- give Cleansing Tonics",
                 "void give <player> <shard|remnant> [amount] <dark_gray>- give void items",
+                "essence give <player> <amount> <dark_gray>- add (or with a negative amount, remove) Essence",
                 dev.skyrealms.journal.JournalCommands.adminHelp(),
                 dev.skyrealms.contracts.ContractCommands.adminHelp(),
                 "reload <dark_gray>- reload piece files"))

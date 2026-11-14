@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.16.0-2f9e5a">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.17.0-2f9e5a">
   <img alt="Paper 26.3" src="https://img.shields.io/badge/Paper-26.3-1e88e5">
   <img alt="Java 25" src="https://img.shields.io/badge/Java-25-e76f00">
   <img alt="Bedrock ready" src="https://img.shields.io/badge/Bedrock-Geyser%20%2B%20Floodgate-6a1b9a">
@@ -63,7 +63,7 @@ on Java** and **native Bedrock forms** for players joining through Geyser + Floo
   - [Roles and protection](#roles-and-protection)
   - [Falling and returning](#falling-and-returning)
   - [The corruption](#the-corruption)
-  - [Earning money](#earning-money)
+  - [Essence](#essence)
 - [Bedrock players](#bedrock-players)
 - [Admin guide](#admin-guide)
   - [Commands](#commands)
@@ -97,8 +97,8 @@ on Java** and **native Bedrock forms** for players joining through Geyser + Floo
 | ☠️ **The corruption** | Players' presence slowly corrupts the overworld around them: drying, wasteland, then bedrock. The skylands are never touched. |
 | ♻️ **Weekly recycle** | A fresh overworld every 7 days (or on command), with countdown warnings and everyone flown home first. |
 | 🧪 **Resist it** | Brew Cleansing Tonics from corrupted ingredients (up to 3 minutes of no corruption) and smith Warded armor like a trim (up to 80% less corruption). |
-| 💎 **Earn from it** | Void Shards from corrupted land, tougher corrupted mobs that drop Remnants, a Void Exchange to sell them, and daily contracts. |
-| 🪙 **Visitor tips** | Visiting an island pays the owner and the visitor a small tip, with daily limits. |
+| 💎 **Purify it** | Void Shards from corrupted land and Remnants from tougher corrupted mobs are purified into **Essence**, the currency islands grow on. Contracts and the tutorial pay Essence too. |
+| 🪙 **Visitor tips** | Visiting an island pays the owner and the visitor a little Essence, with daily limits. |
 | 💰 **Money or items** | Any Vault economy, or prices in diamonds or a custom token. |
 
 ## Screenshots
@@ -166,18 +166,18 @@ walks you through 12 steps in order; each one unlocks a page and pays a small re
 | Step | Objective | Reward |
 |---|---|---:|
 | 1 | Claim your free island | your island |
-| 2 | Jump off the edge into the world below | 100 |
-| 3 | Fly home with the return feather | 100 |
-| 4 | Stand on land that is at least 25% corrupted | 100 |
-| 5 | Collect 3 Void Shards | 150 |
-| 6 | Defeat a corrupted mob | 200 |
-| 7 | Sell something at the Void Exchange | 100 |
-| 8 | Collect a Corrupted Spider Eye | 150 |
-| 9 | Brew a Cleansing Tonic I | 250 |
-| 10 | Craft a Ward Template | 250 |
-| 11 | Smith a piece of Ward I armor | 300 |
-| 12 | Claim a daily contract | 200 |
-| ✓ | Finish the tutorial (unlocks The Resets and The Untouched Realms) | 500 |
+| 2 | Jump off the edge into the world below | 4 Essence |
+| 3 | Fly home with the return feather | 4 |
+| 4 | Stand on land that is at least 25% corrupted | 4 |
+| 5 | Collect 3 Void Shards | 6 |
+| 6 | Defeat a corrupted mob | 8 |
+| 7 | Purify shards at the Purifier | 4 |
+| 8 | Collect a Corrupted Spider Eye | 6 |
+| 9 | Brew a Cleansing Tonic I | 10 |
+| 10 | Craft a Ward Template | 10 |
+| 11 | Smith a piece of Ward I armor | 12 |
+| 12 | Claim a daily contract | 8 |
+| ✓ | Finish the tutorial (unlocks The Resets and The Untouched Realms) | 20 |
 
 Each step shows a title, a page-turn sound and a chat line with your next objective. Locked pages
 show as "???". Veterans can **skip** (every page unlocks, no step rewards) and **restart** any time;
@@ -217,7 +217,7 @@ in a pond or on a tree.
     Restore My Island           appears if your island was archived
     Hotbar Shortcuts            turn the menu book and return feather on or off
 └── The Corruption              corruption where you stand
-    ├── Void Exchange           sell Void Shards and Corrupted Remnants
+    ├── The Purifier            purify shards and remnants into Essence
     ├── Recipes                 Warded armor and Cleansing Tonics
     └── Daily Contracts         three tasks a day for money and shards
 ```
@@ -465,20 +465,37 @@ Only the real corrupted items work; vanilla spider eyes, bones and gunpowder don
 prefer a shop can set `tonic.shop: true` and `ward.shop: true` to bring back `/skyland tonic buy`
 and `/skyland ward upgrade`.
 
-### Earning money
+### Essence
 
-Everything you bring back from the corruption sells at the **Void Exchange**
-(`/skyland` → **The Corruption** → **Void Exchange**, or `/skyland exchange`).
+Islands grow on **Essence**: corruption you bring back and purify. Take your Void Shards and
+Corrupted Remnants to **The Purifier** (`/skyland` → **The Corruption** → **The Purifier**, or
+`/skyland exchange`): each shard purifies into **1 Essence**, each remnant into **4**.
+
+Essence pays for everything island-related: buying a bigger island, upgrading, growing land,
+unlocking biomes and restyling. Prices in `config.yml` stay written in money and convert at
+`essence.money-per-essence` (125), rounded up:
+
+| Island cost | Essence |
+|---|---:|
+| A piece of land (Grow Land) | 8 |
+| Upgrade Small → Medium | 120 |
+| Upgrade Medium → Large | 440 |
+| Most biome unlocks | 40–320 |
+| Restyle the underside | 20 |
+
+Your first Small island is still free. Set `essence.islands: false` to go back to paying with money.
+
+Where Essence comes from:
 
 | Source | What you get |
 |---|---|
 | **Corruption harvest** | Breaking natural blocks in corrupted land can drop **Void Shards**: about 1% of blocks when drying, 4% in wasteland, 10% when barren. Blackstone and deepslate drop twice as often, blocks touching bedrock 1.5×. Fresh bedrock occasionally leaves a shard behind (at most one per chunk per overworld, so it can't be farmed). Blocks you placed never count; up to 20 shards a minute. |
 | **Corrupted mobs** | Monsters that spawn on corrupted land may become **Corrupted** (15% to 60% of them, by corruption): purple names, +25–75% health, +10–30% damage. They drop 1–4 **Corrupted Remnants**, sometimes shards, and a **corrupted ingredient** for brewing (Spider Eye, Bone, Gunpowder or Flesh), on top of normal drops. |
-| **Daily contracts** | Three tasks a day, reset at 4 AM server time: deliver items, hunt mobs or corrupted mobs, mine, explore new chunks, or hand in shards. Rewards are money and shards, **×1.5** in the last 24 hours before a recycle. Hand in part of a delivery whenever you like. |
-| **Visitor tips** | Visit someone's island from **Visit Islands** and stay 30 seconds: the owner gets 50 and you get 20 (more for higher-level islands). Once per island per day, up to 5 tips a day as a visitor and 20 as an owner. No tips for your own, a friend's or a co-owned island. |
+| **Daily contracts** | Three tasks a day, reset at 4 AM server time: deliver items, hunt mobs or corrupted mobs, mine, explore new chunks, or hand in shards. Rewards are Essence and shards, **×1.5** in the last 24 hours before a recycle. Hand in part of a delivery whenever you like. |
+| **Visitor tips** | Visit someone's island from **Visit Islands** and stay 30 seconds: the owner gets 2 Essence and you get 1 (more for higher-level islands). Once per island per day, up to 5 tips a day as a visitor and 20 as an owner. No tips for your own, a friend's or a co-owned island. |
 
-Default Exchange prices: **Void Shard 25**, **Corrupted Remnant 75**. Void items can't be used in
-crafting or anvils, and renamed vanilla items are never accepted.
+Void items can't be used in crafting or anvils (except the Ward recipes), and renamed vanilla items
+are never accepted.
 
 ## Bedrock players
 
@@ -492,7 +509,7 @@ identical.
 | Buying, delete, transfer | Yes/No chest screen | Yes/no pop-up (two for delete and transfer) |
 | Protection | Tap each option | One screen of toggles with a quick-set dropdown |
 | Rename island | Type in chat | A real text box |
-| The Corruption, Void Exchange, Daily Contracts | Chest menus | Forms with sell, hand-in and claim buttons |
+| The Corruption, The Purifier, Daily Contracts | Chest menus | Forms with purify, hand-in and claim buttons |
 
 Bedrock players also get the **hotbar shortcuts** (menu book and return feather) by default, so
 they can play without typing a single command.
@@ -528,6 +545,7 @@ sell when the shop is turned on in config; otherwise they show the recipes.) Adm
 | `tonic give <player> <1-3> [amount]` | Give Cleansing Tonics |
 | `ward apply <1-3>` · `ward give <player> <piece> <1-3>` | Ward the armor in your hand, or give a warded iron piece |
 | `void give <player> <shard\|remnant> [amount]` | Give Void Shards or Corrupted Remnants |
+| `essence give <player> <amount>` | Add Essence (a negative amount removes it) |
 | `contracts reset <player>` | Give a player a fresh set of contracts |
 | `tutorial reset\|skip\|complete <player>` | Restart, skip or finish a player's tutorial |
 | `reload` | Reload custom biome pieces (config changes need a restart) |
@@ -629,7 +647,7 @@ SkyLands creates two files in `plugins/SkyRealms/`. Restart the server after edi
 | `recycle` | Weekly recycle on/off, interval, warning times, messages, blocked commands |
 | `tonic` | Cleansing Tonic durations (max 180 s), splash radius, and the optional shop (off by default) |
 | `ward` | Warded armor reduction per level, the 80% cap, and the optional shop (off by default) |
-| `exchange` | Void Shard and Corrupted Remnant sell prices |
+| `essence` | Pay for islands in Essence (default on), the money-to-Essence rates for prices and rewards, Essence per shard and remnant |
 | `harvest` | Shard drop chances per stage, multipliers, per-minute cap |
 | `corrupted-mobs` | How often mobs become corrupted, their buffs and drops, an optional coin bounty |
 | `tips` | Owner and visitor tips, level scaling, minimum stay, daily caps |
@@ -798,6 +816,7 @@ The jar is written to `build/libs/skylands.jar`. The website is a single file at
 
 | Version | Highlights |
 |---|---|
+| **0.17.0** | **Essence**: islands are paid in purified Essence instead of money. The Void Exchange becomes **The Purifier** (shards 1, remnants 4). Tutorial, contracts, tips and bounties pay Essence. Island growth is far cheaper in practice (Medium upgrade: 120 Essence). |
 | **0.16.0** | **Season Two start**: a guided 12-step tutorial and journal (Java book, Bedrock forms) with rewards, skip and restart; first-join welcome; free first Small island (`/skyland claim`); your island is your respawn whenever no bed or anchor is set; falls land on dry ground (boat if there's none); hotbar book and feather given on join by default. |
 | **0.15.0** | Warded armor is smithed like an armor trim (Ward Template, Corrupted Template, Echo Shard for Ward III). Cleansing Tonics are brewed from corrupted ingredients that only corrupted mobs drop, with a splash version. New **Recipes** page in The Corruption (Java and Bedrock). Void Shards now look like amethyst shards. |
 | **0.14.0** | **The corruption**: the overworld decays around players through drying, wasteland and bedrock, with a configurable radius. **Weekly recycle** into a fresh managed overworld. **Cleansing Tonics** and **Warded armor**. **Earning**: Void Shards from corrupted land, corrupted mobs with Remnant drops, the Void Exchange, daily contracts and visitor tips, all with native Bedrock forms. Menus now stay open after unlocking a biome, setting home or restyling. |

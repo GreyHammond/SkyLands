@@ -48,11 +48,12 @@ public final class JournalPages {
                 + "At 25% the land dries out, at 50% it turns to wasteland, and at 75% bedrock spreads. "
                 + "It never hurts you, and leaving lets it fade, but bedrock stays until the world is recycled.");
         add("void_shards", "Void Shards", "Mining corrupted land can turn up Void Shards, and the deeper the corruption, the better the odds. "
-                + "Blocks you placed yourself never drop them. Sell shards at the Void Exchange, or keep them to craft Ward Templates and brew tonics.");
+                + "Blocks you placed yourself never drop them. Purify them into Essence at the Purifier, or keep them to craft Ward Templates and brew tonics.");
         add("corrupted_creatures", "Corrupted Creatures", "Monsters that spawn on corrupted land can become Corrupted: purple names, more health and harder hits. "
                 + "They drop Corrupted Remnants, sometimes Void Shards, and corrupted versions of their usual drops.");
-        add("earning", "Earning", "The Void Exchange, in /skyland under The Corruption, buys Void Shards and Corrupted Remnants. "
-                + "Daily contracts pay too, and visiting other players' islands earns a tip for you and for the owner.");
+        add("earning", "Purified Essence", "The Purifier, in /skyland under The Corruption, turns Void Shards (1 each) and Corrupted Remnants (4 each) into Essence. "
+                + "Essence is what your island grows on: new land, new biomes and bigger islands. "
+                + "Tutorial steps, daily contracts and visiting other players' islands all pay Essence too.");
         add("corrupted_ingredients", "Corrupted Ingredients", "Corrupted spiders, skeletons and creepers drop a Corrupted Spider Eye, Bone or Gunpowder. "
                 + "Only these work in corrupted brews; the normal versions don't. "
                 + "Brew a Water Bottle with a Void Shard to make a Tainted Potion, the base of every tonic.");
@@ -63,7 +64,7 @@ public final class JournalPages {
         add("ward_levels", "Ward Levels", lines(Recipes.WARD.subList(2, Recipes.WARD.size()))
                 + "\nEcho Shards come from chests in Ancient Cities, deep in the Deep Dark.");
         add("daily_contracts", "Daily Contracts", "Every day brings three contracts in /skyland under The Corruption: deliver items, hunt, mine, explore or hand in shards. "
-                + "They pay money and shards, and pay more in the last day before a recycle.");
+                + "They pay Essence and shards, and pay more in the last day before a recycle.");
         add(RESETS, "The Resets", "The gods remake the overworld every week to hold the corruption back. "
                 + "Warnings count down first, and everyone below is carried home. Anything built down there is lost, so build your home on your island. "
                 + "The resets buy time, but they have never stopped the corruption.");
