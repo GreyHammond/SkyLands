@@ -227,6 +227,11 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         firstJoin = new dev.skyrealms.player.FirstJoin(this);
         getServer().getPluginManager().registerEvents(firstJoin, this);
         // First join opens the journal at the story, then offers a one-click claim of the free island.
+        // Automatic island: once the player lands on it, open the story (Java book / Bedrock Guide).
+        firstJoin.onAutoArrive = p -> Bukkit.getScheduler().runTaskLater(this, () -> {
+            if (p.isOnline() && journal != null) journal.start(p);
+        }, 60L);
+        milestones.listen((p, m, n) -> { if (m == dev.skyrealms.player.Milestone.CLAIMED_ISLAND) firstJoin.arrived(p); });
         // Java: the story book, plus a clickable claim link. Bedrock (no clickable chat, one form at a time):
         // straight to the claim form; the story is in the Guide.
         firstJoin.onFirstJoin = p -> {

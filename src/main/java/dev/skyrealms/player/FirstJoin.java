@@ -65,6 +65,16 @@ public final class FirstJoin implements Listener {
         Bukkit.getScheduler().runTaskLater(plugin, () -> welcome(p), delay);
     }
 
+    /** Players given an automatic island who haven't landed on it yet. */
+    private final java.util.Set<java.util.UUID> pendingArrival = new java.util.HashSet<>();
+    /** Runs when a player with an automatic island first lands on it (the story opens here). */
+    public Consumer<Player> onAutoArrive = p -> {};
+
+    /** Call when a player lands on a newly claimed island (CLAIMED_ISLAND). */
+    public void arrived(Player p) {
+        if (pendingArrival.remove(p.getUniqueId()) && onAutoArrive != null) onAutoArrive.accept(p);
+    }
+
     /** Runs the welcome now. Also usable to replay it for a player. */
     public void welcome(Player p) {
         if (!p.isOnline() || plugin.islands().of(p.getUniqueId()) != null) return;
@@ -75,7 +85,7 @@ public final class FirstJoin implements Listener {
                 onFirstJoin.accept(p);
                 return;
             }
-            plugin.service().buy(p, Tier.SMALL, biome);
+            if (plugin.service().buy(p, Tier.SMALL, biome)) pendingArrival.add(p.getUniqueId());
             return;
         }
         if (onFirstJoin != null) onFirstJoin.accept(p);

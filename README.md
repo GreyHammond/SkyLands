@@ -155,8 +155,8 @@ on Java** and **native Bedrock forms** for players joining through Geyser + Floo
 ### Your first login
 
 1. You join with the **menu book** and **return feather** in your hotbar (admins can turn this off).
-2. **Java:** the journal opens on the story, with a **[Claim your free island]** link. **Bedrock:** the claim form opens straight away (the story is in the Guide).
-3. Pick a biome: **your first Small island is free**. You're flown up to it with a welcome message.
+2. Your **free first Small island** is made for you and you're flown straight up to it, with a welcome message. Once you land, the journal opens on the story.
+3. (Servers can set `first-island.auto: false` to let new players pick their biome instead; the claim menu then opens, and your first Small island is still free.)
 4. Your island is now your **spawn**. If you die without a working bed or respawn anchor (broken, out of charge, or lost in a recycle), you respawn at your island home. With no island, you respawn at the world spawn.
 5. Jump off the edge any time to go down. Falls aim for **dry land**: water and ocean spots are skipped, the plugin searches outward up to 1,000 blocks for land, and if there's truly none you're given a boat.
 
@@ -620,7 +620,7 @@ SkyLands creates two files in `plugins/SkyRealms/`. Restart the server after edi
 | `bedrock` | Native Bedrock forms on/off, form button icons |
 | `cosmetics` | Island name length and banned words |
 | `hotbar` | Hotbar shortcuts: `give-on-join` (new players get the book and feather locked in, default on), slots. Players can always toggle their own. |
-| `first-island` | `free` (first Small island free, default on), `auto` (make it automatically on first join, default off), `auto-biome` |
+| `first-island` | `free` (first Small island free, default on), `auto` (new players start on a ready-made island, default on), `auto-biome` (default plains) |
 | `first-join` | First-join welcome on/off and its delay |
 | `spawn` | `island-fallback`: respawn at your island when no bed or anchor is set (default on) |
 | `tutorial` | Tutorial on/off, step order, rewards per step, finish reward, shard goal |

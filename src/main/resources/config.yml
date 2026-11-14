@@ -392,8 +392,8 @@ contracts:
 first-island:
   free: true
   # Give new players their free Small island automatically on first join, with no menus.
-  # Off: the claim-island menu (or the tutorial) lets them pick a biome instead.
-  auto: false
+  # Off: the claim-island menu lets them pick a biome instead.
+  auto: true
   # Biome for the automatic island.
   auto-biome: plains
 
