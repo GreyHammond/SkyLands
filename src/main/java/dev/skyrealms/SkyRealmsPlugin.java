@@ -51,6 +51,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private dev.skyrealms.cosmetic.CosmeticService cosmetics;
     private dev.skyrealms.cosmetic.NamePrompt namePrompt;
     private dev.skyrealms.bedrock.BedrockUi bedrock;
+    private dev.skyrealms.decay.DecayService decay;
 
     @Override
     public void onEnable() {
@@ -145,6 +146,11 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         pm.registerEvents(new FallTransit(this, skyName, overName, cfg.getConfigurationSection("transit")), this);
         pm.registerEvents(new ProtectionListener(islands, skyName), this);
 
+        // Overworld decay (off unless decay.enabled is true). Starts after all worlds have loaded.
+        decay = new dev.skyrealms.decay.DecayService(this,
+                dev.skyrealms.decay.DecaySettings.load(cfg.getConfigurationSection("decay"), overName));
+        Bukkit.getScheduler().runTask(this, () -> decay.start(skyName));
+
         SkylandCommands commands = new SkylandCommands(this);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> commands.register(event.registrar()));
 
@@ -154,6 +160,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         if (islands != null) islands.save();
+        if (decay != null && decay.isRunning()) decay.flush();
     }
 
     /** Lets Multiverse (or bukkit.yml) create the sky world with: generator SkyRealms */
@@ -182,4 +189,5 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public dev.skyrealms.cosmetic.CosmeticService cosmetics() { return cosmetics; }
     public dev.skyrealms.cosmetic.NamePrompt namePrompt() { return namePrompt; }
     public dev.skyrealms.bedrock.BedrockUi bedrock() { return bedrock; }
+    public dev.skyrealms.decay.DecayService decay() { return decay; }
 }

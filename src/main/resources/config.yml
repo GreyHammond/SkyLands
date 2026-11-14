@@ -154,3 +154,45 @@ transit:
   protection-seconds: 90
   # Seconds between "Return to Island" uses (0 = no cooldown).
   home-cooldown: 10
+
+# Overworld decay: players' presence slowly corrupts the chunks around them, ending in bedrock.
+# Skylands are never affected. See docs/DECAY_SPEC.md.
+decay:
+  # Off by default. It also refuses to run on the server's main world (that world can never be
+  # recycled), so point it at a dedicated resource world, or set allow-main-world for testing.
+  enabled: false
+  allow-main-world: false
+  # World to corrupt. Defaults to worlds.overworld.
+  # world: skyrealms_overworld
+  ignore-creative: true
+  particles: true
+  action-bar: true
+  # Decay added per second to the chunk an active (recently moved) player stands in.
+  gain-per-second: 0.03
+  # At 100 decay the gain is multiplied by (1 + ramp). Makes decay accelerate.
+  ramp: 2.0
+  # Share of that gain spilling into the 8 surrounding chunks, and the most it can reach there.
+  neighbor-fraction: 0.25
+  neighbor-cap: 50
+  # Decay a chunk loses per second when nobody is near it.
+  heal-per-second: 0.01
+  # Chunks above leak-threshold slowly push decay into loaded neighbours, up to leak-cap.
+  leak-threshold: 60
+  leak-per-second: 0.004
+  leak-cap: 30
+  # Decay values where each stage begins.
+  stages:
+    decayed: 25   # grass -> coarse dirt, foliage dies, growth stops
+    blighted: 50  # stone -> blackstone, logs vanish
+    barren: 75    # surface becomes bedrock (permanent until the world is recycled)
+  # Block-change attempts per second in a chunk at 100 decay (scales with decay).
+  attempts-per-second-max: 20
+  # Hard cap on attempts per tick across the whole world, so conversion can never lag the server.
+  max-attempts-per-tick: 200
+  # How many layers deep the bedrock crust goes.
+  bedrock-depth: 24
+  # Blocks within this many blocks of a player are never converted.
+  safe-radius: 3
+  # A player who hasn't moved for this long stops adding decay.
+  afk-seconds: 60
+  min-move: 0.5

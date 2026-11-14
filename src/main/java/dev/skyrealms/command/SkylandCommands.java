@@ -164,6 +164,13 @@ public final class SkylandCommands {
                 .executes(ctx -> restore(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "owner")))));
         root.then(Commands.literal("archives").executes(ctx -> archives(ctx.getSource().getSender())));
 
+        // decay [set <0-100> | clear]
+        root.then(Commands.literal("decay")
+                .executes(ctx -> decayStatus(ctx.getSource()))
+                .then(Commands.literal("set").then(Commands.argument("value", IntegerArgumentType.integer(0, 100))
+                        .executes(ctx -> decaySet(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "value")))))
+                .then(Commands.literal("clear").executes(ctx -> decayClear(ctx.getSource()))));
+
         root.then(Commands.literal("reload").executes(ctx -> {
             plugin.library().reload();
             Msg.send(ctx.getSource().getSender(), "Pieces reloaded. (Restart the server to apply config.yml changes.)");
@@ -258,9 +265,51 @@ public final class SkylandCommands {
                 "restore <owner> <dark_gray>- bring back an archived island",
                 "archives <dark_gray>- list archived islands",
                 "xp <owner> [add|set <amount>] <dark_gray>- view or change island XP",
+                "decay [set <0-100>|clear] <dark_gray>- overworld corruption in your chunk / all chunks",
                 "reload <dark_gray>- reload piece files"))
             to.sendMessage(Msg.c(" <aqua>/skylandadmin <gray>" + l));
         to.sendMessage(Msg.c(" <dark_gray>Sizes can also be an exact radius from " + MIN_RADIUS + " to " + MAX_RADIUS + "."));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    // ---- decay ---------------------------------------------------------------------------
+
+    private boolean decayOn(CommandSender to) {
+        var d = plugin.decay();
+        if (d != null && d.isRunning()) return true;
+        Msg.error(to, "Decay isn't running. Enable it under <white>decay:</white> in config.yml (and restart).");
+        return false;
+    }
+
+    private int decayStatus(CommandSourceStack src) {
+        CommandSender to = src.getSender();
+        if (!decayOn(to)) return 0;
+        if (!(src.getExecutor() instanceof Player p)) { Msg.send(to, "Decay is active in <white>" + plugin.decay().worldName() + "</white>."); return Command.SINGLE_SUCCESS; }
+        if (!p.getWorld().getName().equals(plugin.decay().worldName())) {
+            Msg.send(to, "Decay only runs in <white>" + plugin.decay().worldName() + "</white>.");
+            return Command.SINGLE_SUCCESS;
+        }
+        Msg.send(to, "Corruption in this chunk: <white>" + String.format("%.1f", plugin.decay().valueAt(p.getLocation())) + "%");
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int decaySet(CommandSourceStack src, int value) {
+        CommandSender to = src.getSender();
+        if (!decayOn(to)) return 0;
+        if (!(src.getExecutor() instanceof Player p) || !p.getWorld().getName().equals(plugin.decay().worldName())) {
+            Msg.error(to, "Stand in <white>" + plugin.decay().worldName() + "</white> to set a chunk's corruption.");
+            return 0;
+        }
+        plugin.decay().setAt(p.getLocation(), value);
+        Msg.send(to, "This chunk's corruption is now <white>" + value + "%");
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int decayClear(CommandSourceStack src) {
+        CommandSender to = src.getSender();
+        if (!decayOn(to)) return 0;
+        int n = plugin.decay().clearAll();
+        Msg.send(to, "Cleared corruption values from <white>" + n + "</white> chunks. Blocks already changed stay changed.");
         return Command.SINGLE_SUCCESS;
     }
 

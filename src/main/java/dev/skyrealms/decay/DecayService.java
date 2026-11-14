@@ -1,0 +1,285 @@
+/*
+ * SkyLands (SkyRealms) - floating-island survival for Paper
+ * Copyright (C) 2026 Hammond Digital Studios
+ *
+ * This program is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU General Public License version 3, together with the additional terms in the NOTICE
+ * file (section 7: you must keep the attribution "SkyLands by Hammond Digital Studios" and mark
+ * modified versions). This program is distributed WITHOUT ANY WARRANTY. See the LICENSE and
+ * NOTICE files, or <https://www.gnu.org/licenses/>.
+ */
+package dev.skyrealms.decay;
+
+import dev.skyrealms.util.Msg;
+import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockGrowEvent;
+import org.bukkit.event.block.BlockSpreadEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.event.world.ChunkUnloadEvent;
+import org.bukkit.event.world.StructureGrowEvent;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.Plugin;
+
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+
+/**
+ * Overworld decay: players' presence slowly corrupts the chunks around them. State lives in each
+ * chunk's persistent data; only chunks that currently have decay are tracked in memory.
+ */
+public final class DecayService implements Listener {
+    private static final double MIN = 0.05;
+
+    private record ChunkPos(int x, int z) {}
+
+    private static final class Cell {
+        double value;
+        double owed; // fractional block-change attempts carried between ticks
+        Cell(double v) { this.value = v; }
+    }
+
+    private final Plugin plugin;
+    private final DecaySettings s;
+    private final DecayConverter converter;
+    private final NamespacedKey key;
+    private final Map<ChunkPos, Cell> cells = new HashMap<>();
+    private final Map<UUID, double[]> lastPos = new HashMap<>();
+    private final Map<UUID, Long> lastActive = new HashMap<>();
+    private final List<ChunkPos> convertible = new ArrayList<>();
+    private volatile DecayResist resist = DecayResist.NONE;
+    private boolean running;
+
+    public DecayService(Plugin plugin, DecaySettings settings) {
+        this.plugin = plugin;
+        this.s = settings;
+        this.converter = new DecayConverter(settings);
+        this.key = new NamespacedKey(plugin, "decay");
+    }
+
+    public DecaySettings settings() { return s; }
+    public boolean isRunning() { return running; }
+    public String worldName() { return s.world; }
+    public void setResist(DecayResist r) { this.resist = r == null ? DecayResist.NONE : r; }
+
+    /** Registers listeners and starts the tick loops. Returns false (with a log line) if it refuses to run. */
+    public boolean start(String skyWorldName) {
+        if (!s.enabled) return false;
+        World w = Bukkit.getWorld(s.world);
+        if (s.world.equals(skyWorldName)) {
+            plugin.getLogger().severe("decay.world is the sky world. Decay will not run there.");
+            return false;
+        }
+        if (w == null) {
+            plugin.getLogger().warning("decay.world '" + s.world + "' isn't loaded; decay is off until it is.");
+            return false;
+        }
+        if (!s.allowMainWorld && w.equals(Bukkit.getWorlds().get(0))) {
+            plugin.getLogger().warning("decay.world '" + s.world + "' is the server's main world, which can never be "
+                    + "recycled. Decay is off. Use a dedicated resource world, or set decay.allow-main-world: true to test.");
+            return false;
+        }
+        Bukkit.getPluginManager().registerEvents(this, plugin);
+        for (Chunk c : w.getLoadedChunks()) load(c);
+        Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20L, 20L);
+        Bukkit.getScheduler().runTaskTimer(plugin, this::convertTick, 20L, 1L);
+        Bukkit.getScheduler().runTaskTimer(plugin, this::flush, 1200L, 1200L);
+        running = true;
+        plugin.getLogger().info("Decay active in '" + s.world + "'.");
+        return true;
+    }
+
+    // ---- public API ------------------------------------------------------------------
+
+    public double valueAt(Location l) {
+        if (!inWorld(l.getWorld())) return 0;
+        Cell c = cells.get(new ChunkPos(l.getBlockX() >> 4, l.getBlockZ() >> 4));
+        return c == null ? 0 : c.value;
+    }
+
+    public void setAt(Location l, double value) {
+        if (!inWorld(l.getWorld())) return;
+        ChunkPos p = new ChunkPos(l.getBlockX() >> 4, l.getBlockZ() >> 4);
+        double v = Math.max(0, Math.min(100, value));
+        if (v < MIN) { cells.remove(p); store(l.getChunk(), null); return; }
+        cells.computeIfAbsent(p, k -> new Cell(v)).value = v;
+    }
+
+    /** Forgets all decay values (blocks already changed stay changed). */
+    public int clearAll() {
+        World w = Bukkit.getWorld(s.world);
+        int n = cells.size();
+        if (w != null) {
+            for (ChunkPos p : cells.keySet()) if (w.isChunkLoaded(p.x, p.z)) store(w.getChunkAt(p.x, p.z), null);
+        }
+        cells.clear();
+        convertible.clear();
+        return n;
+    }
+
+    /** Writes every tracked value into its chunk. Call on shutdown. */
+    public void flush() {
+        World w = Bukkit.getWorld(s.world);
+        if (w == null) return;
+        for (Map.Entry<ChunkPos, Cell> e : cells.entrySet()) {
+            ChunkPos p = e.getKey();
+            if (w.isChunkLoaded(p.x, p.z)) store(w.getChunkAt(p.x, p.z), e.getValue());
+        }
+    }
+
+    // ---- persistence -----------------------------------------------------------------
+
+    private boolean inWorld(World w) { return w != null && w.getName().equals(s.world); }
+
+    private void load(Chunk c) {
+        Float f = c.getPersistentDataContainer().get(key, PersistentDataType.FLOAT);
+        if (f != null && f > MIN) cells.put(new ChunkPos(c.getX(), c.getZ()), new Cell(f));
+    }
+
+    private void store(Chunk c, Cell cell) {
+        var pdc = c.getPersistentDataContainer();
+        if (cell == null || cell.value < MIN) pdc.remove(key);
+        else pdc.set(key, PersistentDataType.FLOAT, (float) cell.value);
+    }
+
+    @EventHandler
+    public void onChunkLoad(ChunkLoadEvent e) {
+        if (inWorld(e.getWorld())) load(e.getChunk());
+    }
+
+    @EventHandler
+    public void onChunkUnload(ChunkUnloadEvent e) {
+        if (!inWorld(e.getWorld())) return;
+        Cell c = cells.remove(new ChunkPos(e.getChunk().getX(), e.getChunk().getZ()));
+        if (c != null) store(e.getChunk(), c);
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent e) {
+        lastPos.remove(e.getPlayer().getUniqueId());
+        lastActive.remove(e.getPlayer().getUniqueId());
+    }
+
+    /** Corrupted ground stops growing things and stops grass spreading. */
+    @EventHandler(ignoreCancelled = true)
+    public void onGrow(BlockGrowEvent e) { if (decayedBlock(e.getBlock())) e.setCancelled(true); }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onSpread(BlockSpreadEvent e) { if (decayedBlock(e.getBlock())) e.setCancelled(true); }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onStructureGrow(StructureGrowEvent e) { if (decayedBlock(e.getLocation().getBlock())) e.setCancelled(true); }
+
+    private boolean decayedBlock(Block b) {
+        if (!inWorld(b.getWorld())) return false;
+        Cell c = cells.get(new ChunkPos(b.getX() >> 4, b.getZ() >> 4));
+        return c != null && c.value >= s.stage1;
+    }
+
+    // ---- the once-a-second pass --------------------------------------------------------
+
+    private Cell cell(World w, ChunkPos p) {
+        if (!w.isChunkLoaded(p.x, p.z)) return null;
+        return cells.computeIfAbsent(p, k -> new Cell(0));
+    }
+
+    private void tick() {
+        World w = Bukkit.getWorld(s.world);
+        if (w == null) return;
+        long now = System.currentTimeMillis();
+        Set<ChunkPos> held = new HashSet<>();
+
+        for (Player p : w.getPlayers()) {
+            GameMode gm = p.getGameMode();
+            if (gm == GameMode.SPECTATOR || (s.ignoreCreative && gm == GameMode.CREATIVE)) continue;
+            Location l = p.getLocation();
+            UUID id = p.getUniqueId();
+            double[] last = lastPos.get(id);
+            if (last == null || sq(last[0] - l.getX()) + sq(last[1] - l.getY()) + sq(last[2] - l.getZ()) >= s.minMove * s.minMove) {
+                lastPos.put(id, new double[]{l.getX(), l.getY(), l.getZ()});
+                lastActive.put(id, now);
+            }
+            ChunkPos here = new ChunkPos(l.getBlockX() >> 4, l.getBlockZ() >> 4);
+            for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) held.add(new ChunkPos(here.x + dx, here.z + dz));
+
+            boolean afk = now - lastActive.getOrDefault(id, now) > s.afkSeconds * 1000L;
+            double factor = afk ? 0 : Math.max(0, Math.min(1, resist.factor(p)));
+            if (factor > 0) {
+                Cell center = cell(w, here);
+                if (center != null) {
+                    double gain = s.gainPerSecond * factor * (1 + s.ramp * center.value / 100.0);
+                    center.value = Math.min(100, center.value + gain);
+                    for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
+                        if (dx == 0 && dz == 0) continue;
+                        Cell n = cell(w, new ChunkPos(here.x + dx, here.z + dz));
+                        if (n != null && n.value < s.neighborCap) n.value = Math.min(s.neighborCap, n.value + gain * s.neighborFraction);
+                    }
+                }
+            }
+            feedback(p, w, cells.get(here));
+        }
+
+        // Quiet chunks recover; strongly decayed chunks leak a little into loaded neighbours.
+        List<ChunkPos> keys = new ArrayList<>(cells.keySet());
+        for (ChunkPos p : keys) {
+            Cell c = cells.get(p);
+            if (c == null) continue;
+            if (!held.contains(p)) c.value -= s.healPerSecond;
+            if (c.value < MIN) { cells.remove(p); if (w.isChunkLoaded(p.x, p.z)) store(w.getChunkAt(p.x, p.z), null); continue; }
+            if (c.value >= s.leakThreshold && s.leakPerSecond > 0) {
+                int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+                for (int[] d : dirs) {
+                    Cell n = cell(w, new ChunkPos(p.x + d[0], p.z + d[1]));
+                    if (n != null && n.value < s.leakCap) n.value = Math.min(s.leakCap, n.value + s.leakPerSecond);
+                }
+            }
+        }
+
+        convertible.clear();
+        for (Map.Entry<ChunkPos, Cell> e : cells.entrySet()) if (e.getValue().value >= s.stage1) convertible.add(e.getKey());
+    }
+
+    private void feedback(Player p, World w, Cell c) {
+        if (c == null || c.value < 1) return;
+        int stage = DecayConverter.stageOf(s, c.value);
+        if (s.actionBar) {
+            String color = switch (stage) { case 0 -> "green"; case 1 -> "yellow"; case 2 -> "gold"; default -> "red"; };
+            p.sendActionBar(Msg.c("<gray>Corruption <" + color + ">" + (int) c.value + "%</" + color + ">"));
+        }
+        if (s.particles && stage >= 1) {
+            Location l = p.getLocation().add(0, 1, 0);
+            w.spawnParticle(Particle.ASH, l, 6 + stage * 8, 4, 2, 4, 0);
+            if (stage >= 2 && ThreadLocalRandom.current().nextInt(12) == 0) {
+                p.playSound(l, Sound.AMBIENT_SOUL_SAND_VALLEY_MOOD, 0.4f, 0.8f);
+            }
+        }
+    }
+
+    // ---- the every-tick conversion pass ------------------------------------------------
+
+    private void convertTick() {
+        if (convertible.isEmpty() || s.attemptsPerSecondMax <= 0) return;
+        World w = Bukkit.getWorld(s.world);
+        if (w == null) return;
+        converter.beginTick(w);
+        Collections.shuffle(convertible);
+        int budget = s.maxAttemptsPerTick;
+        for (ChunkPos p : convertible) {
+            Cell c = cells.get(p);
+            if (c == null || !w.isChunkLoaded(p.x, p.z)) continue;
+            c.owed = Math.min(4, c.owed + s.attemptsPerSecondMax * (c.value / 100.0) / 20.0);
+            while (c.owed >= 1 && budget > 0) {
+                c.owed -= 1;
+                budget--;
+                converter.attempt(w, p.x, p.z, c.value);
+            }
+            if (budget <= 0) break;
+        }
+    }
+
+    private static double sq(double d) { return d * d; }
+}
