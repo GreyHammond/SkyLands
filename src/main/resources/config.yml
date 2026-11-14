@@ -196,3 +196,22 @@ decay:
   # A player who hasn't moved for this long stops adding decay.
   afk-seconds: 60
   min-move: 0.5
+
+# Weekly overworld recycle: the overworld players fall into becomes a managed world named
+# <base-name>_<cycle>. Every interval, everyone in it is sent back to their island, a fresh world
+# with a new seed replaces it, and the old one is deleted. When on, this world replaces
+# worlds.overworld and decay.world. Only worlds this plugin created are ever deleted.
+recycle:
+  enabled: false
+  base-name: skyrealms_overworld
+  interval-days: 7
+  # Seconds before a recycle when everyone is warned.
+  warnings: [600, 300, 60, 30, 10]
+  # Commands players can't use in the recycled world (their targets would vanish on recycle).
+  blocked-commands: [sethome, esethome, createhome, setwarp]
+  messages:
+    warning: "<red>The overworld will be recycled in <white>{time}</white> to contain the corruption. Get to your island!"
+    start: "<red>Recycling the overworld to contain the corruption..."
+    done: "<green>The corruption is contained. A fresh overworld waits below the islands."
+    evacuated: "<gray>The winds carried you home before the overworld was recycled."
+    blocked: "<red>You can't do that down here. The overworld is recycled every week to contain the corruption."

@@ -45,6 +45,8 @@ public final class DecayService implements Listener {
 
     private final Plugin plugin;
     private final DecaySettings s;
+    /** The world being corrupted. Starts as decay.world; the overworld recycle can switch it. */
+    private volatile String world;
     private final DecayConverter converter;
     private final NamespacedKey key;
     private final Map<ChunkPos, Cell> cells = new HashMap<>();
@@ -57,13 +59,14 @@ public final class DecayService implements Listener {
     public DecayService(Plugin plugin, DecaySettings settings) {
         this.plugin = plugin;
         this.s = settings;
+        this.world = settings.world;
         this.converter = new DecayConverter(settings);
         this.key = new NamespacedKey(plugin, "decay");
     }
 
     public DecaySettings settings() { return s; }
     public boolean isRunning() { return running; }
-    public String worldName() { return s.world; }
+    public String worldName() { return world; }
     /** Adds a source of resistance (tonic, gear...). All sources multiply together; each returns 0..1. */
     public void addResist(DecayResist r) { if (r != null) resists.add(r); }
 
@@ -76,17 +79,17 @@ public final class DecayService implements Listener {
     /** Registers listeners and starts the tick loops. Returns false (with a log line) if it refuses to run. */
     public boolean start(String skyWorldName) {
         if (!s.enabled) return false;
-        World w = Bukkit.getWorld(s.world);
-        if (s.world.equals(skyWorldName)) {
+        World w = Bukkit.getWorld(world);
+        if (world.equals(skyWorldName)) {
             plugin.getLogger().severe("decay.world is the sky world. Decay will not run there.");
             return false;
         }
         if (w == null) {
-            plugin.getLogger().warning("decay.world '" + s.world + "' isn't loaded; decay is off until it is.");
+            plugin.getLogger().warning("decay.world '" + world + "' isn't loaded; decay is off until it is.");
             return false;
         }
         if (!s.allowMainWorld && w.equals(Bukkit.getWorlds().get(0))) {
-            plugin.getLogger().warning("decay.world '" + s.world + "' is the server's main world, which can never be "
+            plugin.getLogger().warning("decay.world '" + world + "' is the server's main world, which can never be "
                     + "recycled. Decay is off. Use a dedicated resource world, or set decay.allow-main-world: true to test.");
             return false;
         }
@@ -96,7 +99,7 @@ public final class DecayService implements Listener {
         Bukkit.getScheduler().runTaskTimer(plugin, this::convertTick, 20L, 1L);
         Bukkit.getScheduler().runTaskTimer(plugin, this::flush, 1200L, 1200L);
         running = true;
-        plugin.getLogger().info("Decay active in '" + s.world + "'.");
+        plugin.getLogger().info("Decay active in '" + world + "'.");
         return true;
     }
 
@@ -116,9 +119,26 @@ public final class DecayService implements Listener {
         cells.computeIfAbsent(p, k -> new Cell(v)).value = v;
     }
 
+    /**
+     * Points decay at a different world (used by the overworld recycle). Tracked values for the
+     * old world are dropped, since that world is about to be deleted.
+     */
+    public void switchWorld(String newWorld) {
+        if (newWorld == null || newWorld.equals(world)) return;
+        cells.clear();
+        convertible.clear();
+        lastPos.clear();
+        lastActive.clear();
+        world = newWorld;
+        if (running) {
+            World w = Bukkit.getWorld(newWorld);
+            if (w != null) for (Chunk c : w.getLoadedChunks()) load(c);
+        }
+    }
+
     /** Forgets all decay values (blocks already changed stay changed). */
     public int clearAll() {
-        World w = Bukkit.getWorld(s.world);
+        World w = Bukkit.getWorld(world);
         int n = cells.size();
         if (w != null) {
             for (ChunkPos p : cells.keySet()) if (w.isChunkLoaded(p.x, p.z)) store(w.getChunkAt(p.x, p.z), null);
@@ -130,7 +150,7 @@ public final class DecayService implements Listener {
 
     /** Writes every tracked value into its chunk. Call on shutdown. */
     public void flush() {
-        World w = Bukkit.getWorld(s.world);
+        World w = Bukkit.getWorld(world);
         if (w == null) return;
         for (Map.Entry<ChunkPos, Cell> e : cells.entrySet()) {
             ChunkPos p = e.getKey();
@@ -140,7 +160,7 @@ public final class DecayService implements Listener {
 
     // ---- persistence -----------------------------------------------------------------
 
-    private boolean inWorld(World w) { return w != null && w.getName().equals(s.world); }
+    private boolean inWorld(World w) { return w != null && w.getName().equals(world); }
 
     private void load(Chunk c) {
         Float f = c.getPersistentDataContainer().get(key, PersistentDataType.FLOAT);
@@ -195,7 +215,7 @@ public final class DecayService implements Listener {
     }
 
     private void tick() {
-        World w = Bukkit.getWorld(s.world);
+        World w = Bukkit.getWorld(world);
         if (w == null) return;
         long now = System.currentTimeMillis();
         Set<ChunkPos> held = new HashSet<>();
@@ -270,7 +290,7 @@ public final class DecayService implements Listener {
 
     private void convertTick() {
         if (convertible.isEmpty() || s.attemptsPerSecondMax <= 0) return;
-        World w = Bukkit.getWorld(s.world);
+        World w = Bukkit.getWorld(world);
         if (w == null) return;
         converter.beginTick(w);
         Collections.shuffle(convertible);

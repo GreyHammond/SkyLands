@@ -52,6 +52,9 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private dev.skyrealms.cosmetic.NamePrompt namePrompt;
     private dev.skyrealms.bedrock.BedrockUi bedrock;
     private dev.skyrealms.decay.DecayService decay;
+    private dev.skyrealms.decay.recycle.WorldRecycler recycler;
+    /** The overworld players fall into: worlds.overworld, or the current recycled world. */
+    private volatile String overworldName = "world";
 
     @Override
     public void onEnable() {
@@ -68,6 +71,12 @@ public final class SkyRealmsPlugin extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
+        // Weekly overworld recycle (off unless recycle.enabled). Its managed world replaces worlds.overworld.
+        recycler = new dev.skyrealms.decay.recycle.WorldRecycler(this, cfg.getConfigurationSection("recycle"));
+        String recycled = recycler.setup();
+        if (recycled != null) overName = recycled;
+        overworldName = overName;
+
         if (Bukkit.getWorld(overName) == null) {
             getLogger().warning("Overworld '" + overName + "' isn't loaded. Falling off islands won't work until it is.");
         }
@@ -143,12 +152,13 @@ public final class SkyRealmsPlugin extends JavaPlugin {
             for (var i : islands.all()) xp.backfill(i);
             islands.save();
         });
-        pm.registerEvents(new FallTransit(this, skyName, overName, cfg.getConfigurationSection("transit")), this);
+        pm.registerEvents(new FallTransit(this, skyName, this::overworldName, cfg.getConfigurationSection("transit")), this);
         pm.registerEvents(new ProtectionListener(islands, skyName), this);
 
         // Overworld decay (off unless decay.enabled is true). Starts after all worlds have loaded.
         decay = new dev.skyrealms.decay.DecayService(this,
                 dev.skyrealms.decay.DecaySettings.load(cfg.getConfigurationSection("decay"), overName));
+        if (recycled != null) decay.switchWorld(recycled); // the recycled world overrides decay.world
         Bukkit.getScheduler().runTask(this, () -> decay.start(skyName));
 
         SkylandCommands commands = new SkylandCommands(this);
@@ -190,4 +200,12 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public dev.skyrealms.cosmetic.NamePrompt namePrompt() { return namePrompt; }
     public dev.skyrealms.bedrock.BedrockUi bedrock() { return bedrock; }
     public dev.skyrealms.decay.DecayService decay() { return decay; }
+    public dev.skyrealms.decay.recycle.WorldRecycler recycler() { return recycler; }
+    public String overworldName() { return overworldName; }
+
+    /** Switches every overworld target (falls, decay, safe spots) to another world. Used by the recycle. */
+    public void setOverworldName(String name) {
+        overworldName = name;
+        if (decay != null) decay.switchWorld(name);
+    }
 }

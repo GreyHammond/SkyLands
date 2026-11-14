@@ -309,7 +309,7 @@ public final class IslandArchiver implements Listener {
     private File dir(UUID owner) { return new File(root, owner.toString()); }
 
     private Location safeSpot() {
-        World ground = Bukkit.getWorld(plugin.getConfig().getString("worlds.overworld", "world"));
+        World ground = Bukkit.getWorld(plugin.overworldName());
         return (ground != null ? ground : Bukkit.getWorlds().get(0)).getSpawnLocation();
     }
 

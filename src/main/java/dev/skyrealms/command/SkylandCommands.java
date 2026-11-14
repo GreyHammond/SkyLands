@@ -171,6 +171,8 @@ public final class SkylandCommands {
                         .executes(ctx -> decaySet(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "value")))))
                 .then(Commands.literal("clear").executes(ctx -> decayClear(ctx.getSource()))));
 
+        dev.skyrealms.decay.recycle.RecycleCommands.attach(root, plugin);
+
         root.then(Commands.literal("reload").executes(ctx -> {
             plugin.library().reload();
             Msg.send(ctx.getSource().getSender(), "Pieces reloaded. (Restart the server to apply config.yml changes.)");
@@ -266,6 +268,7 @@ public final class SkylandCommands {
                 "archives <dark_gray>- list archived islands",
                 "xp <owner> [add|set <amount>] <dark_gray>- view or change island XP",
                 "decay [set <0-100>|clear] <dark_gray>- overworld corruption in your chunk / all chunks",
+                "recycle [status|now [seconds]|cancel] <dark_gray>- weekly overworld recycle",
                 "reload <dark_gray>- reload piece files"))
             to.sendMessage(Msg.c(" <aqua>/skylandadmin <gray>" + l));
         to.sendMessage(Msg.c(" <dark_gray>Sizes can also be an exact radius from " + MIN_RADIUS + " to " + MAX_RADIUS + "."));
