@@ -65,6 +65,9 @@ public final class DecayService implements Listener {
     }
 
     public DecaySettings settings() { return s; }
+
+    /** Runs whenever decay turns a block into bedrock. */
+    public void onBedrock(java.util.function.Consumer<org.bukkit.block.Block> hook) { converter.onBedrock = hook; }
     public boolean isRunning() { return running; }
     public String worldName() { return world; }
     /** Adds a source of resistance (tonic, gear...). All sources multiply together; each returns 0..1. */
