@@ -42,6 +42,8 @@ public final class CorruptionHarvest implements Listener {
     private final SkyRealmsPlugin plugin;
     private final boolean enabled;
     private final double chanceDecayed, chanceBlighted, chanceBarren, stoneMult, bedrockMult, crystalChance;
+    private final int crystalCap;
+    private final NamespacedKey crystalKey;
     private final int perMinuteCap;
     /** Block positions players placed, stored per chunk as packed ints so it survives restarts. */
     private final NamespacedKey placedKey;
@@ -58,7 +60,9 @@ public final class CorruptionHarvest implements Listener {
         stoneMult = Math.max(0, cfg.getDouble("corrupted-stone-multiplier", 2.0));
         bedrockMult = Math.max(0, cfg.getDouble("bedrock-adjacent-multiplier", 1.5));
         perMinuteCap = Math.max(0, cfg.getInt("per-minute-cap", 20));
-        crystalChance = clamp(cfg.getDouble("bedrock-crystal-chance", 0.02));
+        crystalChance = clamp(cfg.getDouble("bedrock-crystal-chance", 0.002));
+        crystalCap = Math.max(0, cfg.getInt("bedrock-crystals-per-chunk", 1));
+        crystalKey = new NamespacedKey(plugin, "crystals_found");
         placedKey = new NamespacedKey(plugin, "placed_blocks");
     }
 
@@ -141,9 +145,14 @@ public final class CorruptionHarvest implements Listener {
     // ---- crystallised corruption -------------------------------------------------------
 
     private void crystallise(Block bedrock) {
-        if (crystalChance <= 0 || ThreadLocalRandom.current().nextDouble() >= crystalChance) return;
+        if (crystalChance <= 0 || crystalCap <= 0 || ThreadLocalRandom.current().nextDouble() >= crystalChance) return;
         Block above = bedrock.getRelative(BlockFace.UP);
         if (!above.getType().isAir()) return; // only on the surface
+        // A rare find, not a farm: each chunk gives at most crystalCap crystals per world (it resets with the recycle).
+        var pdc = bedrock.getChunk().getPersistentDataContainer();
+        int found = pdc.getOrDefault(crystalKey, PersistentDataType.INTEGER, 0);
+        if (found >= crystalCap) return;
+        pdc.set(crystalKey, PersistentDataType.INTEGER, found + 1);
         Location at = above.getLocation().add(0.5, 0.2, 0.5);
         bedrock.getWorld().dropItem(at, VoidItems.create(VoidItems.Kind.SHARD, 1));
         bedrock.getWorld().spawnParticle(Particle.REVERSE_PORTAL, at, 8, 0.2, 0.2, 0.2, 0.01);

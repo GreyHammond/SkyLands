@@ -310,8 +310,11 @@ harvest:
   bedrock-adjacent-multiplier: 1.5
   # Most shards one player can get from breaking blocks per minute.
   per-minute-cap: 20
-  # Chance a block decay turns to bedrock leaves a shard on top ("crystallised corruption").
-  bedrock-crystal-chance: 0.02
+  # "Crystallised corruption": a rare shard left on top of new bedrock. Kept rare so players
+  # can't farm shards by corrupting land on purpose.
+  bedrock-crystal-chance: 0.002
+  # Most crystals any one chunk can give per overworld (resets with the weekly recycle). 0 = off.
+  bedrock-crystals-per-chunk: 1
 # Corrupted mob bounties: hostile mobs that spawn naturally on corrupted land (stage 1 and up)
 # can come out corrupted: a little tougher, and they drop Corrupted Remnants and sometimes
 # Void Shards when a player kills them. Spawner, spawn-egg and command mobs never count.

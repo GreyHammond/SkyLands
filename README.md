@@ -472,7 +472,7 @@ Everything you bring back from the corruption sells at the **Void Exchange**
 
 | Source | What you get |
 |---|---|
-| **Corruption harvest** | Breaking natural blocks in corrupted land can drop **Void Shards**: about 1% of blocks when drying, 4% in wasteland, 10% when barren. Blackstone and deepslate drop twice as often, blocks touching bedrock 1.5×. Fresh bedrock sometimes leaves a shard behind. Blocks you placed never count; up to 20 shards a minute. |
+| **Corruption harvest** | Breaking natural blocks in corrupted land can drop **Void Shards**: about 1% of blocks when drying, 4% in wasteland, 10% when barren. Blackstone and deepslate drop twice as often, blocks touching bedrock 1.5×. Fresh bedrock occasionally leaves a shard behind (at most one per chunk per overworld, so it can't be farmed). Blocks you placed never count; up to 20 shards a minute. |
 | **Corrupted mobs** | Monsters that spawn on corrupted land may become **Corrupted** (15% to 60% of them, by corruption): purple names, +25–75% health, +10–30% damage. They drop 1–4 **Corrupted Remnants**, sometimes shards, and a **corrupted ingredient** for brewing (Spider Eye, Bone, Gunpowder or Flesh), on top of normal drops. |
 | **Daily contracts** | Three tasks a day, reset at 4 AM server time: deliver items, hunt mobs or corrupted mobs, mine, explore new chunks, or hand in shards. Rewards are money and shards, **×1.5** in the last 24 hours before a recycle. Hand in part of a delivery whenever you like. |
 | **Visitor tips** | Visit someone's island from **Visit Islands** and stay 30 seconds: the owner gets 50 and you get 20 (more for higher-level islands). Once per island per day, up to 5 tips a day as a visitor and 20 as an owner. No tips for your own, a friend's or a co-owned island. |
