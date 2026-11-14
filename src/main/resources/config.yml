@@ -320,3 +320,17 @@ corrupted-mobs:
     remnants-max: 4
     shard-chance: 0.45
     shards-max: 3
+# Visitor tips: visiting someone's island (through the Visit menu) pays the island owner and
+# the visitor, once the visitor has stayed on the island a little while.
+tips:
+  enabled: true
+  owner-tip: 50
+  visitor-tip: 20
+  # Tips grow by this much per island level (0.02 = +2% per level), up to max-multiplier.
+  per-island-level: 0.02
+  max-multiplier: 2.0
+  # Seconds the visitor must stay on the island before tips pay.
+  min-stay-seconds: 30
+  # Each visitor/island pair tips once per day. These cap the number of tips per day.
+  max-tips-per-visitor: 5
+  max-tips-per-owner: 20

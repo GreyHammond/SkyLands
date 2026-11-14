@@ -311,7 +311,9 @@ public final class RealmService {
             return false;
         }
         p.leaveVehicle();
-        p.teleportAsync(i.home(plugin.skyWorld()));
+        p.teleportAsync(i.home(plugin.skyWorld())).thenAccept(ok -> {
+            if (ok && plugin.tips() != null) plugin.tips().startVisit(p, i);
+        });
         Msg.send(p, "Visiting " + owner.getName() + "'s island.");
         return true;
     }
