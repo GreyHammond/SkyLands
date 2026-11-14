@@ -99,6 +99,12 @@ public final class WardCommands {
         WardedGear g = gear(plugin, to);
         if (g == null) return 0;
         if (!(src.getExecutor() instanceof Player p)) { Msg.error(to, "Players only."); return 0; }
+        if (!g.shop) {
+            Msg.send(p, "Warded armor is smithed now. Craft a <light_purple>Ward Template</light_purple> (8 Void Shards around Crying Obsidian), "
+                    + "then smith it onto armor with a Void Shard for Ward I. Ward II and III need a <dark_purple>Corrupted Template</dark_purple> "
+                    + "(a Ward Template surrounded by Corrupted Remnants) plus a Remnant, then an Echo Shard. Check your recipe book.");
+            return 0;
+        }
         ItemStack hand = p.getInventory().getItemInMainHand();
         if (WardedGear.armorSlot(hand.getType()) == null) { Msg.error(p, "Hold the helmet, chestplate, leggings or boots to upgrade."); return 0; }
         if (hand.getAmount() != 1) { Msg.error(p, "Hold a single piece of armor."); return 0; }

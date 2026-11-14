@@ -57,6 +57,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private volatile String overworldName = "world";
     private dev.skyrealms.decay.CleansingTonic tonic;
     private dev.skyrealms.decay.WardedGear ward;
+    private dev.skyrealms.decay.WardSmithing wardSmithing;
     private dev.skyrealms.economy.VoidExchange exchange;
     private dev.skyrealms.economy.CorruptionHarvest harvest;
     private dev.skyrealms.economy.CorruptedMobs corruptedMobs;
@@ -185,6 +186,9 @@ public final class SkyRealmsPlugin extends JavaPlugin {
                 tonic.start();
                 decay.addResist(tonic);
                 decay.addResist(ward);
+                // Warded armor recipes: templates at the crafting table, levels at the smithing table.
+                wardSmithing = new dev.skyrealms.decay.WardSmithing(this, ward);
+                wardSmithing.start();
                 // Corruption harvest: Void Shards from corrupted land.
                 harvest = new dev.skyrealms.economy.CorruptionHarvest(this, cfg.getConfigurationSection("harvest"));
                 harvest.start();
@@ -254,6 +258,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     }
     public dev.skyrealms.decay.CleansingTonic tonic() { return tonic; }
     public dev.skyrealms.decay.WardedGear ward() { return ward; }
+    public dev.skyrealms.decay.WardSmithing wardSmithing() { return wardSmithing; }
     public dev.skyrealms.economy.VoidExchange exchange() { return exchange; }
     public dev.skyrealms.economy.CorruptionHarvest harvest() { return harvest; }
     public dev.skyrealms.economy.CorruptedMobs corruptedMobs() { return corruptedMobs; }
