@@ -261,6 +261,15 @@ ward:
     1: 5
     2: 15
     3: 30
+  # Warded armor is smithed, not bought:
+  #   Ward Template      = 8 Void Shards around 1 Crying Obsidian (crafting table)
+  #   Corrupted Template = a Ward Template surrounded by 8 Corrupted Remnants (crafting table)
+  #   Ward I   = Ward Template      + armor          + Void Shard        (smithing table)
+  #   Ward II  = Corrupted Template + Ward I armor   + Corrupted Remnant (smithing table)
+  #   Ward III = Corrupted Template + Ward II armor  + Echo Shard        (smithing table)
+  # Set shop: true to also sell levels with /skyland ward upgrade (using price and
+  # required-island-level above).
+  shop: false
 
 # The Void Exchange buys what players bring back from the corruption.
 exchange:

@@ -41,6 +41,8 @@ public final class WardedGear implements DecayResist {
     private final double maxReduction;
     private final double[] prices = new double[MAX_LEVEL + 1];
     private final int[] requiredLevels = new int[MAX_LEVEL + 1];
+    /** Whether /skyland ward upgrade sells levels. Off by default: warded armor is smithed. */
+    public final boolean shop;
 
     public WardedGear(Plugin plugin, ConfigurationSection section) {
         ConfigurationSection c = section != null ? section : new MemoryConfiguration();
@@ -54,6 +56,7 @@ public final class WardedGear implements DecayResist {
             requiredLevels[lv] = Math.max(0, c.getInt("required-island-level." + lv, defLevel[lv]));
         }
         this.maxReduction = clamp(c.getDouble("max-reduction", 0.80), 0, 1);
+        this.shop = c.getBoolean("shop", false);
     }
 
     public double price(int level) { return prices[level]; }
