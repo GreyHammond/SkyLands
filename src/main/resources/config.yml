@@ -231,3 +231,23 @@ tonic:
       seconds: 180
       price: 4000
       required-level: 25
+# Warded gear: helmet, chestplate, leggings and boots can carry a Warded level (I-III) that cuts
+# the decay its wearer causes. Players upgrade the piece in their hand with /skyland ward upgrade.
+ward:
+  # Share of decay removed per worn piece, by Warded level. Four level-3 pieces = 0.80.
+  reduction:
+    1: 0.05
+    2: 0.10
+    3: 0.20
+  # Most a full set can remove, whatever the pieces add up to.
+  max-reduction: 0.80
+  # Cost of upgrading a piece TO each level (Vault money, or item currency).
+  price:
+    1: 2500
+    2: 7500
+    3: 20000
+  # Island level needed to buy each level (0 = no requirement).
+  required-island-level:
+    1: 5
+    2: 15
+    3: 30

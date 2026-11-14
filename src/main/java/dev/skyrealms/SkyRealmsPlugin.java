@@ -56,6 +56,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     /** The overworld players fall into: worlds.overworld, or the current recycled world. */
     private volatile String overworldName = "world";
     private dev.skyrealms.decay.CleansingTonic tonic;
+    private dev.skyrealms.decay.WardedGear ward;
 
     @Override
     public void onEnable() {
@@ -160,13 +161,16 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         decay = new dev.skyrealms.decay.DecayService(this,
                 dev.skyrealms.decay.DecaySettings.load(cfg.getConfigurationSection("decay"), overName));
         if (recycled != null) decay.switchWorld(recycled); // the recycled world overrides decay.world
+        // Warded gear: armor that cuts the decay its wearer causes. Registered once decay is running.
+        ward = new dev.skyrealms.decay.WardedGear(this, cfg.getConfigurationSection("ward"));
         Bukkit.getScheduler().runTask(this, () -> {
             decay.start(skyName);
-            // Cleansing Tonic only exists while decay runs.
+            // Cleansing Tonic and Warded gear only matter while decay runs.
             if (decay.isRunning()) {
                 tonic = new dev.skyrealms.decay.CleansingTonic(this, cfg.getConfigurationSection("tonic"));
                 tonic.start();
                 decay.addResist(tonic);
+                decay.addResist(ward);
             }
         });
 
@@ -218,4 +222,5 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         if (decay != null) decay.switchWorld(name);
     }
     public dev.skyrealms.decay.CleansingTonic tonic() { return tonic; }
+    public dev.skyrealms.decay.WardedGear ward() { return ward; }
 }

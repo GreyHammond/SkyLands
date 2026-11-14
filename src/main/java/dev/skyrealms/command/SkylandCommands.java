@@ -64,6 +64,7 @@ public final class SkylandCommands {
                     return Command.SINGLE_SUCCESS;
                 });
         TonicCommands.attachPlayer(root, plugin);
+        dev.skyrealms.decay.WardCommands.attachPlayer(root, plugin);
         return root.build();
     }
 
@@ -174,6 +175,7 @@ public final class SkylandCommands {
 
         dev.skyrealms.decay.recycle.RecycleCommands.attach(root, plugin);
         TonicCommands.attachAdmin(root, plugin);
+        dev.skyrealms.decay.WardCommands.attachAdmin(root, plugin);
 
         root.then(Commands.literal("reload").executes(ctx -> {
             plugin.library().reload();
@@ -273,6 +275,8 @@ public final class SkylandCommands {
                 "recycle [status|now [seconds]|cancel] <dark_gray>- weekly overworld recycle",
                 "tonic give <player> <1-3> [amount] <dark_gray>- give Cleansing Tonics",
                 "reload <dark_gray>- reload piece files"))
+            to.sendMessage(Msg.c(" <aqua>/skylandadmin <gray>" + l));
+        for (String l : dev.skyrealms.decay.WardCommands.adminHelp())
             to.sendMessage(Msg.c(" <aqua>/skylandadmin <gray>" + l));
         to.sendMessage(Msg.c(" <dark_gray>Sizes can also be an exact radius from " + MIN_RADIUS + " to " + MAX_RADIUS + "."));
         return Command.SINGLE_SUCCESS;
