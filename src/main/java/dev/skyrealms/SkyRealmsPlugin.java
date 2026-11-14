@@ -58,6 +58,8 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private dev.skyrealms.decay.CleansingTonic tonic;
     private dev.skyrealms.decay.WardedGear ward;
     private dev.skyrealms.economy.VoidExchange exchange;
+    private dev.skyrealms.contracts.ContractService contracts;
+    private dev.skyrealms.contracts.ContractMenu contractMenu;
 
     @Override
     public void onEnable() {
@@ -180,6 +182,16 @@ public final class SkyRealmsPlugin extends JavaPlugin {
             }
         });
 
+        // Daily contracts (Java menu + Bedrock form), reached from the Corruption hub.
+        var contractCfg = cfg.getConfigurationSection("contracts");
+        if (contractCfg == null || contractCfg.getBoolean("enabled", true)) {
+            contracts = new dev.skyrealms.contracts.ContractService(this, contractCfg);
+            contracts.start();
+            contractMenu = new dev.skyrealms.contracts.ContractMenu(this, contracts);
+            contractMenu.hook();
+            if (bedrock.active()) dev.skyrealms.bedrock.ContractForms.register(this, contracts, contractMenu);
+        }
+
         SkylandCommands commands = new SkylandCommands(this);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> commands.register(event.registrar()));
 
@@ -189,6 +201,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         if (islands != null) islands.save();
+        if (contracts != null) contracts.save();
         if (decay != null && decay.isRunning()) decay.flush();
     }
 
@@ -230,4 +243,6 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public dev.skyrealms.decay.CleansingTonic tonic() { return tonic; }
     public dev.skyrealms.decay.WardedGear ward() { return ward; }
     public dev.skyrealms.economy.VoidExchange exchange() { return exchange; }
+    public dev.skyrealms.contracts.ContractService contracts() { return contracts; }
+    public dev.skyrealms.contracts.ContractMenu contractMenu() { return contractMenu; }
 }
