@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.14.0-2f9e5a">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.15.0-2f9e5a">
   <img alt="Paper 26.3" src="https://img.shields.io/badge/Paper-26.3-1e88e5">
   <img alt="Java 25" src="https://img.shields.io/badge/Java-25-e76f00">
   <img alt="Bedrock ready" src="https://img.shields.io/badge/Bedrock-Geyser%20%2B%20Floodgate-6a1b9a">
@@ -94,7 +94,7 @@ on Java** and **native Bedrock forms** for players joining through Geyser + Floo
 | 🗄️ **Safe auto-prune** | Inactive islands are archived (chests and all) and can be restored to the same spot within 14 days. |
 | ☠️ **The corruption** | Players' presence slowly corrupts the overworld around them: drying, wasteland, then bedrock. The skylands are never touched. |
 | ♻️ **Weekly recycle** | A fresh overworld every 7 days (or on command), with countdown warnings and everyone flown home first. |
-| 🧪 **Resist it** | Cleansing Tonics stop your corruption for up to 3 minutes; Warded armor cuts it by up to 80%. |
+| 🧪 **Resist it** | Brew Cleansing Tonics from corrupted ingredients (up to 3 minutes of no corruption) and smith Warded armor like a trim (up to 80% less corruption). |
 | 💎 **Earn from it** | Void Shards from corrupted land, tougher corrupted mobs that drop Remnants, a Void Exchange to sell them, and daily contracts. |
 | 🪙 **Visitor tips** | Visiting an island pays the owner and the visitor a small tip, with daily limits. |
 | 💰 **Money or items** | Any Vault economy, or prices in diamonds or a custom token. |
@@ -184,6 +184,7 @@ in a pond or on a tree.
     Hotbar Shortcuts            turn the menu book and return feather on or off
 └── The Corruption              corruption where you stand
     ├── Void Exchange           sell Void Shards and Corrupted Remnants
+    ├── Recipes                 Warded armor and Cleansing Tonics
     └── Daily Contracts         three tasks a day for money and shards
 ```
 
@@ -395,12 +396,40 @@ blocks) has a corruption value from 0 to 100%, shown on your action bar as **Cor
 | 50–75% · **Wasteland** | Stone turns to blackstone, deepslate and basalt; logs harden to stone; water boils away or turns to lava; the ground becomes sand, clay and terracotta. The first bedrock appears. |
 | 75–100% · **Barren** | Corruption speeds up, bedrock spreads down from the surface, and it spills into neighbouring chunks. |
 
-**Resisting it:**
+**Resisting it:** both are made from what the corruption leaves behind. All the recipes are also in
+`/skyland` → **The Corruption** → **Recipes**, and in the recipe book.
 
-| Item | Effect | Get it |
+| Item | Effect |
+|---|---|
+| Cleansing Tonic I / II / III | You cause no corruption for 60 / 120 / 180 seconds (a boss bar shows the time left). The splash version protects everyone within 4 blocks. |
+| Warded armor I / II / III | Each worn piece cuts your corruption by 5% / 10% / 20%. A full level-III set cuts 80%. Trims and enchantments are kept. |
+
+**Warded armor** is smithed like an armor trim, and each level is harder to reach:
+
+| Step | Where | Recipe | Result |
+|---|---|---|---|
+| 1 | Crafting table | 8 Void Shards around 1 Crying Obsidian | Ward Template |
+| 2 | Smithing table | Ward Template + armor piece + Void Shard | Ward I armor |
+| 3 | Crafting table | Ward Template surrounded by 8 Corrupted Remnants | Corrupted Template |
+| 4 | Smithing table | Corrupted Template + Ward I armor + Corrupted Remnant | Ward II armor |
+| 5 | Smithing table | Corrupted Template + Ward II armor + Echo Shard | Ward III armor |
+
+Templates are used up. Echo Shards are the vanilla item found in Ancient City chests in the Deep Dark.
+
+**Cleansing Tonics** are brewed from **corrupted ingredients**, dropped only by corrupted mobs
+(spiders, skeletons and creepers drop corrupted versions of their usual drops):
+
+| Brewing stand | Ingredient | Result |
 |---|---|---|
-| Cleansing Tonic I / II / III | You cause no corruption for 60 / 120 / 180 seconds (boss bar shows the time left) | `/skyland tonic buy <1-3>`: 500 / 1,500 / 4,000, island level 1 / 10 / 25 |
-| Warded armor I / II / III | Each worn piece cuts your corruption by 5% / 10% / 20%. A full level-III set cuts 80%. | Hold a helmet, chestplate, leggings or boots and use `/skyland ward upgrade`: 2,500 / 7,500 / 20,000, island level 5 / 15 / 30 |
+| Water Bottle | Void Shard | Tainted Potion |
+| Tainted Potion | Corrupted Spider Eye | Cleansing Tonic I |
+| Cleansing Tonic I | Corrupted Bone | Cleansing Tonic II |
+| Cleansing Tonic II | Corrupted Remnant | Cleansing Tonic III |
+| Any Cleansing Tonic | Corrupted Gunpowder | Splash Cleansing Tonic (same level) |
+
+Only the real corrupted items work; vanilla spider eyes, bones and gunpowder don't. Servers that
+prefer a shop can set `tonic.shop: true` and `ward.shop: true` to bring back `/skyland tonic buy`
+and `/skyland ward upgrade`.
 
 ### Earning money
 
@@ -410,7 +439,7 @@ Everything you bring back from the corruption sells at the **Void Exchange**
 | Source | What you get |
 |---|---|
 | **Corruption harvest** | Breaking natural blocks in corrupted land can drop **Void Shards**: about 1% of blocks when drying, 4% in wasteland, 10% when barren. Blackstone and deepslate drop twice as often, blocks touching bedrock 1.5×. Fresh bedrock sometimes leaves a shard behind. Blocks you placed never count; up to 20 shards a minute. |
-| **Corrupted mobs** | Monsters that spawn on corrupted land may become **Corrupted** (15% to 60% of them, by corruption): purple names, +25–75% health, +10–30% damage. They drop 1–4 **Corrupted Remnants** and sometimes shards, on top of normal drops. |
+| **Corrupted mobs** | Monsters that spawn on corrupted land may become **Corrupted** (15% to 60% of them, by corruption): purple names, +25–75% health, +10–30% damage. They drop 1–4 **Corrupted Remnants**, sometimes shards, and a **corrupted ingredient** for brewing (Spider Eye, Bone, Gunpowder or Flesh), on top of normal drops. |
 | **Daily contracts** | Three tasks a day, reset at 4 AM server time: deliver items, hunt mobs or corrupted mobs, mine, explore new chunks, or hand in shards. Rewards are money and shards, **×1.5** in the last 24 hours before a recycle. Hand in part of a delivery whenever you like. |
 | **Visitor tips** | Visit someone's island from **Visit Islands** and stay 30 seconds: the owner gets 50 and you get 20 (more for higher-level islands). Once per island per day, up to 5 tips a day as a visitor and 20 as an owner. No tips for your own, a friend's or a co-owned island. |
 
@@ -441,7 +470,8 @@ Without Floodgate, everyone gets chest menus and the form code is never loaded.
 ### Commands
 
 Players only need `/skyland` (and `/ihome` for a quick trip home). Shortcuts:
-`/skyland exchange`, `/skyland contracts`, `/skyland tonic buy <1-3>` and `/skyland ward upgrade`. Admin commands (`/skylandadmin`, alias `/sla`) all have
+`/skyland exchange` and `/skyland contracts`. (`/skyland tonic buy` and `/skyland ward upgrade` only
+sell when the shop is turned on in config; otherwise they show the recipes.) Admin commands (`/skylandadmin`, alias `/sla`) all have
 **Tab completion**: press Tab to cycle through sizes, tiers, biomes and player names.
 
 | Command | Description |
@@ -557,8 +587,8 @@ SkyLands creates two files in `plugins/SkyRealms/`. Restart the server after edi
 | `capture-sizes` | Radius of each custom-biome capture size |
 | `decay` | Corruption on/off, speed, radius and falloff, stage thresholds, healing, spill, block-change budget |
 | `recycle` | Weekly recycle on/off, interval, warning times, messages, blocked commands |
-| `tonic` | Cleansing Tonic durations (max 180 s), prices and island levels |
-| `ward` | Warded armor reduction per level, the 80% cap, upgrade prices and island levels |
+| `tonic` | Cleansing Tonic durations (max 180 s), splash radius, and the optional shop (off by default) |
+| `ward` | Warded armor reduction per level, the 80% cap, and the optional shop (off by default) |
 | `exchange` | Void Shard and Corrupted Remnant sell prices |
 | `harvest` | Shard drop chances per stage, multipliers, per-minute cap |
 | `corrupted-mobs` | How often mobs become corrupted, their buffs and drops, an optional coin bounty |
@@ -728,6 +758,7 @@ The jar is written to `build/libs/skylands.jar`. The website is a single file at
 
 | Version | Highlights |
 |---|---|
+| **0.15.0** | Warded armor is smithed like an armor trim (Ward Template, Corrupted Template, Echo Shard for Ward III). Cleansing Tonics are brewed from corrupted ingredients that only corrupted mobs drop, with a splash version. New **Recipes** page in The Corruption (Java and Bedrock). Void Shards now look like amethyst shards. |
 | **0.14.0** | **The corruption**: the overworld decays around players through drying, wasteland and bedrock, with a configurable radius. **Weekly recycle** into a fresh managed overworld. **Cleansing Tonics** and **Warded armor**. **Earning**: Void Shards from corrupted land, corrupted mobs with Remnant drops, the Void Exchange, daily contracts and visitor tips, all with native Bedrock forms. Menus now stay open after unlocking a biome, setting home or restyling. |
 | **0.13.0** | Hotbar shortcuts: a locked menu book and return feather that can't be dropped or lost, on by default for Bedrock players |
 | **0.12.3** | Return flight plays a single gust sound |

@@ -99,11 +99,25 @@ public final class Menus {
         var ex = plugin.exchange();
         m.button(11, glow(item(Material.ECHO_SHARD, "<light_purple>Void Exchange", "<gray>Sell Void Shards and",
                 "<gray>Corrupted Remnants.", "<gray>You carry: <gold>" + svc.money(ex.value(p, null)))), this::exchange);
+        m.button(13, item(Material.KNOWLEDGE_BOOK, "<aqua>Recipes", "<gray>How to smith Warded armor", "<gray>and brew Cleansing Tonics."), this::recipes);
         // Contracts and other corruption features add their buttons here.
         for (var extra : corruptionButtons) extra.accept(p, m);
         m.button(18, back(), this::main);
         m.fill().open(p);
     }
+
+    /** The custom recipes. */
+    public void recipes(Player p) {
+        if (plugin.bedrock().handles(p)) { plugin.bedrock().openRecipes(p); return; }
+        Menu m = new Menu(3, "<dark_purple>Recipes");
+        m.button(11, glow(item(Material.SMITHING_TABLE, "<light_purple>Warded Armor", lines(dev.skyrealms.economy.Recipes.WARD))), null);
+        m.button(13, glow(item(Material.BREWING_STAND, "<light_purple>Cleansing Tonic", lines(dev.skyrealms.economy.Recipes.TONIC))), null);
+        m.button(15, item(Material.CHEST, "<gold>Where to find ingredients", lines(dev.skyrealms.economy.Recipes.SOURCES)), null);
+        m.button(18, back(), this::corruption);
+        m.fill().open(p);
+    }
+
+    private static String[] lines(List<String> l) { return l.stream().map(s -> "<gray>" + s).toArray(String[]::new); }
 
     /** Lets features add buttons to the Corruption hub without touching this class: (player, menu). */
     public final List<java.util.function.BiConsumer<Player, Menu>> corruptionButtons = new ArrayList<>();

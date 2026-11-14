@@ -165,9 +165,20 @@ public final class FormMenus {
         var ex = plugin.exchange();
         List<Btn> b = new ArrayList<>();
         b.add(btn(P + "Void Exchange\n" + DG + "You carry " + svc.money(ex.value(p, null)), "textures/items/echo_shard", this::exchange));
+        b.add(btn(A + "Recipes\n" + DG + "Warded armor and tonics", "textures/items/book_enchanted", this::recipes));
         for (var extra : corruptionButtons) { Btn x = extra.apply(p); if (x != null) b.add(x); }
         b.add(btn(GR + "Back", null, this::main));
         simple(p, "The Corruption", W + "The overworld decays wherever players linger.\n" + here, b);
+    }
+
+    public void recipes(Player p) {
+        StringBuilder s = new StringBuilder(P + "Warded Armor\n");
+        for (String l : dev.skyrealms.economy.Recipes.WARD) s.append(GR).append("- ").append(l).append("\n");
+        s.append("\n").append(P).append("Cleansing Tonic\n");
+        for (String l : dev.skyrealms.economy.Recipes.TONIC) s.append(GR).append("- ").append(l).append("\n");
+        s.append("\n").append(O).append("Where to find ingredients\n");
+        for (String l : dev.skyrealms.economy.Recipes.SOURCES) s.append(GR).append("- ").append(l).append("\n");
+        simple(p, "Recipes", s.toString(), List.of(btn(GR + "Back", null, this::corruption)));
     }
 
     public void exchange(Player p) {

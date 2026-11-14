@@ -311,11 +311,11 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 <header class="hero">
   <div class="wrap">
     <div>
-      <span class="tag pixel">v0.14.0 · Paper 26.3 · Java + Bedrock</span>
+      <span class="tag pixel">v0.15.0 · Paper 26.3 · Java + Bedrock</span>
       <h1>Your own island <em>in the sky.</em></h1>
       <p class="lede">Buy a floating island, grow it biome by biome, and jump off the edge to fall back to the world below. Just don't stay too long: down there, the corruption is spreading.</p>
       <div class="ctas">
-        <a class="btn btn-primary" href="https://github.com/GreyHammond/SkyLands/raw/main/docs/skylands.jar">Download skylands.jar <span style="font-weight:500;opacity:.8">v0.14.0</span></a>
+        <a class="btn btn-primary" href="https://github.com/GreyHammond/SkyLands/raw/main/docs/skylands.jar">Download skylands.jar <span style="font-weight:500;opacity:.8">v0.15.0</span></a>
         <a class="btn btn-ghost" href="https://github.com/GreyHammond/SkyLands">View on GitHub</a>
       </div>
       <p class="req">Paper 26.3 · Java 25 · optional: Vault, Geyser + Floodgate, LuckPerms</p>
@@ -413,18 +413,18 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <div class="grid g3" style="margin-top:20px">
       <div class="card"><h3>Around every player</h3><p>You corrupt an 80-block square around you at full speed, fading out to 144 blocks. The first changes show after about 13 minutes in one place; full corruption takes about 30. It never hurts players, and blocks right next to you are never touched.</p></div>
       <div class="card"><h3>Weekly recycle</h3><p>Every 7 days (or on command) players get countdown warnings, are flown home, and a fresh overworld takes the old one's place. Your main world and the sky world are never touched.</p></div>
-      <div class="card"><h3>Resist it</h3><p><strong>Cleansing Tonics</strong> I–III stop your corruption for 60, 120 or 180 seconds. <strong>Warded armor</strong> cuts it by 5–20% per piece, up to 80% for a full level-III set.</p></div>
+      <div class="card"><h3>Resist it</h3><p><strong>Warded armor</strong> is smithed like a trim: a Ward Template from Void Shards and crying obsidian, a Corrupted Template from Remnants, and an Echo Shard for Ward III. Up to 80% less corruption. <strong>Cleansing Tonics</strong> are brewed from corrupted ingredients only corrupted mobs drop: up to 3 minutes of none, with a splash version for your group.</p></div>
     </div>
 
     <h3 style="margin-top:40px">Earn from the corruption</h3>
     <p class="sub">Everything you bring back sells at the <strong>Void Exchange</strong>, in <code>/skyland</code> → <strong>The Corruption</strong>. Java players get chest menus; Bedrock players get native forms.</p>
     <div class="grid g3">
       <div class="card"><h3>Void Shards</h3><p>Mining in corrupted land can drop shards: about 1% of blocks when drying, 4% in wasteland, 10% when barren, more from blackstone and blocks touching bedrock. Placed blocks never count.</p></div>
-      <div class="card"><h3>Corrupted mobs</h3><p>Monsters on corrupted land may spawn <strong>Corrupted</strong>: purple names, up to +75% health and +30% damage. They drop Corrupted Remnants and sometimes shards.</p></div>
+      <div class="card"><h3>Corrupted mobs</h3><p>Monsters on corrupted land may spawn <strong>Corrupted</strong>: purple names, up to +75% health and +30% damage. They drop Corrupted Remnants, sometimes shards, and corrupted brewing ingredients.</p></div>
       <div class="card"><h3>Daily contracts</h3><p>Three tasks a day: deliver items, hunt, mine, explore or hand in shards. Rewards are money and shards, ×1.5 in the last day before a recycle.</p></div>
       <div class="card"><h3>Visitor tips</h3><p>Visit someone's island and stay 30 seconds: the owner gets a tip and so do you. Once per island per day, with daily limits and no tips for your own or friends' islands.</p></div>
       <div class="card"><h3>Void Exchange</h3><p>Sell shards (25 each) and remnants (75 each) one kind at a time or all at once. Prices are configurable. Void items can't be crafted with, and fakes are never accepted.</p></div>
-      <div class="card"><h3>Stays where you are</h3><p>Selling, handing in and claiming keep the menu open with fresh numbers, so you can do it all in one visit.</p></div>
+      <div class="card"><h3>Recipes in the menu</h3><p>The Corruption menu has a Recipes page with every smithing and brewing step, and the recipes appear in the recipe book. Selling, handing in and claiming keep the menu open.</p></div>
     </div>
   </div>
 </section>
@@ -554,6 +554,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
           <li><span class="t">The Corruption</span>
             <ul>
               <li>Void Exchange <small>— sell shards and remnants</small></li>
+              <li>Recipes <small>— warded armor and tonics</small></li>
               <li>Daily Contracts <small>— three tasks a day</small></li>
             </ul>
           </li>
@@ -754,8 +755,8 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
           <tr><td class="cmd">/ihome set|reset</td><td class="desc">Set your home where you're standing, or clear it.</td><td><span class="pill">skyrealms.use</span></td></tr>
           <tr><td class="cmd">/skyland exchange</td><td class="desc">Open the Void Exchange to sell shards and remnants.</td><td><span class="pill">skyrealms.use</span></td></tr>
           <tr><td class="cmd">/skyland contracts</td><td class="desc">Open your daily contracts.</td><td><span class="pill">skyrealms.use</span></td></tr>
-          <tr><td class="cmd">/skyland tonic buy &lt;1-3&gt;</td><td class="desc">Buy a Cleansing Tonic (60, 120 or 180 seconds without causing corruption).</td><td><span class="pill">skyrealms.use</span></td></tr>
-          <tr><td class="cmd">/skyland ward upgrade</td><td class="desc">Raise the Warded level of the armor piece you're holding.</td><td><span class="pill">skyrealms.use</span></td></tr>
+          <tr><td class="cmd">/skyland tonic buy &lt;1-3&gt;</td><td class="desc">Shows the brewing recipe, or buys a Cleansing Tonic if the server turns the shop on.</td><td><span class="pill">skyrealms.use</span></td></tr>
+          <tr><td class="cmd">/skyland ward upgrade</td><td class="desc">Shows the smithing recipe, or buys a Ward level for the held armor if the server turns the shop on.</td><td><span class="pill">skyrealms.use</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -835,6 +836,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <div class="eyebrow pixel">What's new</div>
     <h2>Changelog</h2>
     <div class="changelog">
+      <div><b>0.15.0</b><span>Warded armor is smithed like an armor trim, with an Echo Shard for Ward III. Cleansing Tonics are brewed from corrupted ingredients that only corrupted mobs drop, including a splash version. New Recipes page in The Corruption menu, on Java and Bedrock.</span></div>
       <div><b>0.14.0</b><span><strong>The corruption</strong>: the overworld decays around players through drying, wasteland and bedrock. <strong>Weekly recycle</strong> into a fresh overworld. Cleansing Tonics and Warded armor. Void Shards, corrupted mobs, the Void Exchange, daily contracts and visitor tips, all with native Bedrock forms. Menus stay open after unlocking a biome, setting home or restyling.</span></div>
       <div><b>0.13.0</b><span>Hotbar shortcuts: an enchanted menu book and return feather locked in the hotbar. They can't be dropped, thrown or lost on death, and each player can turn them off. On by default for Bedrock players.</span></div>
       <div><b>0.12.3</b><span>Return flight plays a single gust sound.</span></div>
