@@ -57,6 +57,11 @@ public final class TonicCommands {
         if (!(src.getExecutor() instanceof Player p)) { Msg.error(src.getSender(), "Players only."); return 0; }
         CleansingTonic t = tonic(p, plugin);
         if (t == null) return 0;
+        if (!t.shopEnabled()) {
+            Msg.send(p, "Cleansing Tonics are brewed now, not bought. At a brewing stand:");
+            for (String step : dev.skyrealms.decay.TonicBrewing.RECIPE_STEPS) p.sendMessage(Msg.c(" <gray>" + step));
+            return 0;
+        }
         CleansingTonic.Tier tier = t.tier(level);
         if (tier.requiredLevel() > 1) {
             Island i = plugin.islands().of(p.getUniqueId());

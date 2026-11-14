@@ -47,6 +47,7 @@ public final class CorruptedMobs implements Listener {
     private final int[] remnantsMin = new int[4], remnantsMax = new int[4];
     private final double[] shardChance = new double[4];
     private final int[] shardsMax = new int[4];
+    private final double[] ingredientChance = new double[4];
     /** Corrupted mobs we know are loaded, for the particle task. */
     private final Set<UUID> tracked = new HashSet<>();
 
@@ -71,6 +72,7 @@ public final class CorruptedMobs implements Listener {
             remnantsMax[s] = Math.max(remnantsMin[s], cfg.getInt(p + "remnants-max", s + 1));
             shardChance[s] = clamp(cfg.getDouble(p + "shard-chance", 0.15 * s));
             shardsMax[s] = Math.max(1, cfg.getInt(p + "shards-max", s));
+            ingredientChance[s] = clamp(cfg.getDouble(p + "ingredient-chance", 0.25 + 0.25 * s));
         }
     }
 
@@ -149,12 +151,28 @@ public final class CorruptedMobs implements Listener {
         int remnants = remnantsMin[stage] + r.nextInt(remnantsMax[stage] - remnantsMin[stage] + 1);
         if (remnants > 0) e.getDrops().add(VoidItems.create(VoidItems.Kind.REMNANT, remnants));
         if (r.nextDouble() < shardChance[stage]) e.getDrops().add(VoidItems.create(VoidItems.Kind.SHARD, 1 + r.nextInt(shardsMax[stage])));
+        // Corrupted brewing ingredient: 1 at stage 1, up to 2 at stage 2, up to 3 at stage 3.
+        VoidItems.Kind ingredient = ingredientFor(mob.getType());
+        if (ingredient != null && r.nextDouble() < ingredientChance[stage]) {
+            e.getDrops().add(VoidItems.create(ingredient, 1 + r.nextInt(stage)));
+        }
         if (bounty > 0) {
             double pay = bounty * stage;
             plugin.money().refund(killer, pay);
             killer.sendActionBar(Msg.c("<dark_purple>Bounty <gold>+" + plugin.money().format(pay)));
         }
         mob.getWorld().spawnParticle(Particle.REVERSE_PORTAL, mob.getLocation().add(0, 1, 0), 30, 0.4, 0.6, 0.4, 0.05);
+    }
+
+    /** The corrupted ingredient a mob type drops, or null. */
+    private static VoidItems.Kind ingredientFor(org.bukkit.entity.EntityType type) {
+        return switch (type) {
+            case SPIDER, CAVE_SPIDER -> VoidItems.Kind.CORRUPTED_SPIDER_EYE;
+            case SKELETON, STRAY, BOGGED, WITHER_SKELETON -> VoidItems.Kind.CORRUPTED_BONE;
+            case CREEPER -> VoidItems.Kind.CORRUPTED_GUNPOWDER;
+            case ZOMBIE, HUSK, DROWNED, ZOMBIE_VILLAGER -> VoidItems.Kind.CORRUPTED_FLESH;
+            default -> null;
+        };
     }
 
     @EventHandler

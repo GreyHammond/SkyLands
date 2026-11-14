@@ -225,13 +225,20 @@ recycle:
     done: "<green>The corruption is contained. A fresh overworld waits below the islands."
     evacuated: "<gray>The winds carried you home before the overworld was recycled."
     blocked: "<red>You can't do that down here. The overworld is recycled every week to contain the corruption."
-# Cleansing Tonic: while it lasts, the drinker causes no decay. Only available while decay runs.
-# Players buy with /skyland tonic buy <1-3>; admins give with /skylandadmin tonic give.
+# Cleansing Tonic: while it lasts, the drinker causes no corruption. Tonics are brewed:
+#   Water Bottle      + Void Shard           -> Tainted Potion
+#   Tainted Potion    + Corrupted Spider Eye -> Cleansing Tonic I
+#   Cleansing Tonic I + Corrupted Bone       -> Cleansing Tonic II
+#   Cleansing Tonic II+ Corrupted Remnant    -> Cleansing Tonic III
+#   Any tonic         + Corrupted Gunpowder  -> Splash Cleansing Tonic (protects players within splash-radius)
 tonic:
+  # Also sell tonics with /skyland tonic buy (prices and levels below). Off: brewing only.
+  shop: false
+  splash-radius: 4
   levels:
     1:
       seconds: 60          # capped at 180
-      price: 500
+      price: 500           # only used when shop: true
       required-level: 1    # island level needed to buy (1 = anyone)
     2:
       seconds: 120
@@ -306,6 +313,7 @@ corrupted-mobs:
     remnants-max: 2
     shard-chance: 0.15
     shards-max: 1
+    ingredient-chance: 0.50   # corrupted brewing ingredient (spider eye, bone, gunpowder, flesh)
   stage-2:
     health-bonus: 0.50
     damage-bonus: 0.20
@@ -313,6 +321,7 @@ corrupted-mobs:
     remnants-max: 3
     shard-chance: 0.30
     shards-max: 2
+    ingredient-chance: 0.75   # corrupted brewing ingredient (spider eye, bone, gunpowder, flesh)
   stage-3:
     health-bonus: 0.75
     damage-bonus: 0.30
@@ -320,6 +329,7 @@ corrupted-mobs:
     remnants-max: 4
     shard-chance: 0.45
     shards-max: 3
+    ingredient-chance: 1.00   # corrupted brewing ingredient (spider eye, bone, gunpowder, flesh)
 # Visitor tips: visiting someone's island (through the Visit menu) pays the island owner and
 # the visitor, once the visitor has stayed on the island a little while.
 tips:

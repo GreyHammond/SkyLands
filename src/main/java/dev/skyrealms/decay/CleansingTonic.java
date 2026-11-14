@@ -50,7 +50,9 @@ public final class CleansingTonic implements Listener, DecayResist {
     public record Tier(int seconds, double price, int requiredLevel) {}
 
     private final Plugin plugin;
-    private final NamespacedKey itemKey, untilKey;
+    private final NamespacedKey itemKey, splashKey, untilKey;
+    private final boolean shop;
+    private final double splashRadius;
     private final Tier[] tiers = new Tier[MAX_LEVEL + 1];
     private final Map<UUID, Long> until = new HashMap<>();
     private final Map<UUID, BossBar> bars = new HashMap<>();
@@ -59,8 +61,11 @@ public final class CleansingTonic implements Listener, DecayResist {
     public CleansingTonic(Plugin plugin, ConfigurationSection cfg) {
         this.plugin = plugin;
         this.itemKey = new NamespacedKey(plugin, "cleansing_tonic");
+        this.splashKey = new NamespacedKey(plugin, "cleansing_tonic_splash");
         this.untilKey = new NamespacedKey(plugin, "tonic_until");
         ConfigurationSection c = cfg != null ? cfg : new MemoryConfiguration();
+        this.shop = c.getBoolean("shop", false);
+        this.splashRadius = Math.max(1, Math.min(16, c.getDouble("splash-radius", 4)));
         int[] defSeconds = {0, 60, 120, 180};
         double[] defPrice = {0, 500, 1500, 4000};
         int[] defLevel = {0, 1, 10, 25};
@@ -77,6 +82,9 @@ public final class CleansingTonic implements Listener, DecayResist {
         for (Player p : Bukkit.getOnlinePlayers()) loadFrom(p);
         Bukkit.getScheduler().runTaskTimer(plugin, this::tickBars, 20L, 20L);
     }
+
+    /** Whether /skyland tonic buy is allowed. Off: tonics are brewed. */
+    public boolean shopEnabled() { return shop; }
 
     public Tier tier(int level) { return tiers[Math.max(1, Math.min(MAX_LEVEL, level))]; }
 
@@ -97,6 +105,29 @@ public final class CleansingTonic implements Listener, DecayResist {
             m.getPersistentDataContainer().set(itemKey, PersistentDataType.INTEGER, lv);
         });
         return item;
+    }
+
+    /** A splash tonic: when it lands, every player within the splash radius is cleansed. */
+    public ItemStack createSplash(int level, int amount) {
+        int lv = Math.max(1, Math.min(MAX_LEVEL, level));
+        ItemStack item = new ItemStack(Material.SPLASH_POTION, Math.max(1, Math.min(64, amount)));
+        item.editMeta(PotionMeta.class, m -> {
+            m.setColor(Color.fromRGB(0x7FE3D0));
+            m.displayName(Msg.c("<!italic><aqua>Splash Cleansing Tonic " + numeral(lv)));
+            m.lore(List.of(
+                    Msg.c("<!italic><gray>Everyone it splashes causes no"),
+                    Msg.c("<!italic><gray>corruption for <white>" + tiers[lv].seconds() + " seconds</white>.")));
+            m.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+            m.getPersistentDataContainer().set(splashKey, PersistentDataType.INTEGER, lv);
+        });
+        return item;
+    }
+
+    /** The splash tonic level of an item, or 0 if it isn't a splash tonic. */
+    public int splashLevelOf(ItemStack item) {
+        if (item == null || item.getType() != Material.SPLASH_POTION || !item.hasItemMeta()) return 0;
+        Integer lv = item.getItemMeta().getPersistentDataContainer().get(splashKey, PersistentDataType.INTEGER);
+        return lv == null ? 0 : Math.max(1, Math.min(MAX_LEVEL, lv));
     }
 
     /** The tonic level of an item, or 0 if it isn't a tonic. */
@@ -123,7 +154,23 @@ public final class CleansingTonic implements Listener, DecayResist {
     public void onDrink(PlayerItemConsumeEvent e) {
         int lv = levelOf(e.getItem());
         if (lv == 0) return;
-        Player p = e.getPlayer();
+        apply(e.getPlayer(), lv);
+    }
+
+    /** A splash tonic cleanses every player within the splash radius instead of vanilla's splash area. */
+    @EventHandler(ignoreCancelled = true)
+    public void onSplash(org.bukkit.event.entity.PotionSplashEvent e) {
+        int lv = splashLevelOf(e.getPotion().getItem());
+        if (lv == 0) return;
+        var at = e.getPotion().getLocation();
+        for (Player p : at.getWorld().getPlayers()) {
+            if (p.getLocation().distanceSquared(at) <= splashRadius * splashRadius) apply(p, lv);
+        }
+    }
+
+    /** Cleanses a player as if they'd drunk a tonic of this level. */
+    public void apply(Player p, int level) {
+        int lv = Math.max(1, Math.min(MAX_LEVEL, level));
         long now = System.currentTimeMillis();
         long fresh = now + tiers[lv].seconds() * 1000L;
         long current = until.getOrDefault(p.getUniqueId(), 0L);
