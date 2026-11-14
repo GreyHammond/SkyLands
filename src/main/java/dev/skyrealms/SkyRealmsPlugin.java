@@ -55,6 +55,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private dev.skyrealms.decay.recycle.WorldRecycler recycler;
     /** The overworld players fall into: worlds.overworld, or the current recycled world. */
     private volatile String overworldName = "world";
+    private dev.skyrealms.decay.CleansingTonic tonic;
 
     @Override
     public void onEnable() {
@@ -159,7 +160,15 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         decay = new dev.skyrealms.decay.DecayService(this,
                 dev.skyrealms.decay.DecaySettings.load(cfg.getConfigurationSection("decay"), overName));
         if (recycled != null) decay.switchWorld(recycled); // the recycled world overrides decay.world
-        Bukkit.getScheduler().runTask(this, () -> decay.start(skyName));
+        Bukkit.getScheduler().runTask(this, () -> {
+            decay.start(skyName);
+            // Cleansing Tonic only exists while decay runs.
+            if (decay.isRunning()) {
+                tonic = new dev.skyrealms.decay.CleansingTonic(this, cfg.getConfigurationSection("tonic"));
+                tonic.start();
+                decay.addResist(tonic);
+            }
+        });
 
         SkylandCommands commands = new SkylandCommands(this);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> commands.register(event.registrar()));
@@ -208,4 +217,5 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         overworldName = name;
         if (decay != null) decay.switchWorld(name);
     }
+    public dev.skyrealms.decay.CleansingTonic tonic() { return tonic; }
 }

@@ -56,14 +56,15 @@ public final class SkylandCommands {
     // ---- /skyland ------------------------------------------------------------------
 
     private LiteralCommandNode<CommandSourceStack> skyland() {
-        return Commands.literal("skyland")
+        LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("skyland")
                 .requires(src -> src.getSender().hasPermission("skyrealms.use"))
                 .executes(ctx -> {
                     if (ctx.getSource().getExecutor() instanceof Player p) plugin.menus().main(p);
                     else Msg.error(ctx.getSource().getSender(), "Players only.");
                     return Command.SINGLE_SUCCESS;
-                })
-                .build();
+                });
+        TonicCommands.attachPlayer(root, plugin);
+        return root.build();
     }
 
     // ---- /ihome (island home; named so it never clashes with Essentials' /home) ----------
@@ -172,6 +173,7 @@ public final class SkylandCommands {
                 .then(Commands.literal("clear").executes(ctx -> decayClear(ctx.getSource()))));
 
         dev.skyrealms.decay.recycle.RecycleCommands.attach(root, plugin);
+        TonicCommands.attachAdmin(root, plugin);
 
         root.then(Commands.literal("reload").executes(ctx -> {
             plugin.library().reload();
@@ -269,6 +271,7 @@ public final class SkylandCommands {
                 "xp <owner> [add|set <amount>] <dark_gray>- view or change island XP",
                 "decay [set <0-100>|clear] <dark_gray>- overworld corruption in your chunk / all chunks",
                 "recycle [status|now [seconds]|cancel] <dark_gray>- weekly overworld recycle",
+                "tonic give <player> <1-3> [amount] <dark_gray>- give Cleansing Tonics",
                 "reload <dark_gray>- reload piece files"))
             to.sendMessage(Msg.c(" <aqua>/skylandadmin <gray>" + l));
         to.sendMessage(Msg.c(" <dark_gray>Sizes can also be an exact radius from " + MIN_RADIUS + " to " + MAX_RADIUS + "."));
