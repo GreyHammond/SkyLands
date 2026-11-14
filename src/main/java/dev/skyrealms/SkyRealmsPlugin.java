@@ -61,6 +61,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private dev.skyrealms.economy.VoidExchange exchange;
     private dev.skyrealms.player.PlayerProfiles profiles;
     private dev.skyrealms.player.Milestones milestones;
+    private dev.skyrealms.player.FirstJoin firstJoin;
     private dev.skyrealms.economy.CorruptionHarvest harvest;
     private dev.skyrealms.economy.CorruptedMobs corruptedMobs;
     private dev.skyrealms.economy.VisitorTips tips;
@@ -218,6 +219,10 @@ public final class SkyRealmsPlugin extends JavaPlugin {
             if (bedrock.active()) dev.skyrealms.bedrock.ContractForms.register(this, contracts, contractMenu);
         }
 
+        // First join (welcome / automatic free island) and island respawns.
+        firstJoin = new dev.skyrealms.player.FirstJoin(this);
+        getServer().getPluginManager().registerEvents(firstJoin, this);
+
         SkylandCommands commands = new SkylandCommands(this);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> commands.register(event.registrar()));
 
@@ -273,6 +278,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public dev.skyrealms.economy.VoidExchange exchange() { return exchange; }
     public dev.skyrealms.player.PlayerProfiles profiles() { return profiles; }
     public dev.skyrealms.player.Milestones milestones() { return milestones; }
+    public dev.skyrealms.player.FirstJoin firstJoin() { return firstJoin; }
     public dev.skyrealms.economy.CorruptionHarvest harvest() { return harvest; }
     public dev.skyrealms.economy.CorruptedMobs corruptedMobs() { return corruptedMobs; }
     public dev.skyrealms.economy.VisitorTips tips() { return tips; }

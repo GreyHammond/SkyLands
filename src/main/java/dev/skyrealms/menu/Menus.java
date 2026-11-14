@@ -264,7 +264,7 @@ public final class Menus {
                     "<gray>Size: <white>" + t.footprint + " x " + t.footprint,
                     "<gray>Starts with <white>" + t.startPieces + "</white> pieces of land",
                     "<gray>Can grow to <white>" + t.maxPieces + "</white> pieces",
-                    "<gray>Price: <gold>" + svc.money(t.price)), pl -> biomes(pl, Mode.BUY, t));
+                    "<gray>Price: <gold>" + svc.priceLabel(p.getUniqueId(), t)), pl -> biomes(pl, Mode.BUY, t));
         }
         m.button(18, back(), this::main);
         m.button(26, item(Material.COMPASS, "<aqua>Visit Islands", "<gray>Look around before you buy."), pl -> visit(pl, 0));
@@ -308,7 +308,7 @@ public final class Menus {
             }
             switch (mode) {
                 case BUY -> m.button(slot++, item(biomeIcon(b), "<green>" + pretty(b), "<gray>" + style,
-                        "<gray>Island: <white>" + tier.pretty() + " for <gold>" + svc.money(tier.price)),
+                        "<gray>Island: <white>" + tier.pretty() + " for <gold>" + svc.priceLabel(p.getUniqueId(), tier)),
                         pl -> newIslandStyle(pl, tier, b));
                 case GROW -> m.button(slot++, item(biomeIcon(b), "<green>" + pretty(b),
                         i != null && i.pieces.stream().noneMatch(pc -> pc.biome().equals(b))
@@ -335,7 +335,7 @@ public final class Menus {
         var styles = svc.startUndersides(p.getUniqueId());
         var themes = svc.startThemes(p.getUniqueId());
         java.util.function.Function<String, Consumer<Player>> buyWith = style -> pl ->
-                confirm(pl, "Buy a " + tier.pretty() + " " + pretty(biome) + " island?", tier.price,
+                confirm(pl, "Buy a " + tier.pretty() + " " + pretty(biome) + " island?", svc.priceFor(pl.getUniqueId(), tier),
                         yes -> { yes.closeInventory(); svc.buy(yes, tier, biome, style); }, back -> newIslandStyle(back, tier, biome));
         if (styles.size() <= 1 && themes.isEmpty()) { buyWith.apply(null).accept(p); return; }   // nothing to choose yet
         String saved = plugin.progress().has(p.getUniqueId()) ? "your saved style" : "Rock";

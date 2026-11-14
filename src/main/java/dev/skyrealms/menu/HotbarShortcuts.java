@@ -59,7 +59,9 @@ public final class HotbarShortcuts implements Listener {
         this.itemKey = new NamespacedKey(plugin, "shortcut");
         this.prefKey = new NamespacedKey(plugin, "shortcuts");
         this.enabled = cfg == null || cfg.getBoolean("enabled", true);
-        this.defaultFor = cfg == null ? "bedrock" : cfg.getString("default", "bedrock").toLowerCase(java.util.Locale.ROOT);
+        // give-on-join (newer) wins over default (older): true = everyone starts with them, false = nobody does.
+        if (cfg != null && cfg.isSet("give-on-join")) this.defaultFor = cfg.getBoolean("give-on-join") ? "all" : "none";
+        else this.defaultFor = cfg == null ? "bedrock" : cfg.getString("default", "bedrock").toLowerCase(java.util.Locale.ROOT);
         int m = cfg == null ? 9 : cfg.getInt("menu-slot", 9), h = cfg == null ? 8 : cfg.getInt("home-slot", 8);
         this.menuSlot = Math.max(1, Math.min(9, m)) - 1;
         int hs = Math.max(1, Math.min(9, h)) - 1;

@@ -93,7 +93,11 @@ return:
 # moved, stored or lost on death. Each player turns them on or off in the /skyland menu.
 hotbar:
   enabled: true
-  # Who has them until they choose for themselves: bedrock (Bedrock players only), all, or none.
+  # New players get the menu book and return feather locked in their hotbar (true), or start
+  # without them and turn them on in the /skyland menu (false). Everyone can always turn their
+  # own shortcuts on or off from the menu. If this line is removed, "default" below is used instead.
+  give-on-join: true
+  # Older setting, used only when give-on-join is missing: bedrock (Bedrock players only), all, or none.
   default: bedrock
   # Hotbar slots, 1-9.
   menu-slot: 9
@@ -380,3 +384,21 @@ contracts:
 # A player's very first Small island is free. Deleting it and buying again costs the normal price.
 first-island:
   free: true
+  # Give new players their free Small island automatically on first join, with no menus.
+  # Off: the claim-island menu (or the tutorial) lets them pick a biome instead.
+  auto: false
+  # Biome for the automatic island.
+  auto-biome: plains
+
+# What happens the first time a player joins.
+first-join:
+  # Run the welcome (claim your island, or the automatic island) for brand-new players.
+  enabled: true
+  # Ticks to wait after joining before the welcome starts (20 ticks = 1 second).
+  delay-ticks: 40
+
+# Respawning.
+spawn:
+  # When a player dies with no bed or respawn anchor, respawn them on their island (owned or
+  # co-owned) instead of the world spawn. Beds and anchors still win while they exist.
+  island-fallback: true
