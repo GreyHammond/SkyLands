@@ -57,6 +57,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private volatile String overworldName = "world";
     private dev.skyrealms.decay.CleansingTonic tonic;
     private dev.skyrealms.decay.WardedGear ward;
+    private dev.skyrealms.economy.VoidExchange exchange;
 
     @Override
     public void onEnable() {
@@ -132,6 +133,11 @@ public final class SkyRealmsPlugin extends JavaPlugin {
             money = new Money(cfg.getConfigurationSection("economy"));
             getLogger().info(money.describe());
         });
+
+        // Void items and the exchange that buys them (shared by harvest, mob bounties and contracts).
+        dev.skyrealms.economy.VoidItems.init(this);
+        exchange = new dev.skyrealms.economy.VoidExchange(this, cfg.getConfigurationSection("exchange"));
+        getServer().getPluginManager().registerEvents(exchange, this);
 
         service = new RealmService(this);
         menus = new Menus(this, service);
@@ -223,4 +229,5 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     }
     public dev.skyrealms.decay.CleansingTonic tonic() { return tonic; }
     public dev.skyrealms.decay.WardedGear ward() { return ward; }
+    public dev.skyrealms.economy.VoidExchange exchange() { return exchange; }
 }

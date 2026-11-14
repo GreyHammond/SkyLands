@@ -68,7 +68,7 @@ public final class FormMenus {
     //  Form helpers
     // =========================================================================================
 
-    private record Btn(String text, String icon, Consumer<Player> action) {}
+    public record Btn(String text, String icon, Consumer<Player> action) {}
 
     private static Btn btn(String text, String icon, Consumer<Player> action) { return new Btn(text, icon, action); }
 
@@ -144,7 +144,56 @@ public final class FormMenus {
             b.add(btn(A + "Hotbar Shortcuts: " + (on ? G + "On" : R + "Off") + "\n" + DG + (on ? "Tap to remove the book & feather" : "Menu book & return feather"),
                     "textures/items/feather", pl -> { plugin.shortcuts().toggle(pl); main(pl); }));
         }
+        b.add(btn(P + "The Corruption\n" + DG + "Sell what you bring back", "textures/items/echo_shard", this::corruption));
         simple(p, "Skyland", content + "\n\n" + DG + dev.skyrealms.Credits.ATTRIBUTION, b);
+    }
+
+    // =========================================================================================
+    //  The corruption
+    // =========================================================================================
+
+    /** Lets features add buttons to the Corruption hub without touching this class. */
+    public static final List<java.util.function.Function<Player, Btn>> corruptionButtons = new ArrayList<>();
+
+    /** A button for {@link #corruptionButtons}; returns null to hide it for this player. */
+    public static Btn hubButton(String text, String icon, Consumer<Player> action) { return new Btn(text, icon, action); }
+
+    public void corruption(Player p) {
+        var d = plugin.decay();
+        String here = d != null && d.isRunning() && p.getWorld().getName().equals(d.worldName())
+                ? GR + "Corruption here: " + R + (int) d.valueAt(p.getLocation()) + "%" : GR + "You're safe in the skylands.";
+        var ex = plugin.exchange();
+        List<Btn> b = new ArrayList<>();
+        b.add(btn(P + "Void Exchange\n" + DG + "You carry " + svc.money(ex.value(p, null)), "textures/items/echo_shard", this::exchange));
+        for (var extra : corruptionButtons) { Btn x = extra.apply(p); if (x != null) b.add(x); }
+        b.add(btn(GR + "Back", null, this::main));
+        simple(p, "The Corruption", W + "The overworld decays wherever players linger.\n" + here, b);
+    }
+
+    public void exchange(Player p) {
+        var ex = plugin.exchange();
+        List<Btn> b = new ArrayList<>();
+        StringBuilder content = new StringBuilder(W + "Sell what you bring back from the corruption.\n");
+        for (var k : dev.skyrealms.economy.VoidItems.Kind.values()) {
+            int n = ex.count(p, k);
+            String label = k == dev.skyrealms.economy.VoidItems.Kind.SHARD ? "Void Shards" : "Corrupted Remnants";
+            content.append("\n").append(GR).append(label).append(": ").append(W).append(n)
+                    .append(GR).append(" (").append(O).append(svc.money(ex.price(k))).append(GR).append(" each)");
+            if (n > 0) b.add(btn(G + "Sell " + label + "\n" + DG + svc.money(ex.value(p, k)), null, pl -> sellVoid(pl, k)));
+        }
+        double all = ex.value(p, null);
+        if (all > 0) b.add(btn(G + "Sell Everything\n" + DG + svc.money(all), "textures/items/emerald", pl -> sellVoid(pl, null)));
+        b.add(btn(GR + "Back", null, this::corruption));
+        simple(p, "Void Exchange", content.toString(), b);
+    }
+
+    private void sellVoid(Player p, dev.skyrealms.economy.VoidItems.Kind kind) {
+        double paid = plugin.exchange().sell(p, kind);
+        if (paid > 0) {
+            p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.7f, 1.2f);
+            dev.skyrealms.util.Msg.send(p, "Sold for <gold>" + svc.money(paid) + "</gold>.");
+        }
+        exchange(p);
     }
 
     public void travel(Player p) {

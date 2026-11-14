@@ -261,3 +261,9 @@ ward:
     1: 5
     2: 15
     3: 30
+
+# The Void Exchange buys what players bring back from the corruption.
+exchange:
+  prices:
+    shard: 25     # Void Shard
+    remnant: 75   # Corrupted Remnant

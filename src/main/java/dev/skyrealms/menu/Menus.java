@@ -16,6 +16,7 @@ import dev.skyrealms.island.Flag;
 import dev.skyrealms.island.Island;
 import dev.skyrealms.island.Role;
 import dev.skyrealms.island.Tier;
+import dev.skyrealms.util.Msg;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -78,9 +79,65 @@ public final class Menus {
                             : item(Material.FEATHER, "<aqua>Hotbar Shortcuts: <red>Off", "<gray>Put a menu book and a return", "<gray>feather in your hotbar, so you", "<gray>never need a command.", "<yellow>Click to turn on"),
                     pl -> { plugin.shortcuts().toggle(pl); main(pl); });
         }
+        m.button(22, glow(item(Material.ECHO_SHARD, "<light_purple>The Corruption", "<gray>Sell what you bring back from",
+                "<gray>the corrupted overworld.")), this::corruption);
         m.button(26, item(Material.KNOWLEDGE_BOOK, "<aqua>About", "<white>" + dev.skyrealms.Credits.ATTRIBUTION,
                 "<gray>Version " + plugin.getPluginMeta().getVersion(), "<dark_gray>Licensed under GPL-3.0"), null);
         m.fill().open(p);
+    }
+
+    // ---- the corruption --------------------------------------------------------------
+
+    /** Hub for everything that pays out from the corrupted overworld. */
+    public void corruption(Player p) {
+        if (plugin.bedrock().handles(p)) { plugin.bedrock().openCorruption(p); return; }
+        Menu m = new Menu(3, "<dark_purple>The Corruption");
+        var d = plugin.decay();
+        String here = d != null && d.isRunning() && p.getWorld().getName().equals(d.worldName())
+                ? "<gray>Corruption here: <red>" + (int) d.valueAt(p.getLocation()) + "%" : "<gray>You're safe in the skylands.";
+        m.button(4, item(Material.CRYING_OBSIDIAN, "<dark_purple>The Corruption", "<gray>The overworld decays wherever", "<gray>players linger.", here), null);
+        var ex = plugin.exchange();
+        m.button(11, glow(item(Material.ECHO_SHARD, "<light_purple>Void Exchange", "<gray>Sell Void Shards and",
+                "<gray>Corrupted Remnants.", "<gray>You carry: <gold>" + svc.money(ex.value(p, null)))), this::exchange);
+        // Contracts and other corruption features add their buttons here.
+        for (var extra : corruptionButtons) extra.accept(p, m);
+        m.button(18, back(), this::main);
+        m.fill().open(p);
+    }
+
+    /** Lets features add buttons to the Corruption hub without touching this class: (player, menu). */
+    public final List<java.util.function.BiConsumer<Player, Menu>> corruptionButtons = new ArrayList<>();
+
+    /** Sell void items. Stays open after selling. */
+    public void exchange(Player p) {
+        if (plugin.bedrock().handles(p)) { plugin.bedrock().openExchange(p); return; }
+        var ex = plugin.exchange();
+        Menu m = new Menu(3, "<dark_purple>Void Exchange");
+        int col = 11;
+        for (var k : dev.skyrealms.economy.VoidItems.Kind.values()) {
+            int n = ex.count(p, k);
+            var icon = dev.skyrealms.economy.VoidItems.create(k, 1);
+            var meta = icon.getItemMeta();
+            meta.lore(List.of(Msg.c("<!italic><gray>Each: <gold>" + svc.money(ex.price(k))),
+                    Msg.c("<!italic><gray>You carry: <white>" + n), Msg.c(n > 0 ? "<!italic><yellow>Click to sell all" : "<!italic><dark_gray>None to sell")));
+            icon.setItemMeta(meta);
+            m.button(col, icon, n > 0 ? pl -> sellVoid(pl, k) : null);
+            col += 2;
+        }
+        double all = ex.value(p, null);
+        m.button(15, all > 0 ? glow(item(Material.EMERALD, "<green>Sell Everything", "<gray>Total: <gold>" + svc.money(all), "<yellow>Click to sell"))
+                : item(Material.GRAY_DYE, "<gray>Sell Everything", "<dark_gray>You have nothing to sell."), all > 0 ? pl -> sellVoid(pl, null) : null);
+        m.button(18, back(), this::corruption);
+        m.fill().open(p);
+    }
+
+    private void sellVoid(Player p, dev.skyrealms.economy.VoidItems.Kind kind) {
+        double paid = plugin.exchange().sell(p, kind);
+        if (paid > 0) {
+            p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.7f, 1.2f);
+            Msg.send(p, "Sold for <gold>" + svc.money(paid) + "</gold>.");
+        }
+        exchange(p);
     }
 
     /** Return / visit. */
