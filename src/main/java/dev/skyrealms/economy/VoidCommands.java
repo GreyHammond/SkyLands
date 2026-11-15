@@ -27,6 +27,13 @@ public final class VoidCommands {
     private VoidCommands() {}
 
     public static void attachPlayer(LiteralArgumentBuilder<CommandSourceStack> skyland, SkyRealmsPlugin plugin) {
+        skyland.then(Commands.literal("essence").executes(ctx -> {
+            if (!(ctx.getSource().getExecutor() instanceof Player p)) { Msg.error(ctx.getSource().getSender(), "Players only."); return 0; }
+            long carried = plugin.essence().purifyValue(p);
+            Msg.send(p, "You have <aqua>" + Essence.format(plugin.essence().balance(p.getUniqueId())) + "</aqua>."
+                    + (carried > 0 ? " Carrying <aqua>+" + Essence.format(carried) + "</aqua> to purify at the Purifier." : ""));
+            return Command.SINGLE_SUCCESS;
+        }));
         skyland.then(Commands.literal("exchange").executes(ctx -> {
             if (ctx.getSource().getExecutor() instanceof Player p) plugin.menus().exchange(p);
             else Msg.error(ctx.getSource().getSender(), "Players only.");

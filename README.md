@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.18.1-2f9e5a">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.18.2-2f9e5a">
   <img alt="Paper 26.3" src="https://img.shields.io/badge/Paper-26.3-1e88e5">
   <img alt="Java 25" src="https://img.shields.io/badge/Java-25-e76f00">
   <img alt="Bedrock ready" src="https://img.shields.io/badge/Bedrock-Geyser%20%2B%20Floodgate-6a1b9a">
@@ -469,6 +469,9 @@ Islands grow on **Essence**: corruption you bring back and purify. Take your Voi
 Corrupted Remnants to **The Purifier** (`/skyland` → **The Corruption** → **The Purifier**, or
 `/skyland exchange`): each shard purifies into **1 Essence**, each remnant into **4**.
 
+Your Essence always shows in the top-left of the `/skyland` and Manage Island menus (on Bedrock,
+at the top of the main and Manage forms), on every purchase confirmation, and with `/skyland essence`.
+
 Essence is SkyLands' only currency: no economy plugin or Vault needed. It pays for everything
 island-related: buying a bigger island, upgrading, growing land, unlocking biomes and restyling.
 Default prices (all in `config.yml`, in Essence):
@@ -519,7 +522,7 @@ Without Floodgate, everyone gets chest menus and the form code is never loaded.
 ### Commands
 
 Players only need `/skyland` (and `/ihome` for a quick trip home). Shortcuts:
-`/skyland journal` (plus `journal skip` / `journal restart`), `/skyland claim` (free first island),
+`/skyland journal` (plus `journal skip` / `journal restart`), `/skyland essence` (your balance), `/skyland claim` (free first island),
 `/skyland exchange` and `/skyland contracts`. (`/skyland tonic buy` and `/skyland ward upgrade` only
 sell when the shop is turned on in config; otherwise they show the recipes.) Admin commands (`/skylandadmin`, alias `/sla`) all have
 **Tab completion**: press Tab to cycle through sizes, tiers, biomes and player names.
@@ -800,6 +803,7 @@ The jar is written to `build/libs/skylands.jar`. The website is a single file at
 
 | Version | Highlights |
 |---|---|
+| **0.18.2** | Essence balance shown in the main and Manage menus (Java and Bedrock), on purchase confirmations, and with `/skyland essence`. |
 | **0.18.1** | Corruption and the weekly recycle are now **on by default**, so a fresh config can't silently turn them off. |
 | **0.18.0** | **Essence only**: money, Vault and item currency are gone. Every price and reward is written in Essence in `config.yml`. The optional tonic and ward shops charge Essence. |
 | **0.17.0** | **Essence**: islands are paid in purified Essence instead of money. The Void Exchange becomes **The Purifier** (shards 1, remnants 4). Tutorial, contracts, tips and bounties pay Essence. Island growth is far cheaper in practice (Medium upgrade: 120 Essence). |

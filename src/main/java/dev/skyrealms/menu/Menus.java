@@ -79,6 +79,7 @@ public final class Menus {
                             : item(Material.FEATHER, "<aqua>Hotbar Shortcuts: <red>Off", "<gray>Put a menu book and a return", "<gray>feather in your hotbar, so you", "<gray>never need a command.", "<yellow>Click to turn on"),
                     pl -> { plugin.shortcuts().toggle(pl); main(pl); });
         }
+        m.button(0, essenceCard(p), this::exchange);
         m.button(4, glow(item(Material.WRITTEN_BOOK, "<aqua>Guide", "<gray>The story, your next objective",
                 "<gray>and every journal page you've found.", "<yellow>" + plugin.journal().unlockedCount(p) + "/"
                 + plugin.journal().countedPages().size() + " pages")), this::journal);
@@ -184,6 +185,7 @@ public final class Menus {
         Island i = svc.owned(p);
         if (i == null) { main(p); return; }
         Menu m = new Menu(4, "<dark_aqua>Manage Island");
+        m.button(0, essenceCard(p), this::exchange);
         m.button(4, levelCard(i), this::levels);
         m.button(10, item(Material.WHEAT_SEEDS, "<green>Grow Land",
                 "<gray>Attach more of a biome you own.", "<gray>Cost: <gold>" + svc.cost(svc.growPrice()) + " <gray>each",
@@ -401,8 +403,9 @@ public final class Menus {
     /** A yes/no screen. Big targets so it's easy to tap on Bedrock. */
     public void confirm(Player p, String question, double price, Consumer<Player> yes, Consumer<Player> no) {
         Menu m = new Menu(3, "<dark_aqua>Are you sure?");
-        m.button(11, item(Material.LIME_CONCRETE, "<green>Yes", "<gray>" + question, "<gray>Cost: <gold>" + svc.cost(price)), yes);
-        m.button(13, item(Material.GOLD_INGOT, "<gold>" + svc.cost(price), "<gray>" + question), null);
+        String have = "<gray>You have: <aqua>" + dev.skyrealms.economy.Essence.format(plugin.essence().balance(p.getUniqueId()));
+        m.button(11, item(Material.LIME_CONCRETE, "<green>Yes", "<gray>" + question, "<gray>Cost: <gold>" + svc.cost(price), have), yes);
+        m.button(13, item(Material.AMETHYST_CLUSTER, "<gold>" + svc.cost(price), "<gray>" + question, have), null);
         m.button(15, item(Material.RED_CONCRETE, "<red>No, go back"), no);
         m.fill().open(p);
     }
@@ -758,6 +761,17 @@ public final class Menus {
     }
 
     // ---- levels ----------------------------------------------------------------------------
+
+    /** The player's Essence, shown like a wallet. Clicking opens the Purifier. */
+    private org.bukkit.inventory.ItemStack essenceCard(Player p) {
+        var es = plugin.essence();
+        long carried = es.purifyValue(p);
+        return glow(item(Material.AMETHYST_CLUSTER, "<aqua>Essence: <white>" + String.format("%,d", es.balance(p.getUniqueId())),
+                "<gray>Purified corruption. Your island",
+                "<gray>grows on it: land, biomes, size.",
+                carried > 0 ? "<gray>Carrying: <aqua>+" + dev.skyrealms.economy.Essence.format(carried) + " <gray>to purify" : "<dark_gray>Bring back shards and remnants.",
+                "<yellow>Click to open the Purifier"));
+    }
 
     private org.bukkit.inventory.ItemStack levelCard(Island i) {
         var lv = plugin.xp().levels();

@@ -96,7 +96,8 @@ public final class FormMenus {
     }
 
     private void confirm(Player p, String question, double price, Consumer<Player> yes, Consumer<Player> back) {
-        String cost = price > 0 ? "\n\n" + GR + "Cost: " + O + svc.cost(price) : "";
+        String cost = price > 0 ? "\n\n" + GR + "Cost: " + O + svc.cost(price) + "\n" + GR + "You have: " + A
+                + dev.skyrealms.economy.Essence.format(plugin.essence().balance(p.getUniqueId())) : "";
         modal(p, "Are you sure?", W + question + cost, G + "Yes", R + "No, go back", yes, back);
     }
 
@@ -146,6 +147,7 @@ public final class FormMenus {
         }
         b.add(0, btn(A + "Guide\n" + DG + "Story, objective and journal", "textures/items/book_written", pl -> plugin.journal().openFor(pl)));
         b.add(btn(P + "The Corruption\n" + DG + "Sell what you bring back", "textures/items/echo_shard", this::corruption));
+        content = A + "Essence: " + W + String.format("%,d", plugin.essence().balance(p.getUniqueId())) + "\n" + content;
         simple(p, "Skyland", content + "\n\n" + DG + dev.skyrealms.Credits.ATTRIBUTION, b);
     }
 
@@ -337,6 +339,7 @@ public final class FormMenus {
         boolean owner = i.owner.equals(p.getUniqueId());
         String bar = plugin.xp().progressBar(i).replaceAll("<[^>]+>", "");
         StringBuilder content = new StringBuilder(W + plugin.cosmetics().displayName(i) + "\n" + O + plugin.xp().badge(i)
+                + "\n" + A + "Essence: " + W + String.format("%,d", plugin.essence().balance(p.getUniqueId()))
                 + "\n" + GR + bar + "\n" + GR + i.tier.pretty() + " · " + i.pieces.size() + "/" + i.tier.maxPieces + " pieces");
         List<Btn> b = new ArrayList<>();
         b.add(btn(G + "Grow Land\n" + DG + svc.cost(svc.growPrice()) + " per piece", "textures/items/seeds_wheat", pl -> biomes(pl, Mode.GROW, null)));
