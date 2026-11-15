@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockFormEvent;
+import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockGrowEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -204,6 +205,16 @@ public final class DecayService implements Listener {
 
     // ---- lava pools ---------------------------------------------------------------------
 
+    /** In corrupted chunks water doesn't flow: pools can't refill or reach lava to put it out. */
+    @EventHandler(ignoreCancelled = true)
+    public void onWaterFlow(BlockFromToEvent e) {
+        if (!s.lavaPools || e.getBlock().getType() != Material.WATER || !inWorld(e.getBlock().getWorld())) return;
+        Block to = e.getToBlock();
+        Cell c = cells.get(new ChunkPos(to.getX() >> 4, to.getZ() >> 4));
+        Cell from = cells.get(new ChunkPos(e.getBlock().getX() >> 4, e.getBlock().getZ() >> 4));
+        if ((c != null && c.value >= s.stage1) || (from != null && from.value >= s.stage1)) e.setCancelled(true);
+    }
+
     private int lavaThisTick;
     private long lavaTick;
 
@@ -222,11 +233,12 @@ public final class DecayService implements Listener {
         if (from != Material.LAVA && from != Material.WATER) return;
         if (!inWorld(b.getWorld())) return;
         Cell c = cells.get(new ChunkPos(b.getX() >> 4, b.getZ() >> 4));
-        if (c == null || c.value < s.stage2) return;
+        if (c == null || c.value < s.stage1) return;
+        e.setCancelled(true);                     // corrupted land: lava never cools into stone
+        if (c.value < s.stage2) return;           // wasteland and worse: it becomes more lava
         long now = b.getWorld().getFullTime();
         if (now != lavaTick) { lavaTick = now; lavaThisTick = 0; }
         if (++lavaThisTick > s.lavaPerTick) return; // keep a chain reaction across an ocean from lagging
-        e.setCancelled(true);
         Bukkit.getScheduler().runTask(plugin, () -> {
             if (b.getType() == Material.LAVA || b.getType() == Material.WATER) b.setType(Material.LAVA, true);
         });

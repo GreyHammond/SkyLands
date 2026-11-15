@@ -58,6 +58,8 @@ final class DecayConverter {
     private static final Pick GRASS_DRY = Pick.of(Material.COARSE_DIRT, 50, Material.DIRT, 15, Material.SAND, 20, Material.GRAVEL, 5, Material.STONE, 10);
     private static final Pick DIRT_DRY = Pick.of(Material.COARSE_DIRT, 30, Material.SAND, 40, Material.GRAVEL, 15, Material.STONE, 15);
     private static final Pick WATER_BED = Pick.of(Material.SAND, 55, Material.CLAY, 30, Material.GRAVEL, 15);
+    /** What boiled-off water leaves behind in the wasteland. */
+    private static final Pick BOILED = Pick.of(Material.MAGMA_BLOCK, 40, Material.SULFUR, 28, Material.POTENT_SULFUR, 10, Material.LAVA, 22);
     private static final Pick GROUND_WASTE = Pick.of(Material.SAND, 35, Material.RED_SAND, 10, Material.CLAY, 10,
             Material.TERRACOTTA, 10, Material.STONE, 15, Material.BLACKSTONE, 10, Material.COARSE_DIRT, 10);
     private static final Pick STONE_WASTE = Pick.of(Material.BLACKSTONE, 50, Material.DEEPSLATE, 25,
@@ -151,8 +153,7 @@ final class DecayConverter {
             Location l = b.getLocation().add(0.5, 1, 0.5);
             w.spawnParticle(Particle.CLOUD, l, 3, 0.3, 0.2, 0.3, 0.01);
             if (r.nextInt(8) == 0) w.playSound(l, Sound.BLOCK_FIRE_EXTINGUISH, 0.5f, 0.8f);
-            if (r.nextInt(10) < 4) place(b, Material.LAVA);
-            else dryWater(b, r);
+            boil(b, r, true);
             return;
         }
         if (Tag.LOGS.isTagged(m)) { place(b, Material.STONE); return; }
@@ -169,11 +170,25 @@ final class DecayConverter {
     }
 
     /** A pool dries up; what it sat on becomes a dry bed. */
-    private void dryWater(Block b, ThreadLocalRandom r) {
-        place(b, Material.AIR);
-        Block bed = b.getRelative(0, -1, 0);
-        Material under = bed.getType();
-        if (GRASSY.contains(under) || DIRTY.contains(under) || under == Material.GRAVEL) set(bed, WATER_BED.roll(r));
+    /**
+     * Water boils down instead of vanishing: each hit makes it visibly shallower, with steam.
+     * When it's a puddle the water block itself becomes ground, so pools never leave holes:
+     * sand, clay and gravel while drying; magma, sulfur and lava in the wasteland.
+     */
+    private void dryWater(Block b, ThreadLocalRandom r) { boil(b, r, false); }
+
+    private void boil(Block b, ThreadLocalRandom r, boolean wasteland) {
+        var w = b.getWorld();
+        var at = b.getLocation().add(0.5, 1, 0.5);
+        w.spawnParticle(Particle.CLOUD, at, 3, 0.3, 0.2, 0.3, 0.01);
+        if (r.nextInt(10) == 0) w.playSound(at, Sound.BLOCK_FIRE_EXTINGUISH, 0.4f, 0.8f);
+        if (b.getBlockData() instanceof org.bukkit.block.data.Levelled lv && lv.getLevel() < 6) {
+            lv.setLevel(Math.min(7, lv.getLevel() + 2 + r.nextInt(2)));   // shallower, never ticked
+            b.setBlockData(lv, false);
+            return;
+        }
+        Material to = wasteland ? BOILED.roll(r) : WATER_BED.roll(r);
+        place(b, to);
     }
 
     /** Stage 3: the topmost non-bedrock block of the column becomes bedrock, down to bedrock-depth layers. */
@@ -208,9 +223,11 @@ final class DecayConverter {
      * spreads, water flows into gaps, and pools drain naturally.
      */
     private static void place(Block b, Material to) {
-        boolean liquid = to == Material.WATER || to == Material.LAVA || b.isLiquid();
-        if (!liquid) for (var f : SIDES) if (b.getRelative(f).isLiquid()) { liquid = true; break; }
-        b.setType(to, liquid);
+        // Physics only around lava, so lava spreads. Water is never ticked, so it can't refill gaps
+        // or drain on its own; the corruption boils it down instead (see boil()).
+        boolean lava = to == Material.LAVA || b.getType() == Material.LAVA;
+        if (!lava) for (var f : SIDES) if (b.getRelative(f).getType() == Material.LAVA) { lava = true; break; }
+        b.setType(to, lava);
     }
 
     private static boolean isPlant(Material m) {

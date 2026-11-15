@@ -188,9 +188,11 @@ decay:
     decayed: 25   # drying: leaves, plants and pools die off; grass and dirt turn coarse, sandy, stony. Creeps in gradually.
     blighted: 50  # wasteland: stone -> blackstone/deepslate, logs -> stone, water boils off or turns to lava, first bedrock
     barren: 75    # bedrock spreads fast, top-down (permanent until the world is recycled); spills into nearby chunks
-  # In wasteland chunks (blighted stage and up), lava meeting water never cools into obsidian or
-  # stone: it becomes a new lava source, so lava pools creep across lakes and oceans. Barren water
-  # turns to lava too, and lava is never crusted over with bedrock. Off: vanilla cooling.
+  # Corrupted water and lava. In chunks at the decayed stage and up, water stops flowing (pools
+  # can't refill or put out lava) and lava never cools into obsidian or stone. Water boils down
+  # gradually and leaves sand and clay (drying) or magma, sulfur and lava (wasteland) where it
+  # stood, so pools never leave holes. In wasteland, lava meeting water makes more lava, and lava
+  # is never crusted over with bedrock. Off: vanilla water and lava.
   lava-pools: true
   # Most new lava sources made this way per tick, so a chain reaction can't lag the server.
   lava-per-tick: 64
