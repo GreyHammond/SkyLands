@@ -108,6 +108,9 @@ final class DecayConverter {
         int floor = w.getMinHeight() + 8;
         if (top <= floor) return;
 
+        // Stage 2+: oceans and rivers settle into one flat, still lava sea at sea level.
+        if (decay >= s.stage2 && seaTick(w, x, top, z)) return;
+
         // Stage 3: bedrock takes the column most of the time; otherwise the wasteland keeps spreading.
         if (decay >= s.stage3 && r.nextInt(10) < 6) { crust(w, x, top, z); return; }
 
@@ -126,6 +129,55 @@ final class DecayConverter {
         double t = progress(decay, s.stage2, s.stage3);
         if (r.nextDouble() < 0.5 + 0.5 * t) waste(w, b, r, t);
         else dry(w, b, r);
+    }
+
+    /**
+     * The lava sea. Handles any column at or below sea level that is water, lava, or in an ocean
+     * or river biome, and returns true when it did (so the column never gets crust or sediment):
+     * the surface at sea level becomes a still lava source, dips below it fill one layer at a time,
+     * lumps poking out of the sea melt away, and flowing lava is topped up into sources.
+     */
+    private boolean seaTick(World w, int x, int top, int z) {
+        int sea = w.getSeaLevel() - 1;                 // the y of a normal ocean's surface block
+        if (top > sea + 3) return false;               // land, or a lake above the sea
+        Block b = w.getBlockAt(x, top, z);
+        Material m = b.getType();
+        boolean liquid = m == Material.WATER || m == Material.LAVA;
+        boolean oceanic = isSea(w, x, top, z);
+        if (top > sea) {
+            // Up to three blocks proud of the sea in an ocean: the lump melts down a layer.
+            if (!oceanic) return false;
+            if (nearPlayer(x, top, z)) return true;
+            steam(b); place(b, Material.AIR);
+            return true;
+        }
+        if (!oceanic && !liquid) return false;          // low-lying land outside the sea stays land
+        if (nearPlayer(x, top, z)) return true;
+        if (top == sea) {
+            if (m == Material.LAVA) {
+                if (b.getBlockData() instanceof org.bukkit.block.data.Levelled lv && lv.getLevel() != 0) {
+                    lv.setLevel(0); b.setBlockData(lv, false);   // flowing lava becomes a still source
+                }
+            } else { steam(b); place(b, Material.LAVA); }           // water or a sunken lump turns to lava
+            return true;
+        }
+        // Below sea level: raise the sea by one layer.
+        Block above = b.getRelative(0, 1, 0);
+        if (m == Material.LAVA && b.getBlockData() instanceof org.bukkit.block.data.Levelled lv && lv.getLevel() != 0) {
+            lv.setLevel(0); b.setBlockData(lv, false);
+        } else if (above.getType().isAir() || above.getType() == Material.WATER) {
+            place(above, Material.LAVA);
+        }
+        return true;
+    }
+
+    private static boolean isSea(World w, int x, int y, int z) {
+        String k = w.getBiome(x, y, z).getKey().getKey();
+        return k.contains("ocean") || k.contains("river");
+    }
+
+    private static void steam(Block b) {
+        b.getWorld().spawnParticle(Particle.CLOUD, b.getLocation().add(0.5, 1, 0.5), 2, 0.3, 0.2, 0.3, 0.01);
     }
 
     /** Stage 1 changes: the land dries out. */

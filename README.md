@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.18.7-2f9e5a">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.18.8-2f9e5a">
   <img alt="Paper 26.3" src="https://img.shields.io/badge/Paper-26.3-1e88e5">
   <img alt="Java 25" src="https://img.shields.io/badge/Java-25-e76f00">
   <img alt="Bedrock ready" src="https://img.shields.io/badge/Bedrock-Geyser%20%2B%20Floodgate-6a1b9a">
@@ -803,6 +803,7 @@ The jar is written to `build/libs/skylands.jar`. The website is a single file at
 
 | Version | Highlights |
 |---|---|
+| **0.18.8** | Corrupted oceans and rivers settle into one flat, still lava sea at sea level: dips fill, lumps melt, flowing lava becomes source, no bedrock crust in the sea. |
 | **0.18.7** | Boiled-off wasteland water leaves magma blocks and lava only (no more sulfur). |
 | **0.18.6** | Deep water boils down from the top while its sediment settles on the bottom, so no more floating sand or gravel. In the wasteland, the sinking surface often turns to lava that flows into the gaps, so lava pools spread across lakes and oceans. |
 | **0.18.5** | Corrupted water: stops flowing in corrupted chunks (no refilling, no putting out lava), boils down gradually with steam, and leaves sand and clay (drying) or magma and lava (wasteland) where it stood, so no holes. Lava never cools into stone in corrupted land. |
