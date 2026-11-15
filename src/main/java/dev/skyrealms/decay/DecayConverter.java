@@ -59,7 +59,7 @@ final class DecayConverter {
     private static final Pick DIRT_DRY = Pick.of(Material.COARSE_DIRT, 30, Material.SAND, 40, Material.GRAVEL, 15, Material.STONE, 15);
     private static final Pick WATER_BED = Pick.of(Material.SAND, 55, Material.CLAY, 30, Material.GRAVEL, 15);
     /** What boiled-off water leaves behind in the wasteland. */
-    private static final Pick BOILED = Pick.of(Material.MAGMA_BLOCK, 40, Material.SULFUR, 28, Material.POTENT_SULFUR, 10, Material.LAVA, 22);
+    private static final Pick BOILED = Pick.of(Material.MAGMA_BLOCK, 75, Material.LAVA, 25);
     private static final Pick GROUND_WASTE = Pick.of(Material.SAND, 35, Material.RED_SAND, 10, Material.CLAY, 10,
             Material.TERRACOTTA, 10, Material.STONE, 15, Material.BLACKSTONE, 10, Material.COARSE_DIRT, 10);
     private static final Pick STONE_WASTE = Pick.of(Material.BLACKSTONE, 50, Material.DEEPSLATE, 25,

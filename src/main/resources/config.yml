@@ -190,7 +190,7 @@ decay:
     barren: 75    # bedrock spreads fast, top-down (permanent until the world is recycled); spills into nearby chunks
   # Corrupted water and lava. In chunks at the decayed stage and up, water stops flowing (pools
   # can't refill or put out lava) and lava never cools into obsidian or stone. Water boils down
-  # gradually and leaves sand and clay (drying) or magma, sulfur and lava (wasteland) where it
+  # gradually and leaves sand and clay (drying) or magma and lava (wasteland) where it
   # stood, so pools never leave holes. In wasteland, lava meeting water makes more lava, and lava
   # is never crusted over with bedrock. Off: vanilla water and lava.
   lava-pools: true
