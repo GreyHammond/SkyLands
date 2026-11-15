@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.18.2-2f9e5a">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.18.3-2f9e5a">
   <img alt="Paper 26.3" src="https://img.shields.io/badge/Paper-26.3-1e88e5">
   <img alt="Java 25" src="https://img.shields.io/badge/Java-25-e76f00">
   <img alt="Bedrock ready" src="https://img.shields.io/badge/Bedrock-Geyser%20%2B%20Floodgate-6a1b9a">
@@ -425,7 +425,7 @@ blocks) has a corruption value from 0 to 100%, shown on your action bar as **Cor
 |---|---|
 | 0–25% | Nothing yet, apart from ash in the air |
 | 25–50% · **Drying** | It creeps in: leaves and plants die, pools dry into sand and clay beds, ice melts, grass and dirt turn coarse, sandy or stony. Crops and grass stop growing. |
-| 50–75% · **Wasteland** | Stone turns to blackstone, deepslate and basalt; logs harden to stone; water boils away or turns to lava; the ground becomes sand, clay and terracotta. The first bedrock appears. |
+| 50–75% · **Wasteland** | Stone turns to blackstone, deepslate and basalt; logs harden to stone; water boils away or turns to lava that spreads; the ground becomes sand, clay and terracotta. The first bedrock appears. |
 | 75–100% · **Barren** | Corruption speeds up, bedrock spreads down from the surface, and it spills into neighbouring chunks. |
 
 **Resisting it:** both are made from what the corruption leaves behind. All the recipes are also in
@@ -803,6 +803,7 @@ The jar is written to `build/libs/skylands.jar`. The website is a single file at
 
 | Version | Highlights |
 |---|---|
+| **0.18.3** | Corruption's water and lava now flow: lava pools spread, water fills gaps and drains naturally (lava meeting water makes stone and obsidian). |
 | **0.18.2** | Essence balance shown in the main and Manage menus (Java and Bedrock), on purchase confirmations, and with `/skyland essence`. |
 | **0.18.1** | Corruption and the weekly recycle are now **on by default**, so a fresh config can't silently turn them off. |
 | **0.18.0** | **Essence only**: money, Vault and item currency are gone. Every price and reward is written in Essence in `config.yml`. The optional tonic and ward shops charge Essence. |

@@ -130,14 +130,14 @@ final class DecayConverter {
     private void dry(World w, Block b, ThreadLocalRandom r) {
         Material m = b.getType();
         if (m.isAir() || m == Material.BEDROCK) return;
-        if (Tag.LEAVES.isTagged(m)) { b.setType(Material.AIR, false); return; }
+        if (Tag.LEAVES.isTagged(m)) { place(b, Material.AIR); return; }
         if (isPlant(m)) {
             boolean shrub = (m == Material.SHORT_GRASS || m == Material.FERN) && r.nextInt(10) < 3;
-            b.setType(shrub ? Material.DEAD_BUSH : Material.AIR, false);
+            place(b, shrub ? Material.DEAD_BUSH : Material.AIR);
             return;
         }
         if (m == Material.WATER) { dryWater(b, r); return; }
-        if (FROZEN.contains(m)) { b.setType(m == Material.SNOW_BLOCK || m == Material.POWDER_SNOW ? Material.SAND : Material.WATER, false); return; }
+        if (FROZEN.contains(m)) { place(b, m == Material.SNOW_BLOCK || m == Material.POWDER_SNOW ? Material.SAND : Material.WATER); return; }
         if (GRASSY.contains(m)) { set(b, GRASS_DRY.roll(r)); return; }
         if (DIRTY.contains(m)) { set(b, DIRT_DRY.roll(r)); }
     }
@@ -151,15 +151,15 @@ final class DecayConverter {
             Location l = b.getLocation().add(0.5, 1, 0.5);
             w.spawnParticle(Particle.CLOUD, l, 3, 0.3, 0.2, 0.3, 0.01);
             if (r.nextInt(8) == 0) w.playSound(l, Sound.BLOCK_FIRE_EXTINGUISH, 0.5f, 0.8f);
-            if (r.nextInt(10) < 4) b.setType(Material.LAVA, false);
+            if (r.nextInt(10) < 4) place(b, Material.LAVA);
             else dryWater(b, r);
             return;
         }
-        if (Tag.LOGS.isTagged(m)) { b.setType(Material.STONE, false); return; }
+        if (Tag.LOGS.isTagged(m)) { place(b, Material.STONE); return; }
         if (Tag.LEAVES.isTagged(m) || isPlant(m) || FROZEN.contains(m)) { dry(w, b, r); return; }
         if (!b.getType().isSolid()) return;
         // The first bedrock appears, more often as the chunk nears 75.
-        if (r.nextDouble() < 0.04 * t) { b.setType(Material.BEDROCK, false); bedrocked(b); return; }
+        if (r.nextDouble() < 0.04 * t) { place(b, Material.BEDROCK); bedrocked(b); return; }
         if (GRASSY.contains(m) || DIRTY.contains(m)) { set(b, GROUND_WASTE.roll(r)); return; }
         if (STONY.contains(m) || Tag.BASE_STONE_OVERWORLD.isTagged(m)) {
             if (m != Material.DEEPSLATE && m != Material.BLACKSTONE) set(b, STONE_WASTE.roll(r));
@@ -170,7 +170,7 @@ final class DecayConverter {
 
     /** A pool dries up; what it sat on becomes a dry bed. */
     private void dryWater(Block b, ThreadLocalRandom r) {
-        b.setType(Material.AIR, false);
+        place(b, Material.AIR);
         Block bed = b.getRelative(0, -1, 0);
         Material under = bed.getType();
         if (GRASSY.contains(under) || DIRTY.contains(under) || under == Material.GRAVEL) set(bed, WATER_BED.roll(r));
@@ -188,13 +188,27 @@ final class DecayConverter {
         Block target = w.getBlockAt(x, y, z);
         Material m = target.getType();
         if (m.isAir() || nearPlayer(x, y, z)) return; // a cave beneath the crust stays as it is
-        if (!m.isSolid() && !target.isLiquid()) { target.setType(Material.AIR, false); return; } // plants and debris just die
-        target.setType(Material.BEDROCK, false);
+        if (!m.isSolid() && !target.isLiquid()) { place(target, Material.AIR); return; } // plants and debris just die
+        place(target, Material.BEDROCK);
         bedrocked(target);
     }
 
     private static void set(Block b, Material to) {
-        if (b.getType() != to) b.setType(to, false);
+        if (b.getType() != to) place(b, to);
+    }
+
+    private static final org.bukkit.block.BlockFace[] SIDES = {org.bukkit.block.BlockFace.UP, org.bukkit.block.BlockFace.DOWN,
+            org.bukkit.block.BlockFace.NORTH, org.bukkit.block.BlockFace.SOUTH, org.bukkit.block.BlockFace.EAST, org.bukkit.block.BlockFace.WEST};
+
+    /**
+     * Changes a block. Normally without physics (cheap, nothing pops off), but whenever liquid is
+     * involved (placing water or lava, replacing a liquid, or touching one) physics runs, so lava
+     * spreads, water flows into gaps, and pools drain naturally.
+     */
+    private static void place(Block b, Material to) {
+        boolean liquid = to == Material.WATER || to == Material.LAVA || b.isLiquid();
+        if (!liquid) for (var f : SIDES) if (b.getRelative(f).isLiquid()) { liquid = true; break; }
+        b.setType(to, liquid);
     }
 
     private static boolean isPlant(Material m) {
