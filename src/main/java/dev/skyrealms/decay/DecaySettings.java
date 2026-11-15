@@ -39,7 +39,7 @@ public final class DecaySettings {
     public final int falloff;
 
     private DecaySettings(ConfigurationSection c, String defaultWorld) {
-        enabled = c.getBoolean("enabled", false);
+        enabled = c.getBoolean("enabled", true);
         allowMainWorld = c.getBoolean("allow-main-world", false);
         world = c.getString("world", defaultWorld);
         ignoreCreative = c.getBoolean("ignore-creative", true);

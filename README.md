@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.18.0-2f9e5a">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.18.1-2f9e5a">
   <img alt="Paper 26.3" src="https://img.shields.io/badge/Paper-26.3-1e88e5">
   <img alt="Java 25" src="https://img.shields.io/badge/Java-25-e76f00">
   <img alt="Bedrock ready" src="https://img.shields.io/badge/Bedrock-Geyser%20%2B%20Floodgate-6a1b9a">
@@ -145,8 +145,8 @@ on Java** and **native Bedrock forms** for players joining through Geyser + Floo
    `plugins/SkyRealms/config.yml` and `levels.yml`.
 4. Check `worlds.overworld` in `config.yml` matches your main world (default `world`).
 5. Players type **`/skyland`**. That's it.
-6. *Optional, recommended:* turn on [the corruption](#setting-up-the-corruption) with
-   `decay.enabled: true` and `recycle.enabled: true`, then restart.
+6. [The corruption](#setting-up-the-corruption) and the weekly recycle run out of the box: falls
+   land in a managed overworld (`skyrealms_overworld_1`) that's recycled every 7 days.
 
 ## Player guide
 
@@ -590,13 +590,13 @@ Sizes: `small` (21 wide), `medium` (29), `large` (41), `huge` (57), or a radius 
 
 ### Setting up the corruption
 
-The corruption is **off by default**. To turn it on, set these in `config.yml` and restart:
+The corruption and the weekly recycle are **on by default**. To turn them off, set these in `config.yml` and restart:
 
 ```yaml
 decay:
-  enabled: true
+  enabled: false
 recycle:
-  enabled: true
+  enabled: false
 ```
 
 - The recycle creates a dedicated overworld, `skyrealms_overworld_1`, and falls land there. Your
@@ -800,6 +800,7 @@ The jar is written to `build/libs/skylands.jar`. The website is a single file at
 
 | Version | Highlights |
 |---|---|
+| **0.18.1** | Corruption and the weekly recycle are now **on by default**, so a fresh config can't silently turn them off. |
 | **0.18.0** | **Essence only**: money, Vault and item currency are gone. Every price and reward is written in Essence in `config.yml`. The optional tonic and ward shops charge Essence. |
 | **0.17.0** | **Essence**: islands are paid in purified Essence instead of money. The Void Exchange becomes **The Purifier** (shards 1, remnants 4). Tutorial, contracts, tips and bounties pay Essence. Island growth is far cheaper in practice (Medium upgrade: 120 Essence). |
 | **0.16.0** | **Season Two start**: a guided 12-step tutorial and journal (Java book, Bedrock forms) with rewards, skip and restart; first-join welcome; free first Small island (`/skyland claim`); your island is your respawn whenever no bed or anchor is set; falls land on dry ground (boat if there's none); hotbar book and feather given on join by default. |

@@ -58,7 +58,7 @@ public final class WorldRecycler implements Listener {
     public WorldRecycler(SkyRealmsPlugin plugin, ConfigurationSection section) {
         this.plugin = plugin;
         ConfigurationSection c = section != null ? section : new MemoryConfiguration();
-        enabled = c.getBoolean("enabled", false);
+        enabled = c.getBoolean("enabled", true);
         base = c.getString("base-name", "skyrealms_overworld").replaceAll("[^A-Za-z0-9_\\-]", "");
         managedName = Pattern.compile(Pattern.quote(base) + "_\\d+");
         intervalMillis = (long) (Math.max(0.01, c.getDouble("interval-days", 7)) * 24 * 60 * 60 * 1000L);

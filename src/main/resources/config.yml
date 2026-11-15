@@ -155,9 +155,9 @@ transit:
 # Overworld decay: players' presence slowly corrupts the chunks around them, ending in bedrock.
 # Skylands are never affected. See docs/DECAY_SPEC.md.
 decay:
-  # Off by default. It also refuses to run on the server's main world (that world can never be
-  # recycled), so point it at a dedicated resource world, or set allow-main-world for testing.
-  enabled: false
+  # On by default, together with recycle below. It never runs on the server's main world (that
+  # world can never be recycled): it runs in the recycled overworld, or set allow-main-world to test.
+  enabled: true
   allow-main-world: false
   # World to corrupt. Defaults to worlds.overworld.
   # world: skyrealms_overworld
@@ -209,7 +209,7 @@ decay:
 # with a new seed replaces it, and the old one is deleted. When on, this world replaces
 # worlds.overworld and decay.world. Only worlds this plugin created are ever deleted.
 recycle:
-  enabled: false
+  enabled: true
   base-name: skyrealms_overworld
   interval-days: 7
   # Seconds before a recycle when everyone is warned.
