@@ -16,6 +16,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockFormEvent;
 import org.bukkit.event.block.BlockGrowEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -200,6 +201,36 @@ public final class DecayService implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onSpread(BlockSpreadEvent e) { if (decayedBlock(e.getBlock())) e.setCancelled(true); }
+
+    // ---- lava pools ---------------------------------------------------------------------
+
+    private int lavaThisTick;
+    private long lavaTick;
+
+    /**
+     * In wasteland chunks, lava meeting water never cools into obsidian, cobblestone or stone:
+     * the block becomes a new lava source instead, so lava pools creep across lakes and oceans.
+     * Outside corrupted land vanilla rules apply, so it stops at the corruption's edge.
+     */
+    @EventHandler(ignoreCancelled = true)
+    public void onLavaCool(BlockFormEvent e) {
+        if (!s.lavaPools) return;
+        Material to = e.getNewState().getType();
+        if (to != Material.OBSIDIAN && to != Material.COBBLESTONE && to != Material.STONE && to != Material.BASALT) return;
+        Block b = e.getBlock();
+        Material from = b.getType();
+        if (from != Material.LAVA && from != Material.WATER) return;
+        if (!inWorld(b.getWorld())) return;
+        Cell c = cells.get(new ChunkPos(b.getX() >> 4, b.getZ() >> 4));
+        if (c == null || c.value < s.stage2) return;
+        long now = b.getWorld().getFullTime();
+        if (now != lavaTick) { lavaTick = now; lavaThisTick = 0; }
+        if (++lavaThisTick > s.lavaPerTick) return; // keep a chain reaction across an ocean from lagging
+        e.setCancelled(true);
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            if (b.getType() == Material.LAVA || b.getType() == Material.WATER) b.setType(Material.LAVA, true);
+        });
+    }
 
     @EventHandler(ignoreCancelled = true)
     public void onStructureGrow(StructureGrowEvent e) { if (decayedBlock(e.getLocation().getBlock())) e.setCancelled(true); }

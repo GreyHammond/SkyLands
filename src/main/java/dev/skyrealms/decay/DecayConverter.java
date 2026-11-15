@@ -188,6 +188,8 @@ final class DecayConverter {
         Block target = w.getBlockAt(x, y, z);
         Material m = target.getType();
         if (m.isAir() || nearPlayer(x, y, z)) return; // a cave beneath the crust stays as it is
+        if (m == Material.LAVA) return;                                   // lava is never crusted over
+        if (m == Material.WATER) { place(target, Material.LAVA); return; } // barren water becomes lava
         if (!m.isSolid() && !target.isLiquid()) { place(target, Material.AIR); return; } // plants and debris just die
         place(target, Material.BEDROCK);
         bedrocked(target);

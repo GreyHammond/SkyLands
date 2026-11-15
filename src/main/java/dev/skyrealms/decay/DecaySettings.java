@@ -33,6 +33,9 @@ public final class DecaySettings {
     /** Block changes speed up by this factor once a chunk reaches stage 3. */
     public final double haste;
     public final double minMove;
+    /** Lava meeting water in wasteland chunks makes new lava instead of obsidian or stone. */
+    public final boolean lavaPools;
+    public final int lavaPerTick;
     /** Chunks around the player corrupted at full strength (0 = only their own chunk). */
     public final int radius;
     /** Extra rings of chunks beyond the radius that get a fading share. */
@@ -65,6 +68,8 @@ public final class DecaySettings {
         haste = Math.max(1, c.getDouble("haste", 3.0));
         radius = Math.max(0, Math.min(6, c.getInt("radius", 2)));
         falloff = Math.max(1, Math.min(6, c.getInt("falloff", 2)));
+        lavaPools = c.getBoolean("lava-pools", true);
+        lavaPerTick = Math.max(1, c.getInt("lava-per-tick", 64));
         minMove = Math.max(0.1, c.getDouble("min-move", 0.5));
     }
 
