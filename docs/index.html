@@ -311,14 +311,14 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 <header class="hero">
   <div class="wrap">
     <div>
-      <span class="tag pixel">v0.17.0 · Paper 26.3 · Java + Bedrock</span>
+      <span class="tag pixel">v0.18.0 · Paper 26.3 · Java + Bedrock</span>
       <h1>Your own island <em>in the sky.</em></h1>
       <p class="lede">Buy a floating island, grow it biome by biome, and jump off the edge to fall back to the world below. Just don't stay too long: down there, the corruption is spreading.</p>
       <div class="ctas">
-        <a class="btn btn-primary" href="https://github.com/GreyHammond/SkyLands/raw/main/docs/skylands.jar">Download skylands.jar <span style="font-weight:500;opacity:.8">v0.17.0</span></a>
+        <a class="btn btn-primary" href="https://github.com/GreyHammond/SkyLands/raw/main/docs/skylands.jar">Download skylands.jar <span style="font-weight:500;opacity:.8">v0.18.0</span></a>
         <a class="btn btn-ghost" href="https://github.com/GreyHammond/SkyLands">View on GitHub</a>
       </div>
-      <p class="req">Paper 26.3 · Java 25 · optional: Vault, Geyser + Floodgate, LuckPerms</p>
+      <p class="req">Paper 26.3 · Java 25 · optional: Geyser + Floodgate, LuckPerms</p>
     </div>
     <div class="scene" aria-hidden="false">
       <div class="cloud" style="top:40px; animation-duration:38s; animation-delay:-6s"></div>
@@ -379,8 +379,8 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
       </div>
       <div class="card">
         <div class="icon" aria-hidden="true"><i></i><i style="background:#5ee0e6"></i><i style="background:#5ee0e6"></i><i></i><i style="background:#5ee0e6"></i><i style="background:#b9f6f8"></i><i style="background:#5ee0e6"></i><i style="background:#2bb5bd"></i><i style="background:#5ee0e6"></i><i style="background:#5ee0e6"></i><i style="background:#2bb5bd"></i><i style="background:#2bb5bd"></i><i></i><i style="background:#2bb5bd"></i><i style="background:#2bb5bd"></i><i></i></div>
-        <h3>Money or items</h3>
-        <p>Use any Vault economy, or price islands in diamonds or a custom token. Your choice in one config line.</p>
+        <h3>Its own currency</h3>
+        <p>Islands grow on Essence, purified from what players bring back from the corruption. No Vault or economy plugin needed.</p>
       </div>
     </div>
   </div>
@@ -429,7 +429,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <div class="grid g3">
       <div class="card"><h3>Void Shards</h3><p>Mining in corrupted land can drop shards: about 1% of blocks when drying, 4% in wasteland, 10% when barren, more from blackstone and blocks touching bedrock. Placed blocks never count.</p></div>
       <div class="card"><h3>Corrupted mobs</h3><p>Monsters on corrupted land may spawn <strong>Corrupted</strong>: purple names, up to +75% health and +30% damage. They drop Corrupted Remnants, sometimes shards, and corrupted brewing ingredients.</p></div>
-      <div class="card"><h3>Daily contracts</h3><p>Three tasks a day: deliver items, hunt, mine, explore or hand in shards. Rewards are money and shards, ×1.5 in the last day before a recycle.</p></div>
+      <div class="card"><h3>Daily contracts</h3><p>Three tasks a day: deliver items, hunt, mine, explore or hand in shards. Rewards are Essence and shards, ×1.5 in the last day before a recycle.</p></div>
       <div class="card"><h3>Visitor tips</h3><p>Visit someone's island and stay 30 seconds: the owner gets a tip and so do you. Once per island per day, with daily limits and no tips for your own or friends' islands.</p></div>
       <div class="card"><h3>The Purifier</h3><p>Purify Void Shards (1 Essence each) and Corrupted Remnants (4 each). Essence buys new land (8 a piece), biome unlocks (40 to 320) and bigger islands (Medium: 120). Your first island is free.</p></div>
       <div class="card"><h3>Recipes in the menu</h3><p>The Corruption menu has a Recipes page with every smithing and brewing step, and the recipes appear in the recipe book. Selling, handing in and claiming keep the menu open.</p></div>
@@ -517,7 +517,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
   <div class="wrap">
     <div class="eyebrow pixel">The menu</div>
     <h2>Everything in <code>/skyland</code></h2>
-    <p class="sub">Three buttons at the top. Everything else lives one tap deeper. Anything that costs money asks you to confirm first. Bedrock players see the same screens as native Bedrock forms.</p>
+    <p class="sub">Three buttons at the top. Everything else lives one tap deeper. Anything that costs Essence asks you to confirm first. Bedrock players see the same screens as native Bedrock forms.</p>
     <div class="grid g2" style="align-items:start">
       <div>
         <div class="chest" role="img" aria-label="Diagram of the top-level Skyland chest menu with three main buttons and a hotbar shortcuts toggle">
@@ -760,7 +760,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
         <thead><tr><th>Command</th><th>What it does</th><th>Permission</th></tr></thead>
         <tbody>
           <tr><td class="cmd">/skyland</td><td class="desc">Opens the Skyland menu: buy, return, visit, manage, protect and delete. Aliases <code>/sl</code>, <code>/realm</code>.</td><td><span class="pill">skyrealms.use</span></td></tr>
-          <tr><td class="cmd">/ihome</td><td class="desc">Fly to your island home on a gust of wind. Until you set one, you land on safe solid ground near the centre. Won't clash with Essentials' <code>/home</code>.</td><td><span class="pill">skyrealms.use</span></td></tr>
+          <tr><td class="cmd">/ihome</td><td class="desc">Fly to your island home on a gust of wind. Until you set one, you land on safe solid ground near the centre. Won't clash with other plugins' <code>/home</code>.</td><td><span class="pill">skyrealms.use</span></td></tr>
           <tr><td class="cmd">/ihome set|reset</td><td class="desc">Set your home where you're standing, or clear it.</td><td><span class="pill">skyrealms.use</span></td></tr>
           <tr><td class="cmd">/skyland journal</td><td class="desc">Open the journal: story, current tutorial step, unlocked pages. <code>skip</code> and <code>restart</code> too.</td><td><span class="pill">skyrealms.use</span></td></tr>
           <tr><td class="cmd">/skyland claim</td><td class="desc">Claim your free first island.</td><td><span class="pill">skyrealms.use</span></td></tr>
@@ -824,7 +824,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <h2>Up and running in minutes</h2>
     <p class="sub">For server owners running Paper 26.3 on Java 25.</p>
     <div class="grid g2 steps">
-      <div class="card step"><h3>Install</h3><p>Drop <a href="https://github.com/GreyHammond/SkyLands/raw/main/docs/skylands.jar"><code>skylands.jar</code></a> into <code>plugins/</code>. Optional: Vault plus an economy plugin (without one, islands are free, which is handy for testing), Floodgate for native Bedrock forms, LuckPerms for permissions.</p></div>
+      <div class="card step"><h3>Install</h3><p>Drop <a href="https://github.com/GreyHammond/SkyLands/raw/main/docs/skylands.jar"><code>skylands.jar</code></a> into <code>plugins/</code>. No economy plugin needed. Optional: Floodgate for native Bedrock forms, LuckPerms for permissions.</p></div>
       <div class="card step"><h3>Start the server</h3><p>An empty sky world, <code>skyrealms_sky</code>, is created automatically. Multiverse is optional.</p></div>
       <div class="card step"><h3>No terrain setup</h3><p>Islands are generated by the plugin in 19 biomes. Optional: add custom biomes with <code>/skylandadmin capture &lt;name&gt; medium</code>.</p></div>
       <div class="card step"><h3>Let players in</h3><p>Players type <code>/skyland</code> and buy their first island.</p></div>
@@ -848,6 +848,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <div class="eyebrow pixel">What's new</div>
     <h2>Changelog</h2>
     <div class="changelog">
+      <div><b>0.18.0</b><span>Essence only: money, Vault and item currency are gone. Every price and reward is in Essence, and SkyLands needs no economy plugin.</span></div>
       <div><b>0.17.0</b><span><strong>Essence</strong>: islands are paid in purified Essence instead of money. The Void Exchange becomes The Purifier. Tutorial, contracts, tips and bounties pay Essence, and growing an island is far cheaper in practice.</span></div>
       <div><b>0.16.0</b><span>Season Two start: a guided 12-step tutorial and journal with rewards, a free first island, your island as your respawn point, falls that land on dry ground, and the menu book and feather on join.</span></div>
       <div><b>0.15.0</b><span>Warded armor is smithed like an armor trim, with an Echo Shard for Ward III. Cleansing Tonics are brewed from corrupted ingredients that only corrupted mobs drop, including a splash version. New Recipes page in The Corruption menu, on Java and Bedrock.</span></div>

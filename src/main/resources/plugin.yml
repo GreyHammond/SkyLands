@@ -4,7 +4,7 @@ main: dev.skyrealms.SkyRealmsPlugin
 api-version: '26.3'
 description: SkyLands by Hammond Digital Studios. Buyable floating islands that grow outward, with a fall-to-overworld transit.
 authors: [Hammond Digital Studios]
-softdepend: [Vault, Multiverse-Core, LuckPerms, floodgate]
+softdepend: [Multiverse-Core, LuckPerms, floodgate]
 permissions:
   skyrealms.use:
     description: Use /skyland (buy, manage, visit and return to islands).

@@ -67,7 +67,7 @@ public final class CleansingTonic implements Listener, DecayResist {
         this.shop = c.getBoolean("shop", false);
         this.splashRadius = Math.max(1, Math.min(16, c.getDouble("splash-radius", 4)));
         int[] defSeconds = {0, 60, 120, 180};
-        double[] defPrice = {0, 500, 1500, 4000};
+        double[] defPrice = {0, 4, 12, 32};
         int[] defLevel = {0, 1, 10, 25};
         for (int lv = 1; lv <= MAX_LEVEL; lv++) {
             String p = "levels." + lv + ".";

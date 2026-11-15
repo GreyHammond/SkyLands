@@ -30,10 +30,10 @@ public final class RealmService {
 
     // ---- prices ---------------------------------------------------------------
 
-    public double growPrice() { return plugin.getConfig().getDouble("prices.grow-piece", 1000); }
+    public double growPrice() { return plugin.getConfig().getDouble("prices.grow-piece", 8); }
 
     public double unlockPrice(String biome) {
-        return plugin.getConfig().getDouble("prices.biome-unlock." + biome, plugin.getConfig().getDouble("prices.biome-unlock-default", 10000));
+        return plugin.getConfig().getDouble("prices.biome-unlock." + biome, plugin.getConfig().getDouble("prices.biome-unlock-default", 80));
     }
 
     public double upgradeCost(Island i) {
@@ -41,24 +41,12 @@ public final class RealmService {
         return next == null ? 0 : Math.max(0, next.price - i.tier.price);
     }
 
-    public String money(double amount) { return plugin.money().format(amount); }
+    /** An island price as shown to players: "120 Essence". */
+    public String cost(double price) { return dev.skyrealms.economy.Essence.format(price); }
 
-    // ---- island prices: Essence (default) or money -------------------------------------
+    private boolean pay(Player p, double price) { return plugin.essence().charge(p, price); }
 
-    private boolean essenceIslands() { return plugin.essence() != null && plugin.essence().islands; }
-
-    /** An island price for display: "120 Essence", or money when Essence is off. */
-    public String cost(double moneyPrice) {
-        return essenceIslands() ? dev.skyrealms.economy.Essence.format(plugin.essence().fromMoney(moneyPrice)) : money(moneyPrice);
-    }
-
-    private boolean pay(Player p, double moneyPrice) {
-        return essenceIslands() ? plugin.essence().charge(p, moneyPrice) : plugin.money().charge(p, moneyPrice);
-    }
-
-    private void repay(Player p, double moneyPrice) {
-        if (essenceIslands()) plugin.essence().refund(p, moneyPrice); else plugin.money().refund(p, moneyPrice);
-    }
+    private void repay(Player p, double price) { plugin.essence().give(p, price); }
 
     // ---- buying & growing -------------------------------------------------------
 
@@ -98,7 +86,6 @@ public final class RealmService {
         }
         double price = priceFor(p.getUniqueId(), tier);
         boolean freeClaim = price <= 0 && tier.price > 0;
-        if (price > 0 && !essenceIslands() && !plugin.money().usable()) { Msg.error(p, "The economy isn't set up yet."); return false; }
         if (!pay(p, price)) { Msg.error(p, "You need <white>" + cost(price) + "</white> for a " + tier.pretty() + " island."); return false; }
         if (freeClaim) {
             var prof = plugin.profiles().get(p.getUniqueId());
@@ -270,7 +257,7 @@ public final class RealmService {
         return true;
     }
 
-    public double restylePrice() { return plugin.getConfig().getDouble("prices.restyle-underside", 2500); }
+    public double restylePrice() { return plugin.getConfig().getDouble("prices.restyle-underside", 20); }
 
     /** Convert the rock under the island's existing land to {@code style}, and use it for new land too. */
     public boolean restyleUnderside(Player p, dev.skyrealms.terrain.UndersideStyle style) {

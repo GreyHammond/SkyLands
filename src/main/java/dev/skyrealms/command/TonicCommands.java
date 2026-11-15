@@ -72,14 +72,13 @@ public final class TonicCommands {
                 return 0;
             }
         }
-        if (!plugin.money().usable()) { Msg.error(p, "Purchases are unavailable: no economy is installed."); return 0; }
-        if (!plugin.money().charge(p, tier.price())) {
-            Msg.error(p, "You can't afford that. It costs <white>" + plugin.money().format(tier.price()) + "</white>.");
+        if (!plugin.essence().charge(p, tier.price())) {
+            Msg.error(p, "You can't afford that. It costs <white>" + dev.skyrealms.economy.Essence.format(tier.price()) + "</white>.");
             return 0;
         }
         hand(p, t.create(level, 1));
         Msg.send(p, "Bought a <aqua>Cleansing Tonic " + CleansingTonic.numeral(level) + "</aqua> for <white>"
-                + plugin.money().format(tier.price()) + "</white>.");
+                + dev.skyrealms.economy.Essence.format(tier.price()) + "</white>.");
         return Command.SINGLE_SUCCESS;
     }
 

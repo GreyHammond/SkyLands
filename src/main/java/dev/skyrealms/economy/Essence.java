@@ -11,6 +11,7 @@
 package dev.skyrealms.economy;
 
 import dev.skyrealms.SkyRealmsPlugin;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.entity.Player;
@@ -19,24 +20,18 @@ import org.bukkit.inventory.ItemStack;
 import java.util.UUID;
 
 /**
- * Purified Essence: corruption brought back from the world below and purified at the Void
- * Exchange. Islands grow on it. Every island price in config is written in money; with Essence on,
- * it's converted at {@code money-per-essence} and rounded up.
+ * Purified Essence, SkyLands' only currency: corruption brought back from the world below and
+ * purified at the Purifier. Islands grow on it; rewards pay it. Stored per player in profiles.yml.
  */
 public final class Essence {
     private final SkyRealmsPlugin plugin;
-    public final boolean islands;
-    private final double moneyPerEssence;
     private final int perShard, perRemnant;
 
     public Essence(SkyRealmsPlugin plugin, ConfigurationSection cfg) {
         this.plugin = plugin;
         if (cfg == null) cfg = new MemoryConfiguration();
-        islands = cfg.getBoolean("islands", true);
-        moneyPerEssence = Math.max(1, cfg.getDouble("money-per-essence", 125));
         perShard = Math.max(0, cfg.getInt("purify.shard", 1));
         perRemnant = Math.max(0, cfg.getInt("purify.remnant", 4));
-        rewardRate = Math.max(1, cfg.getDouble("money-per-reward-essence", 25));
     }
 
     public long balance(UUID id) { return plugin.profiles().get(id).essence; }
@@ -47,37 +42,21 @@ public final class Essence {
         plugin.profiles().dirty();
     }
 
-    /** A money price from config, as Essence (rounded up; 0 stays 0). */
-    public long fromMoney(double money) { return money <= 0 ? 0 : (long) Math.ceil(money / moneyPerEssence); }
+    public static long round(double amount) { return amount <= 0 ? 0 : Math.round(Math.ceil(amount - 1e-9)); }
 
-    public static String format(long amount) { return String.format("%,d Essence", amount); }
+    public static String format(double amount) { return String.format("%,d Essence", round(amount)); }
 
-    /** Takes the Essence equal to a money price. False (nothing taken) if the player has too little. */
-    public boolean charge(Player p, double moneyPrice) {
-        long cost = fromMoney(moneyPrice);
+    /** Takes this much Essence. False (nothing taken) if the player has too little. */
+    public boolean charge(Player p, double amount) {
+        long cost = round(amount);
         if (cost <= 0) return true;
         if (balance(p.getUniqueId()) < cost) return false;
         add(p.getUniqueId(), -cost);
         return true;
     }
 
-    public void refund(Player p, double moneyPrice) { long n = fromMoney(moneyPrice); if (n > 0) add(p.getUniqueId(), n); }
-
-    /** Rewards (tutorial, contracts, tips, bounties) are written in money; with Essence on they pay Essence at this rate. */
-    private double rewardRate = 25;
-
-    public void rewardRate(double r) { rewardRate = Math.max(1, r); }
-
-    private long rewardEssence(double money) { return money <= 0 ? 0 : Math.max(1, Math.round(money / rewardRate)); }
-
-    /** Pays a reward: Essence when islands run on Essence, otherwise money. Works for offline players. */
-    public void payReward(org.bukkit.OfflinePlayer p, double money) {
-        if (money <= 0) return;
-        if (islands) add(p.getUniqueId(), rewardEssence(money)); else plugin.money().refund(p, money);
-    }
-
-    /** How a reward reads: "8 Essence", or money when Essence is off. */
-    public String rewardLabel(double money) { return islands ? format(rewardEssence(money)) : plugin.money().format(money); }
+    /** Gives Essence back or pays a reward. Works for offline players. */
+    public void give(OfflinePlayer p, double amount) { long n = round(amount); if (n > 0) add(p.getUniqueId(), n); }
 
     public int perShard() { return perShard; }
     public int perRemnant() { return perRemnant; }

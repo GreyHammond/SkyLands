@@ -21,7 +21,6 @@ import dev.skyrealms.menu.Menus;
 import dev.skyrealms.piece.PasteQueue;
 import dev.skyrealms.piece.PieceLibrary;
 import dev.skyrealms.transit.FallTransit;
-import dev.skyrealms.util.Money;
 import dev.skyrealms.world.SkyWorld;
 import dev.skyrealms.world.VoidGenerator;
 import org.bukkit.Bukkit;
@@ -37,7 +36,6 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     private IslandManager islands;
     private PieceLibrary library;
     private IslandGrower grower;
-    private Money money;
     private int baseY;
     private dev.skyrealms.terrain.TerrainGenerator terrain;
     private dev.skyrealms.terrain.UndersideRestyler restyler;
@@ -138,13 +136,6 @@ public final class SkyRealmsPlugin extends JavaPlugin {
         if (!new File(getDataFolder(), "levels.yml").exists()) saveResource("levels.yml", false);
         xp = new dev.skyrealms.level.XpService(this, new dev.skyrealms.level.Levels(new File(getDataFolder(), "levels.yml")));
 
-        // Vault registers its economy late, so look it up once everything has enabled.
-        money = new Money(cfg.getConfigurationSection("economy"));
-        Bukkit.getScheduler().runTask(this, () -> {
-            money = new Money(cfg.getConfigurationSection("economy"));
-            getLogger().info(money.describe());
-        });
-
         // Per-player state (first join, free island, tutorial, journal) and the milestones that drive the tutorial.
         profiles = new dev.skyrealms.player.PlayerProfiles(new File(getDataFolder(), "profiles.yml"), getLogger());
         milestones = new dev.skyrealms.player.Milestones(this);
@@ -156,7 +147,7 @@ public final class SkyRealmsPlugin extends JavaPlugin {
 
         // Void items and the exchange that buys them (shared by harvest, mob bounties and contracts).
         dev.skyrealms.economy.VoidItems.init(this);
-        exchange = new dev.skyrealms.economy.VoidExchange(this, cfg.getConfigurationSection("exchange"));
+        exchange = new dev.skyrealms.economy.VoidExchange();
         essence = new dev.skyrealms.economy.Essence(this, cfg.getConfigurationSection("essence"));
         getServer().getPluginManager().registerEvents(exchange, this);
         // Visitor tips: visiting an island pays the owner and the visitor (daily caps).
@@ -267,7 +258,6 @@ public final class SkyRealmsPlugin extends JavaPlugin {
     public IslandManager islands() { return islands; }
     public PieceLibrary library() { return library; }
     public IslandGrower grower() { return grower; }
-    public Money money() { return money; }
     public int baseY() { return baseY; }
     public dev.skyrealms.terrain.BiomeCatalog biomes() { return biomes; }
     public dev.skyrealms.terrain.TerrainGenerator terrain() { return terrain; }

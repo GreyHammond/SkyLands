@@ -53,8 +53,8 @@ public final class VisitorTips implements Listener {
         this.plugin = plugin;
         if (cfg == null) cfg = new MemoryConfiguration();
         enabled = cfg.getBoolean("enabled", true);
-        ownerTip = Math.max(0, cfg.getDouble("owner-tip", 50));
-        visitorTip = Math.max(0, cfg.getDouble("visitor-tip", 20));
+        ownerTip = Math.max(0, cfg.getDouble("owner-tip", 2));
+        visitorTip = Math.max(0, cfg.getDouble("visitor-tip", 1));
         perLevel = Math.max(0, cfg.getDouble("per-island-level", 0.02));
         maxMultiplier = Math.max(1, cfg.getDouble("max-multiplier", 2.0));
         staySeconds = Math.max(0, cfg.getInt("min-stay-seconds", 30));
@@ -113,16 +113,16 @@ public final class VisitorTips implements Listener {
 
         var ownerPlayer = Bukkit.getOfflinePlayer(island.owner);
         if (toOwner > 0) {
-            plugin.essence().payReward(ownerPlayer, toOwner);
+            plugin.essence().give(ownerPlayer, toOwner);
             Player online = ownerPlayer.getPlayer();
             if (online != null) {
-                Msg.send(online, "<white>" + visitor.getName() + "</white> visited your island: <aqua>+" + plugin.essence().rewardLabel(toOwner));
+                Msg.send(online, "<white>" + visitor.getName() + "</white> visited your island: <aqua>+" + dev.skyrealms.economy.Essence.format(toOwner));
                 online.playSound(online.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.4f);
             }
         }
         if (toVisitor > 0) {
-            plugin.essence().payReward(visitor, toVisitor);
-            Msg.send(visitor, "Thanks for visiting: <aqua>+" + plugin.essence().rewardLabel(toVisitor));
+            plugin.essence().give(visitor, toVisitor);
+            Msg.send(visitor, "Thanks for visiting: <aqua>+" + dev.skyrealms.economy.Essence.format(toVisitor));
             visitor.playSound(visitor.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.4f);
         }
     }

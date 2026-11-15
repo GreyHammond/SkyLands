@@ -122,19 +122,18 @@ public final class WardCommands {
             }
         }
         double price = g.price(next);
-        if (!plugin.money().usable()) { Msg.error(p, "Purchases are unavailable: no economy is installed."); return 0; }
-        if (!plugin.money().charge(p, price)) {
-            Msg.error(p, "Warded " + WardedGear.roman(next) + " costs <white>" + plugin.money().format(price) + "</white>.");
+        if (!plugin.essence().charge(p, price)) {
+            Msg.error(p, "Warded " + WardedGear.roman(next) + " costs <white>" + dev.skyrealms.economy.Essence.format(price) + "</white>.");
             return 0;
         }
         ItemStack again = p.getInventory().getItemInMainHand();
         if (!again.isSimilar(hand) || again.getAmount() != 1) {
-            plugin.money().refund(p, price);   // item-currency payment could have shifted the inventory
+            plugin.essence().give(p, price);
             Msg.error(p, "Keep the armor in your hand while upgrading. You were refunded.");
             return 0;
         }
         g.setLevel(again, next);
-        Msg.send(p, "Upgraded to <white>Warded " + WardedGear.roman(next) + "</white> for " + plugin.money().format(price) + ".");
+        Msg.send(p, "Upgraded to <white>Warded " + WardedGear.roman(next) + "</white> for " + dev.skyrealms.economy.Essence.format(price) + ".");
         return Command.SINGLE_SUCCESS;
     }
 }

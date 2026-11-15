@@ -48,7 +48,7 @@ public final class WardedGear implements DecayResist {
         ConfigurationSection c = section != null ? section : new MemoryConfiguration();
         this.key = new NamespacedKey(plugin, "warded");
         double[] defReduce = {0, 0.05, 0.10, 0.20};
-        double[] defPrice = {0, 2500, 7500, 20000};
+        double[] defPrice = {0, 20, 60, 160};
         int[] defLevel = {0, 5, 15, 30};
         for (int lv = 1; lv <= MAX_LEVEL; lv++) {
             perPiece[lv] = clamp(c.getDouble("reduction." + lv, defReduce[lv]), 0, 1);

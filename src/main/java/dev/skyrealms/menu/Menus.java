@@ -27,7 +27,7 @@ import java.util.function.Consumer;
 
 import static dev.skyrealms.menu.Menu.*;
 
-/** Every chest screen. Anything that costs money goes through a confirm screen first. */
+/** Every chest screen. Anything that costs Essence goes through a confirm screen first. */
 public final class Menus {
     private static final Material[] TIER_ICONS = {
             Material.OAK_SAPLING, Material.GRASS_BLOCK, Material.OAK_LOG, Material.MOSS_BLOCK, Material.FILLED_MAP};

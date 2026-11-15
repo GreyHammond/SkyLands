@@ -44,7 +44,7 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Daily contracts: each player gets a few tasks a day that pay out money (and sometimes Void Shards).
+ * Daily contracts: each player gets a few tasks a day that pay out Essence (and sometimes Void Shards).
  * Progress lives in plugins/SkyRealms/contracts.yml.
  */
 public final class ContractService implements Listener {
@@ -172,10 +172,10 @@ public final class ContractService implements Listener {
         c.claimed = true;
         plugin.milestones().trigger(p, dev.skyrealms.player.Milestone.CLAIMED_CONTRACT);
         dirty = true;
-        plugin.essence().payReward(p, pay);
+        plugin.essence().give(p, pay);
         if (c.shards > 0) VoidCommands.give(p, VoidItems.Kind.SHARD, c.shards);
         p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.6f, 1.2f);
-        return "<green>Contract complete! <aqua>+" + plugin.essence().rewardLabel(pay) + "</aqua>"
+        return "<green>Contract complete! <aqua>+" + dev.skyrealms.economy.Essence.format(pay) + "</aqua>"
                 + (c.shards > 0 ? " <dark_purple>+" + c.shards + " Void Shards</dark_purple>" : "");
     }
 

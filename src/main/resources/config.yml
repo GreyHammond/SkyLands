@@ -33,39 +33,40 @@ terrain:
   blob-radius-max: 18
 
 # footprint  = width/length of the buildable square, in blocks
-# price      = cost to buy at this tier (upgrades cost the difference)
+# price      = Essence to buy at this tier (upgrades cost the difference)
 # start-pieces = how many biome pieces you get when buying outright (upgrading adds none:
 #                upgrades only raise the border and max-pieces)
 # max-pieces = how far the island can grow at this tier
 tiers:
-  SMALL:       { footprint: 32,  price: 5000,    start-pieces: 1,  max-pieces: 3 }
-  MEDIUM:      { footprint: 64,  price: 20000,   start-pieces: 3,  max-pieces: 10 }
-  LARGE:       { footprint: 128, price: 75000,   start-pieces: 8,  max-pieces: 30 }
-  EXTRA_LARGE: { footprint: 256, price: 250000,  start-pieces: 20, max-pieces: 90 }
-  CONTINENTAL: { footprint: 512, price: 1000000, start-pieces: 50, max-pieces: 300 }
+  SMALL:       { footprint: 32,  price: 40,    start-pieces: 1,  max-pieces: 3 }
+  MEDIUM:      { footprint: 64,  price: 160,   start-pieces: 3,  max-pieces: 10 }
+  LARGE:       { footprint: 128, price: 600,   start-pieces: 8,  max-pieces: 30 }
+  EXTRA_LARGE: { footprint: 256, price: 2000,  start-pieces: 20, max-pieces: 90 }
+  CONTINENTAL: { footprint: 512, price: 8000,  start-pieces: 50, max-pieces: 300 }
 
+# Every price is in Essence: Void Shards and Corrupted Remnants purified at the Purifier.
 prices:
   # Cost of attaching one extra piece of a biome you already own.
-  grow-piece: 1000
+  grow-piece: 8
   # Cost of unlocking a new biome. Unlocking adds no land: players then use Grow Land.
-  biome-unlock-default: 10000
+  biome-unlock-default: 80
   # Cost of converting the rock under an island's existing land to another underside style.
-  restyle-underside: 2500
+  restyle-underside: 20
   # Percent of the island's tier price given back when it's deleted (0 = nothing).
   delete-refund-percent: 0
   # Per-biome unlock prices (built-in ids, or custom captured folder names).
   biome-unlock:
-    beach: 5000
-    shallow_ocean: 8000
-    cherry_grove: 25000
-    deep_ocean: 20000
-    badlands: 20000
-    snowy: 15000
-    mushroom: 25000
-    lush_caverns: 25000
-    volcanic: 40000
-    crystal: 40000
-    ancient: 40000
+    beach: 40
+    shallow_ocean: 64
+    cherry_grove: 200
+    deep_ocean: 160
+    badlands: 160
+    snowy: 120
+    mushroom: 200
+    lush_caverns: 200
+    volcanic: 320
+    crystal: 320
+    ancient: 320
 
 # Sphere sizes for /skylandadmin capture and preview (radius in blocks).
 # A Small island is 32 wide, so its first piece must be "medium" or smaller.
@@ -102,21 +103,6 @@ hotbar:
   # Hotbar slots, 1-9.
   menu-slot: 9
   home-slot: 8
-
-# How players pay: "vault" (money from any Vault economy plugin) or "item" (a physical item).
-economy:
-  currency: vault
-  # Vault mode: without an economy plugin everything is free, unless this is true.
-  require-vault: false
-  # Item mode: prices above are converted to items. With value 1000, a 5,000 price costs 5 items.
-  item:
-    material: DIAMOND
-    value: 1000
-    # Optional: only accept items with this exact display name (for custom tokens).
-    name: ""
-    # Optional: how the currency is shown in menus. Defaults to the item's name.
-    singular: ""
-    plural: ""
 
 # Bedrock players (via Geyser + Floodgate) get native Bedrock forms instead of chest menus.
 # Needs Floodgate installed; without it everyone uses chest menus.
@@ -249,15 +235,15 @@ tonic:
   levels:
     1:
       seconds: 60          # capped at 180
-      price: 500           # only used when shop: true
+      price: 4             # Essence; only used when shop: true
       required-level: 1    # island level needed to buy (1 = anyone)
     2:
       seconds: 120
-      price: 1500
+      price: 12
       required-level: 10
     3:
       seconds: 180
-      price: 4000
+      price: 32
       required-level: 25
 # Warded gear: helmet, chestplate, leggings and boots can carry a Warded level (I-III) that cuts
 # the decay its wearer causes. Players upgrade the piece in their hand with /skyland ward upgrade.
@@ -269,11 +255,11 @@ ward:
     3: 0.20
   # Most a full set can remove, whatever the pieces add up to.
   max-reduction: 0.80
-  # Cost of upgrading a piece TO each level (Vault money, or item currency).
+  # Essence to upgrade a piece TO each level (only with shop: true).
   price:
-    1: 2500
-    2: 7500
-    3: 20000
+    1: 20
+    2: 60
+    3: 160
   # Island level needed to buy each level (0 = no requirement).
   required-island-level:
     1: 5
@@ -291,25 +277,10 @@ ward:
 
 # Essence: corruption purified at the Purifier (/skyland > The Corruption). Islands grow on it.
 essence:
-  # Pay for islands (buying, upgrading, growing land, unlocking biomes, restyling) in Essence
-  # instead of money. Island prices in this file stay written in money and are converted.
-  islands: true
-  # How much money each Essence is worth for that conversion (rounded up).
-  # 125: Small 40, Medium 160 (upgrade 120), Large 600, a piece of land 8, most biomes 40-320.
-  money-per-essence: 125
-  # Rewards (tutorial, contracts, visitor tips, mob bounties) are written in money and paid as
-  # Essence at this rate: 25 means a 100 reward pays 4 Essence.
-  money-per-reward-essence: 25
   # Essence gained by purifying one of each at the Purifier.
   purify:
     shard: 1
     remnant: 4
-
-# Old sell prices for void items. Unused while essence.islands is on (the Purifier only purifies).
-exchange:
-  prices:
-    shard: 25     # Void Shard
-    remnant: 75   # Corrupted Remnant
 
 # Corruption harvest: breaking blocks in corrupted land can drop Void Shards.
 # Nothing drops below the first decay stage; chances rise with the chunk's corruption.
@@ -339,8 +310,8 @@ corrupted-mobs:
   # Chance a natural hostile spawn is corrupted, from the start of stage 1 up to 100 corruption.
   chance-at-stage-1: 0.15
   chance-at-100: 0.6
-  # Extra coins paid straight to the killer, times the stage (0 = items only).
-  coin-bounty: 0
+  # Extra Essence paid straight to the killer, times the stage (0 = items only).
+  essence-bounty: 0
   particles: true
   # Movement speed bonus for stage 3 mobs (0.15 = 15% faster).
   speed-bonus-stage-3: 0.15
@@ -373,8 +344,9 @@ corrupted-mobs:
 # the visitor, once the visitor has stayed on the island a little while.
 tips:
   enabled: true
-  owner-tip: 50
-  visitor-tip: 20
+  # Essence paid to the island owner and to the visitor.
+  owner-tip: 2
+  visitor-tip: 1
   # Tips grow by this much per island level (0.02 = +2% per level), up to max-multiplier.
   per-island-level: 0.02
   max-multiplier: 2.0
@@ -383,7 +355,7 @@ tips:
   # Each visitor/island pair tips once per day. These cap the number of tips per day.
   max-tips-per-visitor: 5
   max-tips-per-owner: 20
-# Daily contracts: a few jobs per player per day, paid in money and sometimes Void Shards.
+# Daily contracts: a few jobs per player per day, paid in Essence and sometimes Void Shards.
 # Open them from the Corruption menu or /skyland contracts. Works for Java and Bedrock players.
 contracts:
   enabled: true
@@ -397,15 +369,15 @@ contracts:
   #   deliver (needs item), kill, kill_corrupted, mine, explore, shards
   # amount, reward and shards are [min, max]. Higher weight = picked more often.
   pool:
-    copper:    { type: deliver, item: COPPER_INGOT, amount: [32, 96], reward: [150, 400], shards: [0, 0], weight: 10 }
-    iron:      { type: deliver, item: IRON_INGOT,   amount: [16, 48], reward: [200, 500], shards: [0, 2], weight: 10 }
-    logs:      { type: deliver, item: OAK_LOG,      amount: [32, 64], reward: [100, 250], shards: [0, 0], weight: 8 }
-    coal:      { type: deliver, item: COAL,         amount: [32, 64], reward: [100, 250], shards: [0, 0], weight: 8 }
-    hunt:      { type: kill,           amount: [15, 30],   reward: [200, 450], shards: [0, 2], weight: 10 }
-    corrupted: { type: kill_corrupted, amount: [5, 12],    reward: [400, 800], shards: [2, 5], weight: 6 }
-    mine:      { type: mine,           amount: [200, 500], reward: [150, 400], shards: [0, 1], weight: 8 }
-    explore:   { type: explore,        amount: [8, 20],    reward: [150, 350], shards: [0, 1], weight: 8 }
-    shards:    { type: shards,         amount: [10, 30],   reward: [300, 700], shards: [0, 0], weight: 6 }
+    copper:    { type: deliver, item: COPPER_INGOT, amount: [32, 96], reward: [6, 16], shards: [0, 0], weight: 10 }
+    iron:      { type: deliver, item: IRON_INGOT,   amount: [16, 48], reward: [8, 20], shards: [0, 2], weight: 10 }
+    logs:      { type: deliver, item: OAK_LOG,      amount: [32, 64], reward: [4, 10], shards: [0, 0], weight: 8 }
+    coal:      { type: deliver, item: COAL,         amount: [32, 64], reward: [4, 10], shards: [0, 0], weight: 8 }
+    hunt:      { type: kill,           amount: [15, 30],   reward: [8, 18], shards: [0, 2], weight: 10 }
+    corrupted: { type: kill_corrupted, amount: [5, 12],    reward: [16, 32], shards: [2, 5], weight: 6 }
+    mine:      { type: mine,           amount: [200, 500], reward: [6, 16], shards: [0, 1], weight: 8 }
+    explore:   { type: explore,        amount: [8, 20],    reward: [6, 14], shards: [0, 1], weight: 8 }
+    shards:    { type: shards,         amount: [10, 30],   reward: [12, 28], shards: [0, 0], weight: 6 }
 
 # A player's very first Small island is free. Deleting it and buying again costs the normal price.
 first-island:
@@ -438,20 +410,19 @@ tutorial:
   # Step order by journal page id. Leave out a step to drop it.
   order: [getting_started, world_below, returning_home, corruption, void_shards, corrupted_creatures,
           earning, corrupted_ingredients, cleansing_tonics, warded_armor, ward_levels, daily_contracts]
-  # Rewards are written in money; with essence.islands on they're paid as Essence at
-  # essence.money-per-reward-essence (25): 100 = 4 Essence, 500 = 20. The whole tutorial pays 96.
+  # Essence paid for each step (once ever). The whole tutorial pays 96.
   rewards:
     getting_started: 0         # the free island is the reward
-    world_below: 100
-    returning_home: 100
-    corruption: 100
-    void_shards: 150
-    corrupted_creatures: 200
-    earning: 100
-    corrupted_ingredients: 150
-    cleansing_tonics: 250
-    warded_armor: 250
-    ward_levels: 300
-    daily_contracts: 200
+    world_below: 4
+    returning_home: 4
+    corruption: 4
+    void_shards: 6
+    corrupted_creatures: 8
+    earning: 4
+    corrupted_ingredients: 6
+    cleansing_tonics: 10
+    warded_armor: 10
+    ward_levels: 12
+    daily_contracts: 8
   # Paid once on finishing the tutorial, which also unlocks The Resets and The Untouched Realms.
-  finish-reward: 500
+  finish-reward: 20

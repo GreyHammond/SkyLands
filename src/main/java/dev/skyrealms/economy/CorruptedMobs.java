@@ -62,7 +62,7 @@ public final class CorruptedMobs implements Listener {
         particles = cfg.getBoolean("particles", true);
         baseChance = clamp(cfg.getDouble("chance-at-stage-1", 0.15));
         maxChance = clamp(cfg.getDouble("chance-at-100", 0.6));
-        bounty = Math.max(0, cfg.getDouble("coin-bounty", 0));
+        bounty = Math.max(0, cfg.getDouble("essence-bounty", 0));
         speed3 = Math.max(0, cfg.getDouble("speed-bonus-stage-3", 0.15));
         for (int s = 1; s <= 3; s++) {
             String p = "stage-" + s + ".";
@@ -159,8 +159,8 @@ public final class CorruptedMobs implements Listener {
         }
         if (bounty > 0) {
             double pay = bounty * stage;
-            plugin.essence().payReward(killer, pay);
-            killer.sendActionBar(Msg.c("<dark_purple>Bounty <aqua>+" + plugin.essence().rewardLabel(pay)));
+            plugin.essence().give(killer, pay);
+            killer.sendActionBar(Msg.c("<dark_purple>Bounty <aqua>+" + dev.skyrealms.economy.Essence.format(pay)));
         }
         mob.getWorld().spawnParticle(Particle.REVERSE_PORTAL, mob.getLocation().add(0, 1, 0), 30, 0.4, 0.6, 0.4, 0.05);
     }
