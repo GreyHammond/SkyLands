@@ -187,8 +187,20 @@ final class DecayConverter {
             b.setBlockData(lv, false);
             return;
         }
-        Material to = wasteland ? BOILED.roll(r) : WATER_BED.roll(r);
-        place(b, to);
+        Block below = b.getRelative(0, -1, 0);
+        if (below.getType() != Material.WATER) {
+            // Shallow: the last of the water becomes ground right here.
+            place(b, wasteland ? BOILED.roll(r) : WATER_BED.roll(r));
+            return;
+        }
+        // Deep water: the sediment settles at the bottom of the column and the surface sinks by one
+        // block, so oceans silt up from the floor instead of growing floating blocks.
+        Block bottom = below;
+        for (int i = 0; i < 96 && bottom.getRelative(0, -1, 0).getType() == Material.WATER; i++) bottom = bottom.getRelative(0, -1, 0);
+        Material sediment;
+        do { sediment = wasteland ? BOILED.roll(r) : WATER_BED.roll(r); } while (sediment == Material.LAVA);
+        bottom.setType(sediment, false);
+        place(b, Material.AIR);
     }
 
     /** Stage 3: the topmost non-bedrock block of the column becomes bedrock, down to bedrock-depth layers. */
