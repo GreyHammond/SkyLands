@@ -173,7 +173,7 @@ final class DecayConverter {
     /**
      * Water boils down instead of vanishing: each hit makes it visibly shallower, with steam.
      * When it's a puddle the water block itself becomes ground, so pools never leave holes:
-     * sand, clay and gravel while drying; magma, sulfur and lava in the wasteland.
+     * sand, clay and gravel while drying; magma and lava in the wasteland.
      */
     private void dryWater(Block b, ThreadLocalRandom r) { boil(b, r, false); }
 
