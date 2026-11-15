@@ -803,7 +803,7 @@ The jar is written to `build/libs/skylands.jar`. The website is a single file at
 
 | Version | Highlights |
 |---|---|
-| **0.18.6** | Deep water boils down from the top while its sediment settles on the bottom, so no more floating sand or gravel. |
+| **0.18.6** | Deep water boils down from the top while its sediment settles on the bottom, so no more floating sand or gravel. In the wasteland, the sinking surface often turns to lava that flows into the gaps, so lava pools spread across lakes and oceans. |
 | **0.18.5** | Corrupted water: stops flowing in corrupted chunks (no refilling, no putting out lava), boils down gradually with steam, and leaves sand and clay (drying) or magma, sulfur and lava (wasteland) where it stood, so no holes. Lava never cools into stone in corrupted land. |
 | **0.18.4** | Lava pools: in wasteland chunks, lava meeting water becomes new lava instead of obsidian or stone, so lava creeps across lakes and oceans; barren water turns to lava and lava is never crusted over. Stops at the corruption's edge (`decay.lava-pools`). |
 | **0.18.3** | Corruption's water and lava now flow: lava pools spread, water fills gaps and drains naturally (lava meeting water makes stone and obsidian). |

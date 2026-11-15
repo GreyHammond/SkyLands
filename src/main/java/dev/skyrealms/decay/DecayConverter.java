@@ -200,7 +200,9 @@ final class DecayConverter {
         Material sediment;
         do { sediment = wasteland ? BOILED.roll(r) : WATER_BED.roll(r); } while (sediment == Material.LAVA);
         bottom.setType(sediment, false);
-        place(b, Material.AIR);
+        // In the wasteland the boiling surface often catches: lava takes its place and flows into
+        // the gaps left by boiling around it, so lava pools spread across lakes and oceans.
+        place(b, wasteland && r.nextInt(100) < 40 ? Material.LAVA : Material.AIR);
     }
 
     /** Stage 3: the topmost non-bedrock block of the column becomes bedrock, down to bedrock-depth layers. */
