@@ -199,32 +199,38 @@ in a pond or on a tree.
 
 ```
 /skyland
-├── Guide                       the journal: story, tutorial steps, unlocked pages
-├── Return to Island            "Buy an Island" if you don't have one
+├── Journal                     the story, tutorial steps, unlocked pages
+├── My Island                   "Buy an Island" if you don't have one
+│   ├── Development
+│   │   ├── Grow Land           add land of any biome you own, and choose where it goes
+│   │   ├── Unlock Biomes       make a new biome available in Grow Land
+│   │   ├── Upgrade             more room: bigger border, higher piece cap
+│   │   └── Underside Style     what hangs under new land
+│   ├── People
+│   │   ├── Friends             add from online players
+│   │   ├── Co-owners           owner only
+│   │   └── Transfer Island     owner only
+│   ├── Island Settings
+│   │   ├── Protection          Visitors · Friends · Island settings
+│   │   ├── World Rules         hostile mobs, peaceful mobs, fire, explosions, PvP, visits
+│   │   └── Set Home Here
+│   ├── Appearance              name, particles, border, islets, themes
+│   └── Level card              XP bar, next unlock, all levels & unlocks
+├── Explore
 │   ├── Return to My Island     a gust of wind carries you home
 │   ├── Friends' Islands        islands where you're a friend
 │   ├── Visit Islands           every island open to visitors
 │   └── Top Islands             ranked by level, then visits
-├── Manage Island
-│   ├── Island Level            XP bar, next unlock, all levels & unlocks
-│   ├── Grow Land               add land of any biome you own, and choose where it goes
-│   ├── Unlock a Biome          make a new biome available in Grow Land
-│   ├── Upgrade                 more room: bigger border, higher piece cap
-│   ├── Underside Style         what hangs under new land
-│   ├── Cosmetics & Themes      name, particles, border, islets, themes
-│   ├── Protection              Visitors · Friends · Island settings
-│   ├── Friends                 add from online players
-│   ├── Set Home Here
-│   ├── Co-owners               owner only
-│   └── Transfer Island         owner only
-└── Delete Island               owner only, two confirmations
-    Leave Island                what co-owners see instead
-    Restore My Island           appears if your island was archived
-    Hotbar Shortcuts            turn the menu book and return feather on or off
-└── The Corruption              corruption where you stand
-    ├── The Purifier            purify shards and remnants into Essence
-    ├── Recipes                 Warded armor and Cleansing Tonics
-    └── Daily Contracts         three tasks a day for Essence and shards
+├── The Corruption              corruption where you stand
+│   ├── The Purifier            purify shards and remnants into Essence
+│   ├── Recipes                 Warded armor and Cleansing Tonics
+│   └── Daily Contracts         three tasks a day for Essence and shards
+└── More
+    ├── Hotbar Shortcuts        turn the menu book and return feather on or off
+    ├── About                   version and credits
+    ├── Delete Island           owner only, two confirmations
+    └── Leave Island            what co-owners see instead
+    Restore My Island           on the main menu if your island was archived
 ```
 
 **Hotbar shortcuts:** an enchanted **Skyland Menu** book (slot 9) and an enchanted **Return to
@@ -301,7 +307,7 @@ New land always touches the island and stays inside your border. Oceans grown ne
 
 ### Underside styles
 
-Choose what hangs under your island in **Manage Island → Underside Style**. Pick:
+Choose what hangs under your island in **My Island → Development → Underside Style**. Pick:
 
 - **New land only** (free): land you grow from now on hangs the new style.
 - **Convert my whole island** (2,500 by default): also reshapes the rock under the land you already
@@ -338,13 +344,13 @@ Islands earn XP and level up from **1 to 100**. Actions by the owner and co-owne
 - **Titles:** 1 Castaway · 10 Settler · 20 Homesteader · 30 Sky Farmer · 40 Cloud Walker ·
   50 Cloud Baron · 60 Wind Rider · 70 Storm Keeper · 80 Sky Lord · 90 High Sovereign ·
   100 Continental.
-- **Shown in** the Manage Island level card, the Levels & Unlocks screen, visit cards,
+- **Shown in** the My Island level card, the Levels & Unlocks screen, visit cards,
   **Top Islands**, and a banner when you walk onto an island.
 - **Level-ups** show a title and fireworks, with a server-wide announcement every 10 levels.
 
 ### Cosmetics and themes
 
-**Manage Island → Cosmetics & Themes.**
+**My Island → Appearance.**
 
 | Cosmetic | Options | Unlocks at |
 |---|---|---|
@@ -374,7 +380,7 @@ parts you haven't unlocked on their own yet.
 | **Friend** | Whatever the Friends settings allow |
 | **Visitor** | Whatever the Visitors settings allow |
 
-Default settings (change them in **Manage Island → Protection**):
+Default settings (change them in **My Island → Island Settings → Protection**):
 
 | Action | Visitors | Friends |
 |---|:---:|:---:|
@@ -476,7 +482,7 @@ Islands grow on **Essence**: corruption you bring back and purify. Take your Voi
 Corrupted Remnants to **The Purifier** (`/skyland` → **The Corruption** → **The Purifier**, or
 `/skyland exchange`): each shard purifies into **1 Essence**, each remnant into **4**.
 
-Your Essence always shows in the top-left of the `/skyland` and Manage Island menus (on Bedrock,
+Your Essence always shows in the top-left of the `/skyland` and My Island menus (on Bedrock,
 at the top of the main and Manage forms), on every purchase confirmation, and with `/skyland essence`.
 
 Essence is SkyLands' only currency: no economy plugin or Vault needed. It pays for everything
@@ -739,7 +745,7 @@ islands sit lower, under the clouds.
 <details>
 <summary><strong>Can I turn off mob spawning?</strong></summary>
 
-Yes, for the whole island: Protection → Island settings → Hostile mob spawning (off by default on new islands) / Peaceful mob
+Yes, for the whole island: My Island → Island Settings → World Rules → Hostile mob spawning (off by default on new islands) / Peaceful mob
 spawning. Spawn eggs, spawners and breeding still work.
 </details>
 
@@ -810,7 +816,7 @@ The jar is written to `build/libs/skylands.jar`. The website is a single file at
 
 | Version | Highlights |
 |---|---|
-| **0.19.0** | **Tutorial rework**: 16 steps. New steps teach island settings (hostile mob spawning is now **off by default** on new islands; existing islands keep their setting), Grow Land, and brewing. The Guide hands over a Brewing Stand with Glass Bottles and a Crying Obsidian so no step needs the Nether. Tutorial and daily contract rewards are about 25% higher so islands grow a little faster. Saved tutorial progress carries over to the new step order. |
+| **0.19.0** | **Menus regrouped**: the main menu is now Journal, My Island, Explore, The Corruption and More; My Island splits into Development, People, Island Settings and Appearance, and Delete/Leave moved under More (Java and Bedrock). **Tutorial rework**: 16 steps. New steps teach island settings (hostile mob spawning is now **off by default** on new islands; existing islands keep their setting), Grow Land, and brewing. The Guide hands over a Brewing Stand with Glass Bottles and a Crying Obsidian so no step needs the Nether. Tutorial and daily contract rewards are about 25% higher so islands grow a little faster. Saved tutorial progress carries over to the new step order. |
 | **0.18.8** | Corrupted oceans and rivers settle into one flat, still lava sea at sea level: dips fill, lumps melt, flowing lava becomes source, no bedrock crust in the sea. |
 | **0.18.7** | Boiled-off wasteland water leaves magma blocks and lava only (no more sulfur). |
 | **0.18.6** | Deep water boils down from the top while its sediment settles on the bottom, so no more floating sand or gravel. In the wasteland, the sinking surface often turns to lava that flows into the gaps, so lava pools spread across lakes and oceans. |

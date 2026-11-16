@@ -121,34 +121,44 @@ public final class FormMenus {
         Island i = own(p);
         List<Btn> b = new ArrayList<>();
         String content;
+        b.add(btn(A + "Journal\n" + DG + "Story, objective and pages", "textures/items/book_written", pl -> plugin.journal().openFor(pl)));
         if (i == null) {
             content = GR + "You don't have an island yet.";
-            b.add(btn(G + "Buy an Island\n" + DG + "Pick a size and a biome", "textures/blocks/grass_side_carried", this::buyTier));
             var archived = plugin.archiver().info(p.getUniqueId());
             if (archived != null) b.add(btn(A + "Restore My Island\n" + DG + archived.daysLeft() + " days left", "textures/items/compass_item",
                     pl -> modal(pl, "Restore island?", W + "Bring back your archived island exactly as you left it, for free?",
                             G + "Restore", R + "Not now", yes -> svc.restoreOwn(yes), this::main)));
-            b.add(btn(A + "Visit Islands", "textures/items/compass_item", pl -> visit(pl)));
-            b.add(btn(O + "Top Islands", "textures/items/gold_ingot", this::topIslands));
+            else b.add(btn(G + "Buy an Island\n" + DG + "Pick a size and a biome", "textures/blocks/grass_side_carried", this::buyTier));
+            b.add(btn(G + "Explore\n" + DG + "Visit other islands", "textures/items/elytra", this::travel));
         } else {
             boolean owner = i.owner.equals(p.getUniqueId());
             content = W + plugin.cosmetics().displayName(i) + "\n" + O + plugin.xp().badge(i)
                     + (owner ? "" : "\n" + A + "You co-own " + name(i.owner) + "'s island");
-            b.add(btn(G + "Return to Island\n" + DG + "Fly home or visit others", "textures/items/elytra", this::travel));
-            b.add(btn(Y + "Manage Island\n" + DG + "Grow, upgrade, protect, style", "textures/items/book_writable", this::manage));
-            if (owner) b.add(btn(R + "Delete Island", "textures/blocks/tnt_side", this::delete));
-            else b.add(btn(R + "Leave Island", "textures/items/door_wood", pl -> modal(pl, "Leave island?",
-                    W + "Stop co-owning " + name(i.owner) + "'s island?", R + "Leave", G + "Stay", svc::leaveIsland, this::main)));
+            b.add(btn(Y + "My Island\n" + DG + "Grow, share, style, protect", "textures/items/book_writable", this::manage));
+            b.add(btn(G + "Explore\n" + DG + "Fly home or visit islands", "textures/items/elytra", this::travel));
         }
+        b.add(btn(P + "The Corruption\n" + DG + "Purify, brew, contracts", "textures/items/echo_shard", this::corruption));
+        b.add(btn(W + "More\n" + DG + "Shortcuts, about, delete", "textures/items/nether_star", this::more));
+        content = A + "Essence: " + W + String.format("%,d", plugin.essence().balance(p.getUniqueId())) + "\n" + content;
+        simple(p, "Skyland", content, b);
+    }
+
+    /** Preferences, about, and the destructive actions, kept away from everyday play. */
+    public void more(Player p) {
+        Island i = own(p);
+        List<Btn> b = new ArrayList<>();
         if (plugin.shortcuts().available()) {
             boolean on = plugin.shortcuts().isOn(p);
             b.add(btn(A + "Hotbar Shortcuts: " + (on ? G + "On" : R + "Off") + "\n" + DG + (on ? "Tap to remove the book & feather" : "Menu book & return feather"),
-                    "textures/items/feather", pl -> { plugin.shortcuts().toggle(pl); main(pl); }));
+                    "textures/items/feather", pl -> { plugin.shortcuts().toggle(pl); more(pl); }));
         }
-        b.add(0, btn(A + "Guide\n" + DG + "Story, objective and journal", "textures/items/book_written", pl -> plugin.journal().openFor(pl)));
-        b.add(btn(P + "The Corruption\n" + DG + "Sell what you bring back", "textures/items/echo_shard", this::corruption));
-        content = A + "Essence: " + W + String.format("%,d", plugin.essence().balance(p.getUniqueId())) + "\n" + content;
-        simple(p, "Skyland", content + "\n\n" + DG + dev.skyrealms.Credits.ATTRIBUTION, b);
+        if (i != null) {
+            if (i.owner.equals(p.getUniqueId())) b.add(btn(R + "Delete Island", "textures/blocks/tnt_side", this::delete));
+            else b.add(btn(R + "Leave Island", "textures/items/door_wood", pl -> modal(pl, "Leave island?",
+                    W + "Stop co-owning " + name(i.owner) + "'s island?", R + "Leave", G + "Stay", svc::leaveIsland, this::more)));
+        }
+        b.add(btn(GR + "Back", null, this::main));
+        simple(p, "More", W + dev.skyrealms.Credits.ATTRIBUTION + "\n" + GR + "Version " + plugin.getPluginMeta().getVersion() + " · GPL-3.0", b);
     }
 
     // =========================================================================================
@@ -274,7 +284,7 @@ public final class FormMenus {
                                 yes -> { if (svc.unlockBiome(yes, biome)) biomes(yes, Mode.UNLOCK, null); }, back -> biomes(back, Mode.UNLOCK, null))));
             }
         }
-        b.add(btn(GR + "Back", null, mode == Mode.BUY ? this::buyTier : this::manage));
+        b.add(btn(GR + "Back", null, mode == Mode.BUY ? this::buyTier : this::development));
         String title = switch (mode) { case BUY -> "Choose your biome"; case GROW -> "Grow which biome?"; case UNLOCK -> "Unlock a biome"; };
         String content = switch (mode) {
             case BUY -> GR + tier.pretty() + " island for " + O + svc.priceLabel(p.getUniqueId(), tier) + GR + ". Your new island starts at level " + level + ".";
@@ -336,30 +346,62 @@ public final class FormMenus {
     public void manage(Player p) {
         Island i = own(p);
         if (i == null) { main(p); return; }
-        boolean owner = i.owner.equals(p.getUniqueId());
         String bar = plugin.xp().progressBar(i).replaceAll("<[^>]+>", "");
-        StringBuilder content = new StringBuilder(W + plugin.cosmetics().displayName(i) + "\n" + O + plugin.xp().badge(i)
+        String content = W + plugin.cosmetics().displayName(i) + "\n" + O + plugin.xp().badge(i)
                 + "\n" + A + "Essence: " + W + String.format("%,d", plugin.essence().balance(p.getUniqueId()))
-                + "\n" + GR + bar + "\n" + GR + i.tier.pretty() + " · " + i.pieces.size() + "/" + i.tier.maxPieces + " pieces");
+                + "\n" + GR + bar + "\n" + GR + i.tier.pretty() + " · " + i.pieces.size() + "/" + i.tier.maxPieces + " pieces";
+        List<Btn> b = new ArrayList<>();
+        b.add(btn(G + "Development\n" + DG + "Grow, unlock, upgrade, underside", "textures/items/seeds_wheat", this::development));
+        b.add(btn(Y + "People\n" + DG + "Friends, co-owners, transfer", "textures/items/emerald", this::people));
+        b.add(btn(A + "Island Settings\n" + DG + "Protection, world rules, home", "textures/items/bed_red", this::islandSettings));
+        b.add(btn(P + "Appearance\n" + DG + "Name, particles, border, themes", "textures/items/name_tag", this::cosmetics));
+        b.add(btn(Y + "Island Progress\n" + DG + "Level and unlocks", "textures/items/experience_bottle", this::levels));
+        b.add(btn(GR + "Back", null, this::main));
+        simple(p, "My Island", content, b);
+    }
+
+    /** Grow, unlock, upgrade and restyle: everything that changes the island itself. */
+    public void development(Player p) {
+        Island i = own(p);
+        if (i == null) { main(p); return; }
         List<Btn> b = new ArrayList<>();
         b.add(btn(G + "Grow Land\n" + DG + svc.cost(svc.growPrice()) + " per piece", "textures/items/seeds_wheat", pl -> biomes(pl, Mode.GROW, null)));
-        b.add(btn(P + "Unlock a Biome", "textures/blocks/sapling_oak", pl -> biomes(pl, Mode.UNLOCK, null)));
+        b.add(btn(P + "Unlock Biomes", "textures/blocks/sapling_oak", pl -> biomes(pl, Mode.UNLOCK, null)));
         Tier next = i.tier.next();
         if (next != null) b.add(btn(O + "Upgrade to " + next.pretty() + "\n" + DG + svc.cost(svc.upgradeCost(i)) + " · room for " + next.maxPieces,
                 "textures/items/experience_bottle", pl -> confirm(pl, "Upgrade to " + next.pretty() + "? This adds room, not land.",
-                        svc.upgradeCost(i), yes -> { svc.upgrade(yes); manage(yes); }, this::manage)));
-        b.add(btn(Y + "Levels & Unlocks", "textures/items/experience_bottle", this::levels));
-        b.add(btn(P + "Cosmetics & Themes", "textures/items/name_tag", this::cosmetics));
+                        svc.upgradeCost(i), yes -> { svc.upgrade(yes); development(yes); }, this::development)));
         b.add(btn(A + "Underside Style\n" + DG + UndersideStyle.byId(i.underside).displayName, null, this::undersides));
-        b.add(btn(Y + "Protection", null, this::protection));
+        b.add(btn(GR + "Back", null, this::manage));
+        simple(p, "Development", A + "Essence: " + W + String.format("%,d", plugin.essence().balance(p.getUniqueId()))
+                + "\n" + GR + i.tier.pretty() + " · " + i.pieces.size() + "/" + i.tier.maxPieces + " pieces", b);
+    }
+
+    /** Friends, co-owners and handing the island over. */
+    public void people(Player p) {
+        Island i = own(p);
+        if (i == null) { main(p); return; }
+        boolean owner = i.owner.equals(p.getUniqueId());
+        List<Btn> b = new ArrayList<>();
         b.add(btn(Y + "Friends\n" + DG + i.friends.size() + " friend(s)", "textures/items/emerald", this::friends));
-        b.add(btn(G + "Set Home Here", "textures/items/bed_red", pl -> { svc.setHome(pl); manage(pl); }));
         if (owner) {
             b.add(btn(O + "Co-owners\n" + DG + i.coOwners.size() + " co-owner(s)", "textures/items/gold_ingot", this::coOwners));
             b.add(btn(O + "Transfer Island", "textures/items/name_tag", this::transfer));
         }
-        b.add(btn(GR + "Back", null, this::main));
-        simple(p, "Manage Island", content.toString(), b);
+        b.add(btn(GR + "Back", null, this::manage));
+        simple(p, "People", GR + (owner ? "Everyone who shares your island." : "Co-owners can manage friends; only the owner can change co-owners or transfer."), b);
+    }
+
+    /** Protection, world rules (mobs, fire, PvP) and where Return to Island drops you. */
+    public void islandSettings(Player p) {
+        Island i = own(p);
+        if (i == null) { main(p); return; }
+        List<Btn> b = new ArrayList<>();
+        b.add(btn(Y + "Protection\n" + DG + "What visitors and friends can do", null, this::protection));
+        b.add(btn(A + "World Rules\n" + DG + "Hostile mobs, fire, explosions, PvP", null, pl -> flagForm(pl, null)));
+        b.add(btn(G + "Set Home Here\n" + DG + "Stand on your island first", "textures/items/bed_red", pl -> { svc.setHome(pl); islandSettings(pl); }));
+        b.add(btn(GR + "Back", null, this::manage));
+        simple(p, "Island Settings", GR + "Control who can do what, and how your island behaves.", b);
     }
 
     public void levels(Player p) {
@@ -396,7 +438,7 @@ public final class FormMenus {
                 btn(Y + "Visitors\n" + DG + "Everyone who isn't your friend", null, pl -> flagForm(pl, Role.VISITOR)),
                 btn(G + "Friends\n" + DG + "Players you added as friends", null, pl -> flagForm(pl, Role.FRIEND)),
                 btn(A + "Island settings\n" + DG + "Explosions, fire, mobs, PvP, visits", null, pl -> flagForm(pl, null)),
-                btn(GR + "Back", null, this::manage)));
+                btn(GR + "Back", null, this::islandSettings)));
     }
 
     private void flagForm(Player p, Role role) {
@@ -447,7 +489,7 @@ public final class FormMenus {
                     pl -> confirm(pl, "Remove " + n + " as a friend?", 0, yes -> { svc.removeFriend(yes, f); friends(yes); }, this::friends)));
         }
         b.add(btn(Y + "What can friends do?", null, pl -> flagForm(pl, Role.FRIEND)));
-        b.add(btn(GR + "Back", null, this::manage));
+        b.add(btn(GR + "Back", null, this::people));
         simple(p, "Friends", GR + "Friends get whatever the Friends protection settings allow.", b);
     }
 
@@ -465,7 +507,7 @@ public final class FormMenus {
             b.add(btn(O + n + "\n" + DG + "tap to remove", null,
                     pl -> confirm(pl, "Remove " + n + " as a co-owner?", 0, yes -> { svc.removeCoOwner(yes, c); coOwners(yes); }, this::coOwners)));
         }
-        b.add(btn(GR + "Back", null, this::manage));
+        b.add(btn(GR + "Back", null, this::people));
         simple(p, "Co-owners", GR + "Co-owners can grow, unlock, upgrade, and change protection and friends. Only you can delete or transfer.", b);
     }
 
@@ -483,9 +525,9 @@ public final class FormMenus {
                     pl -> modal(pl, "Give your island away?", W + n + " will become the owner.\n\n" + R + "You become a visitor and lose all access immediately.",
                             R + "Give it to " + n, G + "Cancel",
                             yes -> modal(yes, "This can't be undone!", R + "Really give your island to " + n + "?", R + "Yes, give it away", G + "Cancel",
-                                    sure -> svc.transfer(sure, o), this::manage), this::manage)));
+                                    sure -> svc.transfer(sure, o), this::people), this::people)));
         }
-        b.add(btn(GR + "Back", null, this::manage));
+        b.add(btn(GR + "Back", null, this::people));
         simple(p, "Transfer Island", people.isEmpty() ? Y + "No one to give it to. Add a co-owner, or ask the player to come online."
                 : GR + "Pick the new owner. Co-owners are listed first.", b);
     }
@@ -644,7 +686,7 @@ public final class FormMenus {
             b.add(btn((st.id.equals(i.underside) ? G + "✔ " : A) + st.displayName + "\n" + DG + st.description, null,
                     pl -> undersideChoice(pl, st, this::undersides)));
         }
-        b.add(btn(GR + "Back", null, this::manage));
+        b.add(btn(GR + "Back", null, this::development));
         String content = GR + "Land you grow from now on hangs this style underneath. Existing land is never changed.";
         if (!locked.isEmpty()) content += "\n\n" + DG + "Locked: " + String.join(", ", locked);
         simple(p, "Underside Style", content, b);
@@ -673,6 +715,6 @@ public final class FormMenus {
                         + (refund > 0 ? "\n" + GR + "Refund: " + O + svc.cost(refund) : "\n" + GR + "No refund."),
                 R + "Yes, delete it", G + "No, keep it",
                 yes -> modal(yes, "This can't be undone!", R + "Really delete " + plugin.cosmetics().displayName(i) + " forever?",
-                        R + "DELETE FOREVER", G + "Cancel", svc::deleteIsland, this::main), this::main);
+                        R + "DELETE FOREVER", G + "Cancel", svc::deleteIsland, this::more), this::more);
     }
 }

@@ -42,51 +42,55 @@ public final class Menus {
 
     // ---- main -----------------------------------------------------------------------
 
-    /** Top level: Return/Buy, Manage, Delete. */
+    /** Top level: a short hub. My Island, Explore, The Corruption and More; the rest lives one level down. */
     public void main(Player p) {
         if (plugin.bedrock().handles(p)) { plugin.bedrock().openMain(p); return; }   // native Bedrock forms
         Island i = plugin.islands().of(p.getUniqueId());
         Menu m = new Menu(3, "<dark_aqua>Skyland");
+        m.button(0, essenceCard(p), this::exchange);
+        m.button(4, glow(item(Material.WRITTEN_BOOK, "<aqua>Journal", "<gray>Story, objective and pages.", "<yellow>" + plugin.journal().unlockedCount(p) + "/"
+                + plugin.journal().countedPages().size() + " pages")), this::journal);
         if (i == null) {
-            m.button(11, glow(item(Material.GRASS_BLOCK, "<green>Buy an Island", "<gray>Pick a size and a biome,",
-                    "<gray>or visit other players' islands.")), this::buyTier);
             var archived = plugin.archiver().info(p.getUniqueId());
             if (archived != null) {
-                m.button(13, glow(item(Material.RECOVERY_COMPASS, "<aqua>Restore My Island",
-                        "<gray>Your island was archived while", "<gray>you were away. Bring it back",
-                        "<gray>exactly as you left it, for free.", "<yellow>" + archived.daysLeft() + " days left")),
+                m.button(10, glow(item(Material.RECOVERY_COMPASS, "<aqua>Restore My Island",
+                        "<gray>Bring back your archived island", "<gray>exactly as you left it, for free.", "<yellow>" + archived.daysLeft() + " days left")),
                         pl -> confirm(pl, "Restore your archived island?", 0,
                                 yes -> { yes.closeInventory(); svc.restoreOwn(yes); }, this::main));
             } else {
-                m.button(13, item(Material.GRAY_DYE, "<gray>Manage Island", "<dark_gray>You don't have an island yet."), null);
+                m.button(10, glow(item(Material.GRASS_BLOCK, "<green>Buy an Island", "<gray>Pick a size and a biome.")), this::buyTier);
             }
-            m.button(15, item(Material.GRAY_DYE, "<gray>Delete Island", "<dark_gray>You don't have an island yet."), null);
         } else {
             boolean owner = i.owner.equals(p.getUniqueId());
-            m.button(11, glow(item(Material.ELYTRA, "<green>Return to Island", "<gray>Ride the wind home,",
-                    "<gray>or visit other islands.")), this::travel);
-            m.button(13, item(Material.WRITABLE_BOOK, "<yellow>Manage Island", "<gray>Grow, upgrade, biomes,",
-                    "<gray>protection, friends" + (owner ? ", co-owners." : "."),
-                    owner ? "" : "<aqua>You co-own " + nameOf(i.owner) + "'s island"), this::manage);
-            if (owner) m.button(15, item(Material.TNT, "<red>Delete Island", "<gray>Remove your island for good."), this::delete);
-            else m.button(15, item(Material.OAK_DOOR, "<red>Leave Island", "<gray>Stop co-owning " + nameOf(i.owner) + "'s island."),
-                    pl -> confirm(pl, "Stop co-owning " + nameOf(i.owner) + "'s island?", 0,
-                            yes -> { yes.closeInventory(); svc.leaveIsland(yes); }, this::main));
+            m.button(10, glow(item(Material.WRITABLE_BOOK, "<yellow>My Island", "<gray>Grow, share, style and protect.",
+                    owner ? "" : "<aqua>You co-own " + nameOf(i.owner) + "'s island")), this::manage);
         }
+        m.button(12, item(Material.ELYTRA, "<green>Explore", i == null ? "<gray>Visit other islands." : "<gray>Fly home or visit islands."), this::travel);
+        m.button(14, glow(item(Material.ECHO_SHARD, "<light_purple>The Corruption", "<gray>Purify, brew and take contracts.")), this::corruption);
+        m.button(16, item(Material.NETHER_STAR, "<white>More", "<gray>Shortcuts, about, and", "<gray>leaving or deleting an island."), this::more);
+        m.fill().open(p);
+    }
+
+    /** Preferences, about, and the destructive actions, kept away from everyday play. */
+    public void more(Player p) {
+        if (plugin.bedrock().handles(p)) { plugin.bedrock().openMore(p); return; }
+        Island i = plugin.islands().of(p.getUniqueId());
+        Menu m = new Menu(3, "<dark_aqua>More");
         if (plugin.shortcuts().available()) {
             boolean on = plugin.shortcuts().isOn(p);
-            m.button(18, on ? glow(item(Material.FEATHER, "<aqua>Hotbar Shortcuts: <green>On", "<gray>Menu book in slot 9, return", "<gray>feather in slot 8. They can't", "<gray>be dropped or lost.", "<yellow>Click to turn off"))
+            m.button(10, on ? glow(item(Material.FEATHER, "<aqua>Hotbar Shortcuts: <green>On", "<gray>Menu book in slot 9, return", "<gray>feather in slot 8. They can't", "<gray>be dropped or lost.", "<yellow>Click to turn off"))
                             : item(Material.FEATHER, "<aqua>Hotbar Shortcuts: <red>Off", "<gray>Put a menu book and a return", "<gray>feather in your hotbar, so you", "<gray>never need a command.", "<yellow>Click to turn on"),
-                    pl -> { plugin.shortcuts().toggle(pl); main(pl); });
+                    pl -> { plugin.shortcuts().toggle(pl); more(pl); });
         }
-        m.button(0, essenceCard(p), this::exchange);
-        m.button(4, glow(item(Material.WRITTEN_BOOK, "<aqua>Guide", "<gray>The story, your next objective",
-                "<gray>and every journal page you've found.", "<yellow>" + plugin.journal().unlockedCount(p) + "/"
-                + plugin.journal().countedPages().size() + " pages")), this::journal);
-        m.button(22, glow(item(Material.ECHO_SHARD, "<light_purple>The Corruption", "<gray>Sell what you bring back from",
-                "<gray>the corrupted overworld.")), this::corruption);
-        m.button(26, item(Material.KNOWLEDGE_BOOK, "<aqua>About", "<white>" + dev.skyrealms.Credits.ATTRIBUTION,
+        m.button(13, item(Material.KNOWLEDGE_BOOK, "<aqua>About", "<white>" + dev.skyrealms.Credits.ATTRIBUTION,
                 "<gray>Version " + plugin.getPluginMeta().getVersion(), "<dark_gray>Licensed under GPL-3.0"), null);
+        if (i != null) {
+            if (i.owner.equals(p.getUniqueId())) m.button(16, item(Material.TNT, "<red>Delete Island", "<gray>Remove your island for good."), this::delete);
+            else m.button(16, item(Material.OAK_DOOR, "<red>Leave Island", "<gray>Stop co-owning " + nameOf(i.owner) + "'s island."),
+                    pl -> confirm(pl, "Stop co-owning " + nameOf(i.owner) + "'s island?", 0,
+                            yes -> { yes.closeInventory(); svc.leaveIsland(yes); }, this::more));
+        }
+        m.button(18, back(), this::main);
         m.fill().open(p);
     }
 
@@ -180,39 +184,71 @@ public final class Menus {
         m.fill().open(p);
     }
 
-    /** Everything an owner can change. */
+    /** My Island: five groups instead of every option at once. */
     public void manage(Player p) {
         Island i = svc.owned(p);
         if (i == null) { main(p); return; }
-        Menu m = new Menu(4, "<dark_aqua>Manage Island");
+        Menu m = new Menu(3, "<dark_aqua>My Island");
         m.button(0, essenceCard(p), this::exchange);
         m.button(4, levelCard(i), this::levels);
+        m.button(9 + 1, glow(item(Material.WHEAT_SEEDS, "<green>Development", "<gray>Grow land, unlock biomes,", "<gray>upgrade size, underside.",
+                "<gray>Pieces: <white>" + i.pieces.size() + "/" + i.tier.maxPieces)), this::development);
+        m.button(9 + 3, item(Material.PLAYER_HEAD, "<yellow>People", "<gray>Friends, co-owners, transfer."), this::people);
+        m.button(9 + 5, item(Material.SHIELD, "<aqua>Island Settings", "<gray>Protection, world rules, home."), this::islandSettings);
+        m.button(9 + 7, item(Material.ALLIUM, "<light_purple>Appearance", "<gray>Name, particles, border,", "<gray>islets and themes."), this::cosmetics);
+        m.button(22, info(i), null);
+        m.button(18, back(), this::main);
+        m.fill().open(p);
+    }
+
+    /** Grow, unlock, upgrade and restyle: everything that changes the island itself. */
+    public void development(Player p) {
+        Island i = svc.owned(p);
+        if (i == null) { main(p); return; }
+        Menu m = new Menu(3, "<dark_aqua>Development");
+        m.button(0, essenceCard(p), this::exchange);
         m.button(10, item(Material.WHEAT_SEEDS, "<green>Grow Land",
                 "<gray>Attach more of a biome you own.", "<gray>Cost: <gold>" + svc.cost(svc.growPrice()) + " <gray>each",
                 "<gray>Pieces: <white>" + i.pieces.size() + "/" + i.tier.maxPieces), pl -> biomes(pl, Mode.GROW, null));
-        m.button(11, item(Material.CHERRY_SAPLING, "<light_purple>Unlock a Biome",
+        m.button(12, item(Material.CHERRY_SAPLING, "<light_purple>Unlock Biomes",
                 "<gray>Unlock a new biome so you", "<gray>can grow it with Grow Land."), pl -> biomes(pl, Mode.UNLOCK, null));
-        m.button(12, upgradeIcon(i), this::upgrade);
+        m.button(14, upgradeIcon(i), this::upgrade);
         var cur = dev.skyrealms.terrain.UndersideStyle.byId(i.underside);
-        m.button(13, item(cur.icon, "<aqua>Underside Style", "<gray>What hangs under new land.",
+        m.button(16, item(cur.icon, "<aqua>Underside Style", "<gray>What hangs under new land.",
                 "<gray>Current: <white>" + cur.displayName, "<dark_gray>Existing land isn't changed."), this::undersides);
-        m.button(14, item(Material.SHIELD, "<yellow>Protection",
-                "<gray>Choose what visitors and", "<gray>friends can do on your island."), this::protection);
-        m.button(15, item(Material.PLAYER_HEAD, "<yellow>Friends", "<gray>Friends: <white>" + i.friends.size()), this::friends);
-        m.button(16, item(Material.LIGHT_WEIGHTED_PRESSURE_PLATE, "<green>Set Home Here",
-                "<gray>Where Return to Island drops you.", "<gray>Stand on your island first."),
-                pl -> { svc.setHome(pl); pl.playSound(pl.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_CHIME, 0.6f, 1.4f); manage(pl); });
+        m.button(18, back(), this::manage);
+        m.fill().open(p);
+    }
+
+    /** Friends, co-owners and handing the island over. */
+    public void people(Player p) {
+        Island i = svc.owned(p);
+        if (i == null) { main(p); return; }
         boolean owner = i.owner.equals(p.getUniqueId());
-        m.button(20, owner ? item(Material.GOLDEN_HELMET, "<gold>Co-owners", "<gray>Players who can manage the",
+        Menu m = new Menu(3, "<dark_aqua>People");
+        m.button(10, item(Material.PLAYER_HEAD, "<yellow>Friends", "<gray>Friends: <white>" + i.friends.size()), this::friends);
+        m.button(13, owner ? item(Material.GOLDEN_HELMET, "<gold>Co-owners", "<gray>Players who can manage the",
                         "<gray>island with you. Co-owners: <white>" + i.coOwners.size())
                 : item(Material.GRAY_DYE, "<gray>Co-owners", "<dark_gray>Only the owner can change this."), owner ? this::coOwners : null);
-        m.button(22, info(i), null);
-        m.button(24, owner ? item(Material.NAME_TAG, "<gold>Transfer Island", "<gray>Give the island to someone else.",
+        m.button(16, owner ? item(Material.NAME_TAG, "<gold>Transfer Island", "<gray>Give the island to someone else.",
                         "<red>You lose all access to it.")
                 : item(Material.GRAY_DYE, "<gray>Transfer Island", "<dark_gray>Only the owner can do this."), owner ? this::transfer : null);
-        m.button(31, glow(item(Material.ALLIUM, "<light_purple>Cosmetics & Themes", "<gray>Island name, particles, border,",
-                "<gray>floating islets and themes.", "<dark_gray>More unlock as your island levels up.")), this::cosmetics);
-        m.button(27, back(), this::main);
+        m.button(18, back(), this::manage);
+        m.fill().open(p);
+    }
+
+    /** Protection, world rules (mobs, fire, PvP) and where Return to Island drops you. */
+    public void islandSettings(Player p) {
+        Island i = svc.owned(p);
+        if (i == null) { main(p); return; }
+        Menu m = new Menu(3, "<dark_aqua>Island Settings");
+        m.button(10, item(Material.SHIELD, "<yellow>Protection",
+                "<gray>Choose what visitors and", "<gray>friends can do on your island."), this::protection);
+        m.button(13, item(Material.ZOMBIE_SPAWN_EGG, "<aqua>World Rules", "<gray>Hostile mobs, fire, explosions,", "<gray>PvP and visitors."), pl -> flags(pl, null));
+        m.button(16, item(Material.LIGHT_WEIGHTED_PRESSURE_PLATE, "<green>Set Home Here",
+                "<gray>Where Return to Island drops you.", "<gray>Stand on your island first."),
+                pl -> { svc.setHome(pl); pl.playSound(pl.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_CHIME, 0.6f, 1.4f); islandSettings(pl); });
+        m.button(18, back(), this::manage);
         m.fill().open(p);
     }
 
@@ -226,7 +262,7 @@ public final class Menus {
                 "<gray>Every block, chest and animal on", "<gray>your island will be gone forever.",
                 refund > 0 ? "<gray>Refund: <gold>" + svc.cost(refund) : "<gray>No refund."), this::deleteFinal);
         m.button(13, info(i), null);
-        m.button(15, item(Material.LIME_CONCRETE, "<green>No, keep my island"), this::main);
+        m.button(15, item(Material.LIME_CONCRETE, "<green>No, keep my island"), this::more);
         m.fill().open(p);
     }
 
@@ -333,7 +369,7 @@ public final class Menus {
             m.button(4, item(Material.BARRIER, "<red>Nothing here",
                     mode == Mode.UNLOCK ? "<gray>You own every biome!" : "<gray>No biomes are set up yet."), null);
         }
-        m.button((rows - 1) * 9, back(), mode == Mode.BUY ? this::buyTier : this::manage);
+        m.button((rows - 1) * 9, back(), mode == Mode.BUY ? this::buyTier : this::development);
         m.fill().open(p);
     }
 
@@ -397,7 +433,7 @@ public final class Menus {
     public void upgrade(Player p) {
         Island i = plugin.islands().of(p.getUniqueId());
         if (i == null || i.tier.next() == null) return;
-        confirm(p, "Upgrade to " + i.tier.next().pretty() + "?", svc.upgradeCost(i), yes -> { svc.upgrade(yes); manage(yes); }, this::manage);
+        confirm(p, "Upgrade to " + i.tier.next().pretty() + "?", svc.upgradeCost(i), yes -> { svc.upgrade(yes); development(yes); }, this::development);
     }
 
     /** A yes/no screen. Big targets so it's easy to tap on Bedrock. */
@@ -421,7 +457,7 @@ public final class Menus {
                 "<gray>By default they can do everything", "<gray>except trample farmland."), pl -> flags(pl, Role.FRIEND));
         m.button(15, item(Material.GRASS_BLOCK, "<aqua>Island settings", "<gray>Explosions, fire, mobs, PvP", "<gray>and whether visitors may come."),
                 pl -> flags(pl, null));
-        m.button(18, back(), this::manage);
+        m.button(18, back(), this::islandSettings);
         m.fill().open(p);
     }
 
@@ -470,7 +506,7 @@ public final class Menus {
                     pl -> confirm(pl, "Remove " + name + " as a friend?", 0,
                             yes -> { svc.removeFriend(yes, f); friends(yes); }, this::friends));
         }
-        m.button(45, back(), this::manage);
+        m.button(45, back(), this::people);
         m.button(49, glow(item(Material.EMERALD, "<green>Add a friend", "<gray>Pick from online players.")), pl -> pickPlayer(pl, 0));
         m.button(53, item(Material.SHIELD, "<yellow>What can friends do?"), pl -> flags(pl, Role.FRIEND));
         m.fill().open(p);
@@ -516,7 +552,7 @@ public final class Menus {
         if (i.coOwners.isEmpty()) m.button(22, item(Material.GOLDEN_HELMET, "<gray>No co-owners yet",
                 "<gray>Co-owners can grow, unlock, upgrade,", "<gray>and change protection and friends.",
                 "<gray>Only you can delete or transfer."), null);
-        m.button(45, back(), this::manage);
+        m.button(45, back(), this::people);
         m.button(49, glow(item(Material.EMERALD, "<green>Add a co-owner", "<gray>Pick from online players.",
                 "<gray>They can't already own an island.")),
                 pl -> pickOnline(pl, 0, "<dark_aqua>Add a co-owner", "<yellow>Tap to make co-owner",
@@ -543,14 +579,14 @@ public final class Menus {
                 (pl, o) -> transferConfirm(pl, o), pg -> transfer(p));
         if (people.isEmpty()) m.button(22, item(Material.BARRIER, "<red>No one to give it to",
                 "<gray>Add a co-owner, or ask the player", "<gray>to come online."), null);
-        m.button(45, back(), this::manage);
+        m.button(45, back(), this::people);
         m.fill().open(p);
     }
 
     private void transferConfirm(Player p, OfflinePlayer target) {
         String name = Objects.toString(target.getName(), "them");
         Menu m = new Menu(3, "<dark_red>Give your island away?");
-        m.button(11, item(Material.LIME_CONCRETE, "<green>Cancel", "<gray>Keep my island."), this::manage);
+        m.button(11, item(Material.LIME_CONCRETE, "<green>Cancel", "<gray>Keep my island."), this::people);
         m.button(13, head(target, "<gold>" + name, "<gray>will become the owner.", "<red>You become a visitor and",
                 "<red>lose all access immediately."), null);
         m.button(15, glow(item(Material.NAME_TAG, "<dark_red>GIVE IT TO " + name.toUpperCase(),
@@ -740,7 +776,7 @@ public final class Menus {
         }
         m.button(4, item(Material.BOOK, "<white>How it works", "<gray>Land you grow from now on hangs",
                 "<gray>this style underneath. Land you", "<gray>already have is never changed."), null);
-        m.button(18, back(), this::manage);
+        m.button(18, back(), this::development);
         m.fill().open(p);
     }
 

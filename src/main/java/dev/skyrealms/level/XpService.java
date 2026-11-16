@@ -135,9 +135,9 @@ public final class XpService {
             if (!unlocked.isEmpty()) p.sendMessage(Msg.c(" <gray>New biomes to unlock: <green>" + String.join(", ", unlocked)));
             List<String> cos = plugin.cosmetics().unlocksAt(lv);
             if (!cos.isEmpty()) p.sendMessage(Msg.c(" <gray>New cosmetics: <light_purple>" + String.join(", ", cos)
-                    + " <dark_gray>(Manage Island → Cosmetics)"));
+                    + " <dark_gray>(My Island → Appearance)"));
             if (!styles.isEmpty()) p.sendMessage(Msg.c(" <gray>New underside style: <aqua>" + String.join(", ", styles)
-                    + " <dark_gray>(Manage Island → Underside Style)"));
+                    + " <dark_gray>(My Island → Development → Underside Style)"));
             if (p.getWorld().equals(plugin.skyWorld()) && i.containsLand(p.getX(), p.getZ())) firework(p.getLocation());
         }
         if (levels.announceEvery > 0 && lv % levels.announceEvery == 0) {

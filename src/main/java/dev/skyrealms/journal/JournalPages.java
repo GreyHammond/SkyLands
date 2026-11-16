@@ -45,11 +45,11 @@ public final class JournalPages {
         add("returning_home", "Returning Home", "Use the return feather in your hotbar, or /ihome, and a gust of wind carries you back to your island. "
                 + "Home is always one click away, so go back down whenever you're ready.");
         add("hostile_spawns", "Hostile Mobs", "Your island starts out peaceful: no zombies, skeletons or creepers spawn on it. "
-                + "If you want a mob farm or a little danger, open /skyland, then Manage Island, Protection and Island settings, and turn on Hostile mob spawning. "
+                + "If you want a mob farm or a little danger, open /skyland, then My Island, Island Settings and World Rules, and turn on Hostile mob spawning. "
                 + "Spawn eggs, spawners and breeding always work either way.");
         add("quiet_skies", "Quiet Skies", "Hostile spawning is yours to flip any time, and your island's setting never touches anyone else's. "
-                + "Open Island settings again and switch Hostile mob spawning back off when you want the peace and quiet back. "
-                + "The same screen has settings for peaceful mobs, fire, explosions and PvP.");
+                + "Open World Rules again and switch Hostile mob spawning back off when you want the peace and quiet back. "
+                + "The same screen has rules for peaceful mobs, fire, explosions and PvP.");
         add("corruption", "The Corruption", "Every patch of land holds a corruption value, shown above your hotbar. "
                 + "At 25% the land dries out, at 50% it turns to wasteland, and at 75% bedrock spreads. "
                 + "It never hurts you, and leaving lets it fade, but bedrock stays until the world is recycled.");
@@ -60,7 +60,7 @@ public final class JournalPages {
         add("earning", "Purified Essence", "The Purifier, in /skyland under The Corruption, turns Void Shards (1 each) and Corrupted Remnants (4 each) into Essence. "
                 + "Essence is what your island grows on: new land, new biomes and bigger islands. "
                 + "Tutorial steps, daily contracts and visiting other players' islands all pay Essence too.");
-        add("growing_land", "Growing Your Island", "Essence builds your home. Open /skyland, then Manage Island and Grow Land, to attach a new piece of land. "
+        add("growing_land", "Growing Your Island", "Essence builds your home. Open /skyland, then My Island, Development and Grow Land, to attach a new piece of land. "
                 + "You pick the biome and the side it grows on, and nothing already built is touched. "
                 + "Unlock new biomes with Essence too, and every level you earn opens more of them.");
         add("corrupted_ingredients", "Corrupted Ingredients", "Corrupted spiders, skeletons and creepers drop a Corrupted Spider Eye, Bone or Gunpowder. "

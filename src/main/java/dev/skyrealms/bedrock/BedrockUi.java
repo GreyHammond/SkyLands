@@ -48,6 +48,7 @@ public final class BedrockUi {
     }
 
     public void openMain(Player p) { ((FormMenus) forms).main(p); }
+    public void openMore(Player p) { ((FormMenus) forms).more(p); }
     public void openCorruption(Player p) { ((FormMenus) forms).corruption(p); }
     public void openExchange(Player p) { ((FormMenus) forms).exchange(p); }
     public void openRecipes(Player p) { ((FormMenus) forms).recipes(p); }
