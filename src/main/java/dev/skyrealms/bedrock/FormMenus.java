@@ -418,7 +418,9 @@ public final class FormMenus {
                 if (quick == 1) on = true;
                 else if (quick == 2) on = false;
                 else if (quick == 3) on = role == Role.FRIEND ? fl.defaultFriend : fl.defaultVisitor;
+                boolean was = isl.get(role, fl);
                 isl.set(role, fl, on);
+                if (was != on) svc.flagChanged(p, role, fl, on);
             }
             plugin.islands().save();
             p.sendMessage("§3[§bSkyLands§3] §7Saved " + (role == null ? "island settings." : role.pretty().toLowerCase() + " permissions."));

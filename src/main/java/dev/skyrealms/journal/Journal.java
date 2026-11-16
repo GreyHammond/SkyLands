@@ -17,6 +17,7 @@ import dev.skyrealms.util.Msg;
 import net.kyori.adventure.inventory.Book;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
@@ -24,6 +25,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.time.Duration;
 import java.util.*;
@@ -39,17 +41,36 @@ public final class Journal implements Listener {
 
     private static final List<Step> DEFAULT_STEPS = List.of(
             new Step("getting_started", Milestone.CLAIMED_ISLAND, "Claim your free island: open /skyland and pick a biome.", 0),
-            new Step("world_below", Milestone.LANDED_OVERWORLD, "Jump off the edge of your island to fall into the world below.", 4),
-            new Step("returning_home", Milestone.RETURNED_HOME, "Fly home with the return feather in your hotbar, or /ihome.", 4),
-            new Step("corruption", Milestone.ENTERED_CORRUPTION, "Find corrupted land: stay in one area of the world below until the corruption reaches 25%.", 4),
-            new Step("void_shards", Milestone.COLLECTED_SHARD, "Collect Void Shards by mining corrupted land.", 6),
-            new Step("corrupted_creatures", Milestone.KILLED_CORRUPTED_MOB, "Defeat a corrupted mob (purple name) on corrupted land.", 8),
-            new Step("earning", Milestone.SOLD_AT_EXCHANGE, "Purify shards at the Purifier: /skyland, then The Corruption.", 4),
-            new Step("corrupted_ingredients", Milestone.COLLECTED_CORRUPTED_SPIDER_EYE, "Collect a Corrupted Spider Eye from a corrupted spider.", 6),
-            new Step("cleansing_tonics", Milestone.BREWED_TONIC, "Brew a Cleansing Tonic I: Tainted Potion + Corrupted Spider Eye.", 10),
-            new Step("warded_armor", Milestone.CRAFTED_WARD_TEMPLATE, "Craft a Ward Template: 8 Void Shards around Crying Obsidian.", 10),
-            new Step("ward_levels", Milestone.SMITHED_WARD, "Smith a piece of Ward I armor: Ward Template + armor + Void Shard.", 12),
-            new Step("daily_contracts", Milestone.CLAIMED_CONTRACT, "Claim a daily contract: /skyland contracts.", 8));
+            new Step("world_below", Milestone.LANDED_OVERWORLD, "Jump off the edge of your island to fall into the world below.", 5),
+            new Step("returning_home", Milestone.RETURNED_HOME, "Fly home with the return feather in your hotbar, or /ihome.", 5),
+            new Step("hostile_spawns", Milestone.MOB_SPAWNS_ON, "Turn on hostile mob spawning: /skyland, Manage Island, Protection, Island settings.", 5),
+            new Step("quiet_skies", Milestone.MOB_SPAWNS_OFF, "Turn hostile mob spawning back off in the same Island settings screen.", 5),
+            new Step("corruption", Milestone.ENTERED_CORRUPTION, "Find corrupted land: stay in one area of the world below until the corruption reaches 25%.", 5),
+            new Step("void_shards", Milestone.COLLECTED_SHARD, "Collect Void Shards by mining corrupted land.", 8),
+            new Step("corrupted_creatures", Milestone.KILLED_CORRUPTED_MOB, "Defeat a corrupted mob (purple name) on corrupted land.", 10),
+            new Step("earning", Milestone.SOLD_AT_EXCHANGE, "Purify a few shards at the Purifier (keep about ten for crafting): /skyland, then The Corruption.", 5),
+            new Step("growing_land", Milestone.GREW_LAND, "Grow your island: /skyland, Manage Island, Grow Land.", 10),
+            new Step("corrupted_ingredients", Milestone.COLLECTED_CORRUPTED_SPIDER_EYE, "Collect a Corrupted Spider Eye from a corrupted spider.", 8),
+            new Step("brewing_stand", Milestone.PLACED_BREWING_STAND, "Place the Brewing Stand the Guide gave you, then fill your Glass Bottles with water.", 5),
+            new Step("cleansing_tonics", Milestone.BREWED_TONIC, "Brew a Cleansing Tonic I: Water Bottle + Void Shard, then + Corrupted Spider Eye.", 12),
+            new Step("warded_armor", Milestone.CRAFTED_WARD_TEMPLATE, "Craft a Ward Template: 8 Void Shards around the Crying Obsidian the Guide gave you.", 12),
+            new Step("ward_levels", Milestone.SMITHED_WARD, "Smith a piece of Ward I armor: Ward Template + armor + Void Shard.", 15),
+            new Step("daily_contracts", Milestone.CLAIMED_CONTRACT, "Claim a daily contract: /skyland contracts.", 10));
+
+    /** The step order before the tutorial rework (profile layout 1), used to carry saved progress over. */
+    private static final List<String> LEGACY_ORDER = List.of("getting_started", "world_below", "returning_home", "corruption",
+            "void_shards", "corrupted_creatures", "earning", "corrupted_ingredients", "cleansing_tonics", "warded_armor",
+            "ward_levels", "daily_contracts");
+    private static final int LAYOUT = 2;
+
+    /** Items handed over once, when a step becomes the current one. */
+    private static List<ItemStack> supplies(String page) {
+        return switch (page) {
+            case "brewing_stand" -> List.of(new ItemStack(Material.BREWING_STAND), new ItemStack(Material.GLASS_BOTTLE, 3));
+            case "warded_armor" -> List.of(new ItemStack(Material.CRYING_OBSIDIAN));
+            default -> List.of();
+        };
+    }
 
     /** Profile.rewarded marker for the finish reward (steps use their index). */
     private static final int FINISH_MARK = 1000;
@@ -77,8 +98,43 @@ public final class Journal implements Listener {
     }
 
     public void start() {
+        migrate();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         plugin.milestones().listen(this::onMilestone);
+    }
+
+    /**
+     * Carries saved progress from the original 12-step layout to the current steps. Rewards already
+     * paid are remembered by page, so inserted steps never shift or repeat anything. Players who had
+     * finished stay finished (they can restart to earn the new steps); everyone else resumes at the
+     * same page they were on.
+     */
+    private void migrate() {
+        int moved = 0;
+        for (PlayerProfiles.Profile pr : plugin.profiles().all()) {
+            if (pr.tutorialLayout >= LAYOUT) continue;
+            for (int idx : pr.rewarded) if (idx >= 0 && idx < LEGACY_ORDER.size()) pr.paidPages.add(LEGACY_ORDER.get(idx));
+            if (pr.tutorialSkipped || pr.tutorialStep >= LEGACY_ORDER.size()) {
+                pr.tutorialStep = steps.size();
+            } else {
+                String page = LEGACY_ORDER.get(Math.max(0, pr.tutorialStep));
+                int at = indexOfPage(page);
+                pr.tutorialStep = at < 0 ? 0 : at;
+                // Steps they already completed in the old layout must not be asked again.
+                for (int i = 0; i < pr.tutorialStep; i++) pr.pages.add(steps.get(i).page());
+            }
+            pr.tutorialLayout = LAYOUT;
+            moved++;
+        }
+        if (moved > 0) {
+            plugin.profiles().dirty();
+            plugin.getLogger().info("Tutorial: carried " + moved + " player profile(s) over to the new step layout.");
+        }
+    }
+
+    private int indexOfPage(String page) {
+        for (int i = 0; i < steps.size(); i++) if (steps.get(i).page().equals(page)) return i;
+        return -1;
     }
 
     // ---- state -------------------------------------------------------------------------
@@ -147,20 +203,36 @@ public final class Journal implements Listener {
         pr.pages.add(s.page());
         double pay = rewards.getOrDefault(s.page(), 0.0);
         boolean paid = false;
-        if (pay > 0 && pr.rewarded.add(idx)) { plugin.essence().give(p, pay); paid = true; }
+        if (pay > 0 && pr.paidPages.add(s.page())) { plugin.essence().give(p, pay); paid = true; }
         pr.tutorialStep = idx + 1;
         if (pr.tutorialStep >= steps.size()) {
             pr.pages.add(JournalPages.RESETS);
             pr.pages.add(JournalPages.REALMS);
             boolean finishPaid = finishReward > 0 && pr.rewarded.add(FINISH_MARK);
+            pr.tutorialLayout = LAYOUT;
             if (finishPaid) plugin.essence().give(p, finishReward);
             plugin.profiles().dirty();
             if (announce) announce(p, "Tutorial complete", JournalPages.get(JournalPages.RESETS).title() + " and " + JournalPages.get(JournalPages.REALMS).title(),
                     paid || finishPaid ? (paid ? pay : 0) + (finishPaid ? finishReward : 0) : 0);
             return;
         }
+        pr.tutorialLayout = LAYOUT;
         plugin.profiles().dirty();
         if (announce) announce(p, "New journal entry", JournalPages.get(s.page()).title(), paid ? pay : 0);
+        grantSupplies(p);
+    }
+
+    /** Hands over the current step's starter items, once ever per player. */
+    private void grantSupplies(Player p) {
+        PlayerProfiles.Profile pr = prof(p);
+        if (pr.tutorialSkipped || pr.tutorialStep >= steps.size()) return;
+        String page = steps.get(Math.max(0, pr.tutorialStep)).page();
+        List<ItemStack> items = supplies(page);
+        if (items.isEmpty() || !pr.paidPages.add("supply:" + page)) return;
+        for (ItemStack it : items)
+            for (ItemStack left : p.getInventory().addItem(it.clone()).values()) p.getWorld().dropItemNaturally(p.getLocation(), left);
+        plugin.profiles().dirty();
+        p.sendMessage(Msg.c("<light_purple>Journal: <white>the Guide left you something for this step.</white> <gray>Check your inventory."));
     }
 
     private void announce(Player p, String head, String pageTitle, double paid) {
@@ -181,7 +253,8 @@ public final class Journal implements Listener {
         PlayerProfiles.Profile pr = prof(p);
         if (!enabled || pr.tutorialSkipped || pr.tutorialStep >= steps.size()) return;
         Step s = steps.get(Math.max(0, pr.tutorialStep));
-        if (s.milestone() == Milestone.CLAIMED_ISLAND && plugin.islands().of(p.getUniqueId()) != null) completeCurrent(p, false);
+        if (s.milestone() == Milestone.CLAIMED_ISLAND && plugin.islands().of(p.getUniqueId()) != null) { completeCurrent(p, false); return; }
+        grantSupplies(p); // a player resumed mid-tutorial on the new steps still gets this step's items
     }
 
     // ---- skip / restart / admin ---------------------------------------------------------------
@@ -211,6 +284,7 @@ public final class Journal implements Listener {
         pr.tutorialStep = 0;
         pr.pages.clear();
         pr.rewarded.clear();
+        pr.paidPages.clear();
         pr.counters.remove("shards");
         plugin.profiles().dirty();
     }

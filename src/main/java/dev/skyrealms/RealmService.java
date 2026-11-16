@@ -206,7 +206,8 @@ public final class RealmService {
         double[] target = where == null ? null : targetFor(p, i, where);
         String whereText = where == null || where == Placement.AUTO ? "" : where == Placement.HERE ? " near where you're standing" : " on the " + where.label.toLowerCase() + " side";
         if (plugin.grower().growMany(plugin.skyWorld(), i, biome, 1, target,
-                () -> Msg.send(p, "New <green>" + plugin.biomes().pretty(b) + "</green> land has attached" + whereText + ".")).isEmpty()) {
+                () -> { Msg.send(p, "New <green>" + plugin.biomes().pretty(b) + "</green> land has attached" + whereText + ".");
+                        plugin.milestones().trigger(p, dev.skyrealms.player.Milestone.GREW_LAND); }).isEmpty()) {
             repay(p, cost);
             if (target != null) {
                 String side = where == Placement.HERE ? "near where you're standing" : "on the " + where.label.toLowerCase() + " side";
@@ -399,6 +400,18 @@ public final class RealmService {
     public void toggle(Island i, Role role, Flag flag) {
         i.set(role, flag, !i.get(role, flag));
         plugin.islands().save();
+    }
+
+    /** Toggle on behalf of a player, so the tutorial sees island-setting changes. */
+    public void toggle(Player p, Island i, Role role, Flag flag) {
+        toggle(i, role, flag);
+        flagChanged(p, role, flag, i.get(role, flag));
+    }
+
+    /** Reports an island setting change to the tutorial (hostile mob spawning on or off). */
+    public void flagChanged(Player p, Role role, Flag flag, boolean on) {
+        if (role == null && flag == Flag.MONSTER_SPAWNS)
+            plugin.milestones().trigger(p, on ? dev.skyrealms.player.Milestone.MOB_SPAWNS_ON : dev.skyrealms.player.Milestone.MOB_SPAWNS_OFF);
     }
 
     // ---- deleting ------------------------------------------------------------------

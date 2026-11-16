@@ -38,6 +38,10 @@ public final class PlayerProfiles {
         public final Set<String> pages = new LinkedHashSet<>();
         /** Tutorial steps already paid out, so a restart never pays twice. */
         public final Set<Integer> rewarded = new HashSet<>();
+        /** Tutorial pages already paid or supplied (by page id, so reordering steps never double-pays). */
+        public final Set<String> paidPages = new HashSet<>();
+        /** Tutorial layout the saved step index belongs to (1 = the original 12 steps; new profiles start on the current one). */
+        public int tutorialLayout = 2;
         /** Free-form counters (e.g. shards collected toward a step). */
         public final Map<String, Integer> counters = new HashMap<>();
 
@@ -55,6 +59,9 @@ public final class PlayerProfiles {
         this.log = log;
         load();
     }
+
+    /** Every profile, for one-off migrations. */
+    public Collection<Profile> all() { return profiles.values(); }
 
     public Profile get(UUID id) { return profiles.computeIfAbsent(id, k -> new Profile()); }
 
@@ -78,6 +85,8 @@ public final class PlayerProfiles {
             p.essence = s.getLong("essence");
             p.pages.addAll(s.getStringList("pages"));
             p.rewarded.addAll(s.getIntegerList("rewarded"));
+            p.paidPages.addAll(s.getStringList("paid-pages"));
+            p.tutorialLayout = s.getInt("tutorial-layout", 1);
             ConfigurationSection c = s.getConfigurationSection("counters");
             if (c != null) for (String k : c.getKeys(false)) p.counters.put(k, c.getInt(k));
             profiles.put(id, p);
@@ -98,6 +107,8 @@ public final class PlayerProfiles {
             if (p.essence != 0) s.set("essence", p.essence);
             s.set("pages", new ArrayList<>(p.pages));
             s.set("rewarded", new ArrayList<>(p.rewarded));
+            if (!p.paidPages.isEmpty()) s.set("paid-pages", new ArrayList<>(p.paidPages));
+            s.set("tutorial-layout", p.tutorialLayout);
             if (!p.counters.isEmpty()) s.createSection("counters", p.counters);
         }
         try { yml.save(file); dirty = false; } catch (IOException ex) { log.severe("Could not save profiles.yml: " + ex.getMessage()); }

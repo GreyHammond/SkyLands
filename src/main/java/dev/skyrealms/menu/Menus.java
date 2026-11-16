@@ -435,7 +435,7 @@ public final class Menus {
         int slot = 0;
         for (Flag f : list) {
             boolean on = i.get(role, f);
-            m.button(slot++, toggleIcon(f, on), pl -> { svc.toggle(i, role, f); flags(pl, role); });
+            m.button(slot++, toggleIcon(f, on), pl -> { svc.toggle(pl, i, role, f); flags(pl, role); });
         }
         m.button(27, back(), this::protection);
         if (role != null) {

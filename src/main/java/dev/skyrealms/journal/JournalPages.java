@@ -44,23 +44,34 @@ public final class JournalPages {
                 + "Down here you'll find wood, ore and food. But the corruption follows the living: stay too long in one place and the land around you begins to die.");
         add("returning_home", "Returning Home", "Use the return feather in your hotbar, or /ihome, and a gust of wind carries you back to your island. "
                 + "Home is always one click away, so go back down whenever you're ready.");
+        add("hostile_spawns", "Hostile Mobs", "Your island starts out peaceful: no zombies, skeletons or creepers spawn on it. "
+                + "If you want a mob farm or a little danger, open /skyland, then Manage Island, Protection and Island settings, and turn on Hostile mob spawning. "
+                + "Spawn eggs, spawners and breeding always work either way.");
+        add("quiet_skies", "Quiet Skies", "Hostile spawning is yours to flip any time, and your island's setting never touches anyone else's. "
+                + "Open Island settings again and switch Hostile mob spawning back off when you want the peace and quiet back. "
+                + "The same screen has settings for peaceful mobs, fire, explosions and PvP.");
         add("corruption", "The Corruption", "Every patch of land holds a corruption value, shown above your hotbar. "
                 + "At 25% the land dries out, at 50% it turns to wasteland, and at 75% bedrock spreads. "
                 + "It never hurts you, and leaving lets it fade, but bedrock stays until the world is recycled.");
         add("void_shards", "Void Shards", "Mining corrupted land can turn up Void Shards, and the deeper the corruption, the better the odds. "
-                + "Blocks you placed yourself never drop them. Purify them into Essence at the Purifier, or keep them to craft Ward Templates and brew tonics.");
+                + "Blocks you placed yourself never drop them. Purify them into Essence at the Purifier, or keep them to craft Ward Templates and brew tonics. Hold on to about ten for the crafting steps ahead.");
         add("corrupted_creatures", "Corrupted Creatures", "Monsters that spawn on corrupted land can become Corrupted: purple names, more health and harder hits. "
                 + "They drop Corrupted Remnants, sometimes Void Shards, and corrupted versions of their usual drops.");
         add("earning", "Purified Essence", "The Purifier, in /skyland under The Corruption, turns Void Shards (1 each) and Corrupted Remnants (4 each) into Essence. "
                 + "Essence is what your island grows on: new land, new biomes and bigger islands. "
                 + "Tutorial steps, daily contracts and visiting other players' islands all pay Essence too.");
+        add("growing_land", "Growing Your Island", "Essence builds your home. Open /skyland, then Manage Island and Grow Land, to attach a new piece of land. "
+                + "You pick the biome and the side it grows on, and nothing already built is touched. "
+                + "Unlock new biomes with Essence too, and every level you earn opens more of them.");
         add("corrupted_ingredients", "Corrupted Ingredients", "Corrupted spiders, skeletons and creepers drop a Corrupted Spider Eye, Bone or Gunpowder. "
                 + "Only these work in corrupted brews; the normal versions don't. "
                 + "Brew a Water Bottle with a Void Shard to make a Tainted Potion, the base of every tonic.");
+        add("brewing_stand", "The Brewing Stand", "Brewing stands normally need a Blaze Rod from the Nether, so the Guide gives you one to start with, along with a few Glass Bottles. "
+                + "Place it on your island and fill the bottles with water. You can craft more later if you find Blaze Rods, or loot a village.");
         add("cleansing_tonics", "Cleansing Tonics", "While a Cleansing Tonic lasts, you cause no corruption at all: 60, 120 or 180 seconds by level.\n"
                 + lines(Recipes.TONIC));
         add("warded_armor", "Warded Armor", "Warded armor cuts the corruption you cause: 5% a piece at Ward I, up to 80% for a full Ward III set. "
-                + "Its trims and enchantments are kept.\n" + lines(Recipes.WARD.subList(0, 2)));
+                + "Its trims and enchantments are kept. Crying Obsidian is rare, so the Guide gives you one for your first template.\n" + lines(Recipes.WARD.subList(0, 2)));
         add("ward_levels", "Ward Levels", lines(Recipes.WARD.subList(2, Recipes.WARD.size()))
                 + "\nEcho Shards come from chests in Ancient Cities, deep in the Deep Dark.");
         add("daily_contracts", "Daily Contracts", "Every day brings three contracts in /skyland under The Corruption: deliver items, hunt, mine, explore or hand in shards. "

@@ -377,15 +377,15 @@ contracts:
   #   deliver (needs item), kill, kill_corrupted, mine, explore, shards
   # amount, reward and shards are [min, max]. Higher weight = picked more often.
   pool:
-    copper:    { type: deliver, item: COPPER_INGOT, amount: [32, 96], reward: [6, 16], shards: [0, 0], weight: 10 }
-    iron:      { type: deliver, item: IRON_INGOT,   amount: [16, 48], reward: [8, 20], shards: [0, 2], weight: 10 }
-    logs:      { type: deliver, item: OAK_LOG,      amount: [32, 64], reward: [4, 10], shards: [0, 0], weight: 8 }
-    coal:      { type: deliver, item: COAL,         amount: [32, 64], reward: [4, 10], shards: [0, 0], weight: 8 }
-    hunt:      { type: kill,           amount: [15, 30],   reward: [8, 18], shards: [0, 2], weight: 10 }
-    corrupted: { type: kill_corrupted, amount: [5, 12],    reward: [16, 32], shards: [2, 5], weight: 6 }
-    mine:      { type: mine,           amount: [200, 500], reward: [6, 16], shards: [0, 1], weight: 8 }
-    explore:   { type: explore,        amount: [8, 20],    reward: [6, 14], shards: [0, 1], weight: 8 }
-    shards:    { type: shards,         amount: [10, 30],   reward: [12, 28], shards: [0, 0], weight: 6 }
+    copper:    { type: deliver, item: COPPER_INGOT, amount: [32, 96], reward: [8, 20], shards: [0, 0], weight: 10 }
+    iron:      { type: deliver, item: IRON_INGOT,   amount: [16, 48], reward: [10, 25], shards: [0, 2], weight: 10 }
+    logs:      { type: deliver, item: OAK_LOG,      amount: [32, 64], reward: [5, 13], shards: [0, 0], weight: 8 }
+    coal:      { type: deliver, item: COAL,         amount: [32, 64], reward: [5, 13], shards: [0, 0], weight: 8 }
+    hunt:      { type: kill,           amount: [15, 30],   reward: [10, 23], shards: [0, 2], weight: 10 }
+    corrupted: { type: kill_corrupted, amount: [5, 12],    reward: [20, 40], shards: [2, 5], weight: 6 }
+    mine:      { type: mine,           amount: [200, 500], reward: [8, 20], shards: [0, 1], weight: 8 }
+    explore:   { type: explore,        amount: [8, 20],    reward: [8, 18], shards: [0, 1], weight: 8 }
+    shards:    { type: shards,         amount: [10, 30],   reward: [15, 35], shards: [0, 0], weight: 6 }
 
 # A player's very first Small island is free. Deleting it and buying again costs the normal price.
 first-island:
@@ -416,21 +416,28 @@ tutorial:
   # Void Shards to collect for the shards step.
   shard-goal: 3
   # Step order by journal page id. Leave out a step to drop it.
-  order: [getting_started, world_below, returning_home, corruption, void_shards, corrupted_creatures,
-          earning, corrupted_ingredients, cleansing_tonics, warded_armor, ward_levels, daily_contracts]
-  # Essence paid for each step (once ever). The whole tutorial pays 96.
+  # brewing_stand and warded_armor also hand the player starter items once (a Brewing Stand with
+  # Glass Bottles, and a Crying Obsidian), since those are otherwise Nether or structure loot.
+  order: [getting_started, world_below, returning_home, hostile_spawns, quiet_skies, corruption,
+          void_shards, corrupted_creatures, earning, growing_land, corrupted_ingredients, brewing_stand,
+          cleansing_tonics, warded_armor, ward_levels, daily_contracts]
+  # Essence paid for each step (once ever). The whole tutorial pays 120 (145 with the finish reward).
   rewards:
     getting_started: 0         # the free island is the reward
-    world_below: 4
-    returning_home: 4
-    corruption: 4
-    void_shards: 6
-    corrupted_creatures: 8
-    earning: 4
-    corrupted_ingredients: 6
-    cleansing_tonics: 10
-    warded_armor: 10
-    ward_levels: 12
-    daily_contracts: 8
+    world_below: 5
+    returning_home: 5
+    hostile_spawns: 5          # turn hostile mob spawning on (it starts off on new islands)
+    quiet_skies: 5             # and back off again
+    corruption: 5
+    void_shards: 8
+    corrupted_creatures: 10
+    earning: 5
+    growing_land: 10           # first Grow Land
+    corrupted_ingredients: 8
+    brewing_stand: 5
+    cleansing_tonics: 12
+    warded_armor: 12
+    ward_levels: 15
+    daily_contracts: 10
   # Paid once on finishing the tutorial, which also unlocks The Resets and The Untouched Realms.
-  finish-reward: 20
+  finish-reward: 25

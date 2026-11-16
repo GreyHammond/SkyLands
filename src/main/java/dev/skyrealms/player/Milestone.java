@@ -29,5 +29,13 @@ public enum Milestone {
     BREWED_TONIC,
     CRAFTED_WARD_TEMPLATE,
     SMITHED_WARD,
-    CLAIMED_CONTRACT
+    CLAIMED_CONTRACT,
+    /** Turned the island's hostile mob spawning on. */
+    MOB_SPAWNS_ON,
+    /** Turned the island's hostile mob spawning back off. */
+    MOB_SPAWNS_OFF,
+    /** Grew the island with Grow Land. */
+    GREW_LAND,
+    /** Placed a Brewing Stand. */
+    PLACED_BREWING_STAND
 }

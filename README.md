@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.18.8-2f9e5a">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.19.0-2f9e5a">
   <img alt="Paper 26.3" src="https://img.shields.io/badge/Paper-26.3-1e88e5">
   <img alt="Java 25" src="https://img.shields.io/badge/Java-25-e76f00">
   <img alt="Bedrock ready" src="https://img.shields.io/badge/Bedrock-Geyser%20%2B%20Floodgate-6a1b9a">
@@ -83,7 +83,7 @@ on Java** and **native Bedrock forms** for players joining through Geyser + Floo
 
 | | |
 |---|---|
-| 📖 **Guided start** | New players get the story, a free first island, and a 12-step guided tutorial in a journal that fills in as they play. |
+| 📖 **Guided start** | New players get the story, a free first island, and a 16-step guided tutorial in a journal that fills in as they play. |
 | 🏝️ **Buy and grow** | Five island sizes, from Small (32×32) to Continental (512×512). New land attaches to the island's edge, so it stays one connected landmass. |
 | 🌸 **19 generated biomes** | Plains to Volcanic, each with its own ground, vanilla trees and plants, and the real biome tag. No setup needed. |
 | 🌊 **One sea level** | All ocean, shore and swamp water sits at the same height, held in on every side, so it never floods the void. |
@@ -159,23 +159,30 @@ on Java** and **native Bedrock forms** for players joining through Geyser + Floo
 5. Jump off the edge any time to go down. Falls aim for **dry land**: water and ocean spots are skipped, the plugin searches outward up to 1,000 blocks for land, and if there's truly none you're given a boat.
 
 **The journal (Guide):** open it from the **Guide** button in `/skyland` or with `/skyland journal`. It
-walks you through 12 steps in order; each one unlocks a page and pays a small reward:
+walks you through 16 steps in order; each one unlocks a page and pays a small reward:
 
 | Step | Objective | Reward |
 |---|---|---:|
 | 1 | Claim your free island | your island |
-| 2 | Jump off the edge into the world below | 4 Essence |
-| 3 | Fly home with the return feather | 4 |
-| 4 | Stand on land that is at least 25% corrupted | 4 |
-| 5 | Collect 3 Void Shards | 6 |
-| 6 | Defeat a corrupted mob | 8 |
-| 7 | Purify shards at the Purifier | 4 |
-| 8 | Collect a Corrupted Spider Eye | 6 |
-| 9 | Brew a Cleansing Tonic I | 10 |
-| 10 | Craft a Ward Template | 10 |
-| 11 | Smith a piece of Ward I armor | 12 |
-| 12 | Claim a daily contract | 8 |
-| ✓ | Finish the tutorial (unlocks The Resets and The Untouched Realms) | 20 |
+| 2 | Jump off the edge into the world below | 5 Essence |
+| 3 | Fly home with the return feather | 5 |
+| 4 | Turn on hostile mob spawning (island settings; it starts off) | 5 |
+| 5 | Turn hostile mob spawning back off | 5 |
+| 6 | Stand on land that is at least 25% corrupted | 5 |
+| 7 | Collect 3 Void Shards | 8 |
+| 8 | Defeat a corrupted mob | 10 |
+| 9 | Purify shards at the Purifier | 5 |
+| 10 | Grow your island with Grow Land | 10 |
+| 11 | Collect a Corrupted Spider Eye | 8 |
+| 12 | Place the Brewing Stand the Guide gives you | 5 |
+| 13 | Brew a Cleansing Tonic I | 12 |
+| 14 | Craft a Ward Template (the Guide gives you the Crying Obsidian) | 12 |
+| 15 | Smith a piece of Ward I armor | 15 |
+| 16 | Claim a daily contract | 10 |
+| ✓ | Finish the tutorial (unlocks The Resets and The Untouched Realms) | 25 |
+
+Brewing Stands normally need a Blaze Rod and Crying Obsidian is rare loot, so steps 12 and 14 hand
+you those items once, free, so nobody has to leave the overworld to finish the tutorial.
 
 Each step shows a title, a page-turn sound and a chat line with your next objective. Locked pages
 show as "???". Veterans can **skip** (every page unlocks, no step rewards) and **restart** any time;
@@ -732,7 +739,7 @@ islands sit lower, under the clouds.
 <details>
 <summary><strong>Can I turn off mob spawning?</strong></summary>
 
-Yes, for the whole island: Protection → Island settings → Hostile mob spawning / Peaceful mob
+Yes, for the whole island: Protection → Island settings → Hostile mob spawning (off by default on new islands) / Peaceful mob
 spawning. Spawn eggs, spawners and breeding still work.
 </details>
 
@@ -803,6 +810,7 @@ The jar is written to `build/libs/skylands.jar`. The website is a single file at
 
 | Version | Highlights |
 |---|---|
+| **0.19.0** | **Tutorial rework**: 16 steps. New steps teach island settings (hostile mob spawning is now **off by default** on new islands; existing islands keep their setting), Grow Land, and brewing. The Guide hands over a Brewing Stand with Glass Bottles and a Crying Obsidian so no step needs the Nether. Tutorial and daily contract rewards are about 25% higher so islands grow a little faster. Saved tutorial progress carries over to the new step order. |
 | **0.18.8** | Corrupted oceans and rivers settle into one flat, still lava sea at sea level: dips fill, lumps melt, flowing lava becomes source, no bedrock crust in the sea. |
 | **0.18.7** | Boiled-off wasteland water leaves magma blocks and lava only (no more sulfur). |
 | **0.18.6** | Deep water boils down from the top while its sediment settles on the bottom, so no more floating sand or gravel. In the wasteland, the sinking surface often turns to lava that flows into the gaps, so lava pools spread across lakes and oceans. |

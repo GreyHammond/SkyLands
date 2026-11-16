@@ -16,6 +16,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.Material;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -59,6 +61,11 @@ public final class Milestones implements Listener {
         VoidItems.Kind k = VoidItems.kindOf(it);
         if (k == VoidItems.Kind.SHARD) trigger(p, Milestone.COLLECTED_SHARD, it.getAmount());
         else if (k == VoidItems.Kind.CORRUPTED_SPIDER_EYE) trigger(p, Milestone.COLLECTED_CORRUPTED_SPIDER_EYE, it.getAmount());
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+    public void onPlace(BlockPlaceEvent e) {
+        if (e.getBlockPlaced().getType() == Material.BREWING_STAND) trigger(e.getPlayer(), Milestone.PLACED_BREWING_STAND);
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
